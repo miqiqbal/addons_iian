@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <!-- Update Admin Mitchell -->
+        <record id="base.user_admin" model="res.users">
+            <field name="name">Mitchell Admin</field>
+            <field name="initials">ADM</field>
+            <field name="function">IT Helpdesk Officer</field>
+            <field name="phone">0811-1000-0001</field>
+            <field name="mobile">0811-1000-0001</field>
+        </record>
+
+        <!-- 1. AFD -->
+        <record id="partner_engineer_afd" model="res.partner">
+            <field name="name">Afdhal M</field>
+            <field name="initials">AFD</field>
+            <field name="function">Engineer SAP &amp; Keuangan</field>
+            <field name="email">afd@hki.co.id</field>
+            <field name="phone">0812-3456-7801</field>
+            <field name="mobile">0812-3456-7801</field>
+        </record>
+        <record id="user_engineer_afd" model="res.users">
+            <field name="name">Afdhal M</field>
+            <field name="initials">AFD</field>
+            <field name="function">Engineer SAP &amp; Keuangan</field>
+            <field name="login">afd@hki.co.id</field>
+            <field name="email">afd@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_afd"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 2. MIQ -->
+        <record id="partner_engineer_miq" model="res.partner">
+            <field name="name">M. Iqbal</field>
+            <field name="initials">MIQ</field>
+            <field name="function">Engineer Core System &amp; Odoo</field>
+            <field name="email">miq@hki.co.id</field>
+            <field name="phone">0812-3456-7802</field>
+            <field name="mobile">0812-3456-7802</field>
+        </record>
+        <record id="user_engineer_miq" model="res.users">
+            <field name="name">M. Iqbal</field>
+            <field name="initials">MIQ</field>
+            <field name="function">Engineer Core System &amp; Odoo</field>
+            <field name="login">miq@hki.co.id</field>
+            <field name="email">miq@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_miq"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 3. DWA -->
+        <record id="partner_engineer_dwa" model="res.partner">
+            <field name="name">Dedi W</field>
+            <field name="initials">DWA</field>
+            <field name="function">Engineer Core System &amp; Odoo</field>
+            <field name="email">dwa@hki.co.id</field>
+            <field name="phone">0812-3456-7803</field>
+            <field name="mobile">0812-3456-7803</field>
+        </record>
+        <record id="user_engineer_dwa" model="res.users">
+            <field name="name">Dedi W</field>
+            <field name="initials">DWA</field>
+            <field name="function">Engineer Core System &amp; Odoo</field>
+            <field name="login">dwa@hki.co.id</field>
+            <field name="email">dwa@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_dwa"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 4. DMS -->
+        <record id="partner_engineer_dms" model="res.partner">
+            <field name="name">Dimas S</field>
+            <field name="initials">DMS</field>
+            <field name="function">Engineer Infrastruktur &amp; Network</field>
+            <field name="email">dms@hki.co.id</field>
+            <field name="phone">0812-3456-7804</field>
+            <field name="mobile">0812-3456-7804</field>
+        </record>
+        <record id="user_engineer_dms" model="res.users">
+            <field name="name">Dimas S</field>
+            <field name="initials">DMS</field>
+            <field name="function">Engineer Infrastruktur &amp; Network</field>
+            <field name="login">dms@hki.co.id</field>
+            <field name="email">dms@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_dms"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 5. RDW -->
+        <record id="partner_engineer_rdw" model="res.partner">
+            <field name="name">Randi D</field>
+            <field name="initials">RDW</field>
+            <field name="function">Engineer Infrastruktur &amp; Hardware</field>
+            <field name="email">rdw@hki.co.id</field>
+            <field name="phone">0812-3456-7805</field>
+            <field name="mobile">0812-3456-7805</field>
+        </record>
+        <record id="user_engineer_rdw" model="res.users">
+            <field name="name">Randi D</field>
+            <field name="initials">RDW</field>
+            <field name="function">Engineer Infrastruktur &amp; Hardware</field>
+            <field name="login">rdw@hki.co.id</field>
+            <field name="email">rdw@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_rdw"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 6. BGN -->
+        <record id="partner_engineer_bgn" model="res.partner">
+            <field name="name">Bagus G</field>
+            <field name="initials">BGN</field>
+            <field name="function">Engineer Enhancement &amp; UI/UX</field>
+            <field name="email">bgn@hki.co.id</field>
+            <field name="phone">0812-3456-7806</field>
+            <field name="mobile">0812-3456-7806</field>
+        </record>
+        <record id="user_engineer_bgn" model="res.users">
+            <field name="name">Bagus G</field>
+            <field name="initials">BGN</field>
+            <field name="function">Engineer Enhancement &amp; UI/UX</field>
+            <field name="login">bgn@hki.co.id</field>
+            <field name="email">bgn@hki.co.id</field>
+            <field name="password">eng123</field>
+            <field name="partner_id" ref="partner_engineer_bgn"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_agent')])]"/>
+        </record>
+
+        <!-- 7. Ahmad Fauzi (Staff Employee) -->
+        <record id="partner_employee_ahmad" model="res.partner">
+            <field name="name">Ahmad Fauzi</field>
+            <field name="initials">AFZ</field>
+            <field name="function">Staff Operasional</field>
+            <field name="email">ahmad.fauzi@hki.co.id</field>
+            <field name="phone">0812-1234-5678</field>
+            <field name="mobile">0812-1234-5678</field>
+        </record>
+        <record id="user_employee_ahmad" model="res.users">
+            <field name="name">Ahmad Fauzi</field>
+            <field name="initials">AFZ</field>
+            <field name="function">Staff Operasional</field>
+            <field name="login">ahmad.fauzi@hki.co.id</field>
+            <field name="email">ahmad.fauzi@hki.co.id</field>
+            <field name="password">123456</field>
+            <field name="partner_id" ref="partner_employee_ahmad"/>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_user')])]"/>
+        </record>
+
+    </data>
+</odoo>

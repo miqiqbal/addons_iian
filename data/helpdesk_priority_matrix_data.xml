@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <record id="helpdesk_priority_matrix_1" model="helpdesk.priority.matrix">
+            <field name="impact_level">tinggi</field>
+            <field name="urgency_level">tinggi</field>
+            <field name="priority">1</field>
+            <field name="label">Critical</field>
+        </record>
+        <record id="helpdesk_priority_matrix_2" model="helpdesk.priority.matrix">
+            <field name="impact_level">tinggi</field>
+            <field name="urgency_level">sedang</field>
+            <field name="priority">2</field>
+            <field name="label">High</field>
+        </record>
+        <record id="helpdesk_priority_matrix_3" model="helpdesk.priority.matrix">
+            <field name="impact_level">tinggi</field>
+            <field name="urgency_level">rendah</field>
+            <field name="priority">2</field>
+            <field name="label">High</field>
+        </record>
+        <record id="helpdesk_priority_matrix_4" model="helpdesk.priority.matrix">
+            <field name="impact_level">sedang</field>
+            <field name="urgency_level">tinggi</field>
+            <field name="priority">2</field>
+            <field name="label">High</field>
+        </record>
+        <record id="helpdesk_priority_matrix_5" model="helpdesk.priority.matrix">
+            <field name="impact_level">sedang</field>
+            <field name="urgency_level">sedang</field>
+            <field name="priority">3</field>
+            <field name="label">Medium</field>
+        </record>
+        <record id="helpdesk_priority_matrix_6" model="helpdesk.priority.matrix">
+            <field name="impact_level">sedang</field>
+            <field name="urgency_level">rendah</field>
+            <field name="priority">3</field>
+            <field name="label">Medium</field>
+        </record>
+        <record id="helpdesk_priority_matrix_7" model="helpdesk.priority.matrix">
+            <field name="impact_level">rendah</field>
+            <field name="urgency_level">tinggi</field>
+            <field name="priority">3</field>
+            <field name="label">Medium</field>
+        </record>
+        <record id="helpdesk_priority_matrix_8" model="helpdesk.priority.matrix">
+            <field name="impact_level">rendah</field>
+            <field name="urgency_level">sedang</field>
+            <field name="priority">4</field>
+            <field name="label">Low</field>
+        </record>
+        <record id="helpdesk_priority_matrix_9" model="helpdesk.priority.matrix">
+            <field name="impact_level">rendah</field>
+            <field name="urgency_level">rendah</field>
+            <field name="priority">4</field>
+            <field name="label">Low</field>
+        </record>
+
+    </data>
+</odoo>

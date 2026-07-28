@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- helpdesk.service -->
+        <record id="view_helpdesk_service_list" model="ir.ui.view">
+            <field name="name">helpdesk.service.list</field>
+            <field name="model">helpdesk.service</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="engineer_id" string="Default PIC IT"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                    <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_service_form" model="ir.ui.view">
+            <field name="name">helpdesk.service.form</field>
+            <field name="model">helpdesk.service</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_service" model="ir.actions.act_window">
+            <field name="name">Service</field>
+            <field name="res_model">helpdesk.service</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- helpdesk.category -->
+        <record id="view_helpdesk_category_list" model="ir.ui.view">
+            <field name="name">helpdesk.category.list</field>
+            <field name="model">helpdesk.category</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="service_id"/>
+                    <field name="engineer_id" string="Default PIC IT"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                    <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_category_form" model="ir.ui.view">
+            <field name="name">helpdesk.category.form</field>
+            <field name="model">helpdesk.category</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <group>
+                            <field name="name"/>
+                            <field name="service_id"/>
+                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_category" model="ir.actions.act_window">
+            <field name="name">Category</field>
+            <field name="res_model">helpdesk.category</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- helpdesk.subcategory -->
+        <record id="view_helpdesk_subcategory_list" model="ir.ui.view">
+            <field name="name">helpdesk.subcategory.list</field>
+            <field name="model">helpdesk.subcategory</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="category_id"/>
+                    <field name="engineer_id" string="Default PIC IT"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_subcategory_form" model="ir.ui.view">
+            <field name="name">helpdesk.subcategory.form</field>
+            <field name="model">helpdesk.subcategory</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="category_id"/>
+                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_subcategory" model="ir.actions.act_window">
+            <field name="name">Sub Category</field>
+            <field name="res_model">helpdesk.subcategory</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- helpdesk.location -->
+        <record id="view_helpdesk_location_list" model="ir.ui.view">
+            <field name="name">helpdesk.location.list</field>
+            <field name="model">helpdesk.location</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="address"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                    <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_location_form" model="ir.ui.view">
+            <field name="name">helpdesk.location.form</field>
+            <field name="model">helpdesk.location</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <group>
+                            <field name="name"/>
+                            <field name="address"/>
+                            <field name="active"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_location" model="ir.actions.act_window">
+            <field name="name">Location</field>
+            <field name="res_model">helpdesk.location</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Dashboard Read-Only Tree & Form Views -->
+        <record id="view_helpdesk_service_tree_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.service.tree.dashboard</field>
+            <field name="model">helpdesk.service</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false" delete="false" js_class="helpdesk_drilldown_list">
+                    <field name="name" string="Nama Service"/>
+                    <field name="code" string="Kode"/>
+                    <field name="engineer_id" string="Default PIC IT"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_service_form_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.service.form.dashboard</field>
+            <field name="model">helpdesk.service</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false" delete="false">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <field name="code" readonly="1"/>
+                            <field name="engineer_id" readonly="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Daftar Case Tiket Relevan">
+                                <field name="ticket_ids" readonly="1">
+                                    <tree>
+                                        <field name="name" string="Ticket No"/>
+                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="requester_id" string="Pemohon"/>
+                                        <field name="created_date" string="Tanggal Create"/>
+                                        <field name="priority" string="Priority"/>
+                                        <field name="state" string="Status" widget="badge"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_service_dashboard" model="ir.actions.act_window">
+            <field name="name">Daftar Jenis Service (Klik Baris untuk Lihat Case Tiket)</field>
+            <field name="res_model">helpdesk.service</field>
+            <field name="view_mode">tree,form</field>
+            <field name="views" eval="[(ref('view_helpdesk_service_tree_dashboard'), 'tree'), (ref('view_helpdesk_service_form_dashboard'), 'form')]"/>
+        </record>
+
+        <record id="view_helpdesk_category_tree_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.category.tree.dashboard</field>
+            <field name="model">helpdesk.category</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false" delete="false" js_class="helpdesk_drilldown_list">
+                    <field name="name" string="Nama Category"/>
+                    <field name="service_id" string="Service"/>
+                    <field name="engineer_id" string="Default PIC IT"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_category_form_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.category.form.dashboard</field>
+            <field name="model">helpdesk.category</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false" delete="false">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <field name="service_id" readonly="1"/>
+                            <field name="engineer_id" readonly="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Daftar Case Tiket Relevan">
+                                <field name="ticket_ids" readonly="1">
+                                    <tree>
+                                        <field name="name" string="Ticket No"/>
+                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="requester_id" string="Pemohon"/>
+                                        <field name="created_date" string="Tanggal Create"/>
+                                        <field name="priority" string="Priority"/>
+                                        <field name="state" string="Status" widget="badge"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_category_dashboard" model="ir.actions.act_window">
+            <field name="name">Daftar Jenis Category (Klik Baris untuk Lihat Case Tiket)</field>
+            <field name="res_model">helpdesk.category</field>
+            <field name="view_mode">tree,form</field>
+            <field name="views" eval="[(ref('view_helpdesk_category_tree_dashboard'), 'tree'), (ref('view_helpdesk_category_form_dashboard'), 'form')]"/>
+        </record>
+
+        <record id="view_helpdesk_location_tree_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.location.tree.dashboard</field>
+            <field name="model">helpdesk.location</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false" delete="false" js_class="helpdesk_drilldown_list">
+                    <field name="name" string="Departemen / Proyek"/>
+                    <field name="address" string="Alamat / Keterangan"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_location_form_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.location.form.dashboard</field>
+            <field name="model">helpdesk.location</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false" delete="false">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="name" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <field name="address" readonly="1"/>
+                        </group>
+                        <notebook>
+                            <page string="Daftar Case Tiket Relevan">
+                                <field name="ticket_ids" readonly="1">
+                                    <tree>
+                                        <field name="name" string="Ticket No"/>
+                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="requester_id" string="Pemohon"/>
+                                        <field name="created_date" string="Tanggal Create"/>
+                                        <field name="priority" string="Priority"/>
+                                        <field name="state" string="Status" widget="badge"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_location_dashboard" model="ir.actions.act_window">
+            <field name="name">Daftar Jenis Departemen / Proyek (Klik Baris untuk Lihat Case Tiket)</field>
+            <field name="res_model">helpdesk.location</field>
+            <field name="view_mode">tree,form</field>
+            <field name="views" eval="[(ref('view_helpdesk_location_tree_dashboard'), 'tree'), (ref('view_helpdesk_location_form_dashboard'), 'form')]"/>
+        </record>
+
+    </data>
+</odoo>

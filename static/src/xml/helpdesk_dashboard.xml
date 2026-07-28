@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="it_helpdesk_v2.AnalyticsDashboard">
+        <div class="o_helpdesk_analytics_dashboard p-4 bg-light" style="min-height: 100vh; overflow-y: auto !important; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #2d3748;">
+            
+            <!-- 1. Header Bar & Global Filters -->
+            <div class="card border-0 shadow-sm rounded-lg p-3 mb-4 bg-white" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <div>
+                        <h4 class="font-weight-bold mb-0" style="color: #714B67; letter-spacing: -0.5px;">Dashboard Helpdesk HKI</h4>
+                        <span class="small text-muted">Real-time Analytics &amp; Operational Control Center</span>
+                    </div>
+                    <div class="d-flex align-items-center small text-muted">
+                        <i class="fa fa-clock-o text-success mr-1"/>
+                        <span>Last Update: <b><t t-esc="widget.data.last_updated"/></b></span>
+                    </div>
+                </div>
+
+                <!-- Global Filters Bar -->
+                <div class="row align-items-center">
+                    <div class="col-md-10">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <!-- Date Range / Quick Period -->
+                            <select id="filter_date_range" class="form-control form-control-sm mr-2 bg-white" style="width: 140px; border-radius: 6px;">
+                                <option value="custom">Date Range</option>
+                                <option value="today">Hari Ini</option>
+                                <option value="week" selected="selected">Minggu Ini</option>
+                                <option value="month">Bulan Ini</option>
+                                <option value="year">Tahun Ini</option>
+                            </select>
+
+                            <!-- Department / Location -->
+                            <select id="filter_department" class="form-control form-control-sm mr-2 bg-white" style="width: 160px; border-radius: 6px;">
+                                <option value="all">Semua Departemen</option>
+                                <t t-foreach="widget.data.locations" t-as="loc">
+                                    <option t-att-value="loc.id"><t t-esc="loc.name"/></option>
+                                </t>
+                            </select>
+
+                            <!-- Service -->
+                            <select id="filter_service" class="form-control form-control-sm mr-2 bg-white" style="width: 140px; border-radius: 6px;">
+                                <option value="all">Semua Service</option>
+                                <t t-foreach="widget.data.services_list" t-as="s">
+                                    <option t-att-value="s.id"><t t-esc="s.name"/></option>
+                                </t>
+                            </select>
+
+                            <!-- Category -->
+                            <select id="filter_category" class="form-control form-control-sm mr-2 bg-white" style="width: 140px; border-radius: 6px;">
+                                <option value="all">Semua Category</option>
+                                <t t-foreach="widget.data.categories_list" t-as="c">
+                                    <option t-att-value="c.id"><t t-esc="c.name"/></option>
+                                </t>
+                            </select>
+
+                            <!-- Priority -->
+                            <select id="filter_priority" class="form-control form-control-sm mr-2 bg-white" style="width: 130px; border-radius: 6px;">
+                                <option value="all">Semua Priority</option>
+                                <option value="1">P1 - High</option>
+                                <option value="2">P2 - Medium</option>
+                                <option value="3">P3 - Low</option>
+                                <option value="4">P4 - Very Low</option>
+                            </select>
+
+                            <!-- Engineer -->
+                            <select id="filter_engineer" class="form-control form-control-sm mr-2 bg-white" style="width: 140px; border-radius: 6px;">
+                                <option value="all">Semua Engineer</option>
+                                <t t-foreach="widget.data.engineers_list" t-as="e">
+                                    <option t-att-value="e.id"><t t-esc="e.name"/></option>
+                                </t>
+                            </select>
+
+                            <button id="btn_apply_filter" class="btn btn-sm text-white font-weight-bold mr-1" style="background-color: #714B67; border-radius: 6px;">
+                                <i class="fa fa-filter mr-1"/> Apply
+                            </button>
+                            <button id="btn_reset_filter" class="btn btn-sm btn-secondary font-weight-bold text-white ml-1" style="background-color: #6c757d; border-color: #6c757d; border-radius: 6px; display: inline-flex; align-items: center;">
+                                <i class="fa fa-undo mr-1"/> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-md-2 text-right">
+                        <div class="btn-group btn-group-sm">
+                            <button id="btn_refresh" class="btn btn-light border text-muted" title="Refresh Data"><i class="fa fa-refresh"/></button>
+                            <button id="btn_export_excel" class="btn btn-light border text-success" title="Export Excel"><i class="fa fa-file-excel-o"/></button>
+                            <button id="btn_export_pdf" class="btn btn-light border text-danger" title="Export PDF"><i class="fa fa-file-pdf-o"/></button>
+                            <button id="btn_print" class="btn btn-light border text-dark" title="Print Dashboard"><i class="fa fa-print"/></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. KPI Cards (6 Grid Cards with Hover Effect & Clickable Drill-down) -->
+            <div class="row mb-4">
+                <!-- Card 1: Total Ticket -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="all" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #714B67 !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Total Ticket</span>
+                            <div class="rounded-circle p-2" style="background: #f3e8ff; color: #714B67;">
+                                <i class="fa fa-ticket fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_ticket"/></div>
+                        <div class="small font-weight-bold" style="color: #28C76F;">
+                            <i class="fa fa-arrow-up mr-1"/> 12.5% <span class="text-muted font-weight-normal">periode sebelumnya</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Jumlah Service -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="services" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #28C76F !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Service</span>
+                            <div class="rounded-circle p-2" style="background: #e8fadf; color: #28C76F;">
+                                <i class="fa fa-cogs fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_service"/></div>
+                        <div class="small text-muted">Total Service</div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Jumlah Category -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="categories" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #00CFE8 !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Category</span>
+                            <div class="rounded-circle p-2" style="background: #e0fbfd; color: #00CFE8;">
+                                <i class="fa fa-folder-open fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_category"/></div>
+                        <div class="small text-muted">Total Category</div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Jumlah Department / Project -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="departments" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #FF9F43 !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Dept / Project</span>
+                            <div class="rounded-circle p-2" style="background: #fff0e1; color: #FF9F43;">
+                                <i class="fa fa-building fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_location"/></div>
+                        <div class="small text-muted">Total Department/Project</div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Jumlah Priority -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="priorities" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #EA5455 !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Priority</span>
+                            <div class="rounded-circle p-2" style="background: #fceaea; color: #EA5455;">
+                                <i class="fa fa-exclamation-triangle fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_priority"/></div>
+                        <div class="small text-muted">Priority Level</div>
+                    </div>
+                </div>
+
+                <!-- Card 6: Jumlah Status -->
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="all" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #7367F0 !important; cursor: pointer; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Jumlah Status</span>
+                            <div class="rounded-circle p-2" style="background: #f3f0ff; color: #7367F0;">
+                                <i class="fa fa-tasks fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_status"/></div>
+                        <div class="small text-muted">Status Ticket</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Analytics Row 1 (Service, Category, Priority, Department Horizontal Bar) -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Ticket by Service</h6>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="chart_ticket_by_service"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Ticket by Category</h6>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="chart_ticket_by_category"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Ticket by Priority</h6>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="chart_ticket_by_priority"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Ticket by Department / Project</h6>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="chart_ticket_by_location"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Analytics Row 2 (Status Donut, Priority Heatmap, Ticket Comparison Line Trend) -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Ticket by Status</h6>
+                        <div style="height: 240px; position: relative;">
+                            <canvas id="chart_ticket_by_status"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Heatmap Matrix (Green -> Yellow -> Orange -> Red) -->
+                <div class="col-xl-4 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <h6 class="font-weight-bold text-dark mb-3">Priority Heatmap</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm text-center align-middle mb-2" style="font-size: 12px;">
+                                <thead style="background: #f8fafc; color: #475569;">
+                                    <tr>
+                                        <th>Priority</th>
+                                        <th>Open</th>
+                                        <th>Assigned</th>
+                                        <th>In Progress</th>
+                                        <th>Pending User</th>
+                                        <th>Resolved</th>
+                                        <th>Closed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="widget.data.heatmap_matrix" t-as="row">
+                                        <tr>
+                                            <td class="font-weight-bold text-left bg-light"><t t-esc="row.priority"/></td>
+                                            <td class="o_heatmap_cell" style="background: #EA5455; color: #ffffff; font-weight: bold; cursor: pointer;"><t t-esc="row.open"/></td>
+                                            <td class="o_heatmap_cell" style="background: #FF9F43; color: #ffffff; font-weight: bold; cursor: pointer;"><t t-esc="row.assigned"/></td>
+                                            <td class="o_heatmap_cell" style="background: #fff3cd; color: #856404; font-weight: bold; cursor: pointer;"><t t-esc="row.in_progress"/></td>
+                                            <td class="o_heatmap_cell" style="background: #fef9c3; color: #854d0e; font-weight: bold; cursor: pointer;"><t t-esc="row.pending"/></td>
+                                            <td class="o_heatmap_cell" style="background: #28C76F; color: #ffffff; font-weight: bold; cursor: pointer;"><t t-esc="row.resolved"/></td>
+                                            <td class="o_heatmap_cell" style="background: #00CFE8; color: #ffffff; font-weight: bold; cursor: pointer;"><t t-esc="row.closed"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top small text-muted">
+                            <span>Rendah</span>
+                            <div style="height: 8px; width: 120px; border-radius: 4px; background: linear-gradient(to right, #28C76F, #fff3cd, #FF9F43, #EA5455);"/>
+                            <span>Tinggi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Comparison Multi-Line Trend Chart -->
+                <div class="col-xl-5 col-md-12 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="font-weight-bold text-dark mb-0">Ticket Comparison</h6>
+                            <div class="btn-group btn-group-toggle" id="trend_period_group">
+                                <label class="btn btn-xs btn-secondary o_trend_period_btn" data-period="day" style="background-color: #6c757d; border-color: #6c757d; color: #ffffff; font-weight: 600; cursor: pointer; padding: 3px 10px;">
+                                    <input type="radio" name="trend_period" value="day"/> Hari
+                                </label>
+                                <label class="btn btn-xs btn-secondary active o_trend_period_btn" data-period="week" style="background-color: #714B67; border-color: #714B67; color: #ffffff; font-weight: 600; cursor: pointer; padding: 3px 10px;">
+                                    <input type="radio" name="trend_period" value="week" checked="checked"/> Minggu
+                                </label>
+                                <label class="btn btn-xs btn-secondary o_trend_period_btn" data-period="month" style="background-color: #6c757d; border-color: #6c757d; color: #ffffff; font-weight: 600; cursor: pointer; padding: 3px 10px;">
+                                    <input type="radio" name="trend_period" value="month"/> Bulan
+                                </label>
+                                <label class="btn btn-xs btn-secondary o_trend_period_btn" data-period="year" style="background-color: #6c757d; border-color: #6c757d; color: #ffffff; font-weight: 600; cursor: pointer; padding: 3px 10px;">
+                                    <input type="radio" name="trend_period" value="year"/> Tahun
+                                </label>
+                            </div>
+                        </div>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="chart_ticket_trend"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Operational Widgets Row (6 Special Widgets) -->
+            <div class="row mb-4">
+                <!-- Widget 1: Recent Tickets (10 Terbaru) -->
+                <div class="col-xl-6 col-md-12 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="font-weight-bold text-dark mb-0"><i class="fa fa-history text-primary mr-1"/> Recent Tickets (10 Terbaru)</h6>
+                            <a href="#" class="small font-weight-bold text-primary o_see_all_tickets">Lihat Semua</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm align-middle mb-0" style="font-size: 12px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Ticket No</th>
+                                        <th>Subject</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>SLA Due</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="widget.data.recent_tickets" t-as="t">
+                                        <tr class="o_ticket_row_click" t-att-data-ticket-id="t.id" style="cursor: pointer;">
+                                            <td class="font-weight-bold text-primary"><t t-esc="t.name"/></td>
+                                            <td><t t-esc="t.title"/></td>
+                                            <td><span class="badge badge-light border"><t t-esc="t.priority_label"/></span></td>
+                                            <td><span class="badge badge-info"><t t-esc="t.state"/></span></td>
+                                            <td t-att-class="t.is_breached ? 'text-danger font-weight-bold' : 'text-muted'"><t t-esc="t.sla_deadline"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget 2: Top 5 SLA Breached & Widget 3: Top 5 Engineers -->
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <!-- Top 5 SLA Breached -->
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white mb-3" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #EA5455 !important;">
+                        <h6 class="font-weight-bold text-danger mb-2"><i class="fa fa-exclamation-circle mr-1"/> Top 5 SLA Breached</h6>
+                        <ul class="list-group list-group-flush small">
+                            <t t-foreach="widget.data.top_sla_breached" t-as="sb">
+                                <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center border-0">
+                                    <span><b><t t-esc="sb.name"/></b> - <t t-esc="sb.title"/></span>
+                                    <span class="badge badge-danger"><t t-esc="sb.engineer"/></span>
+                                </li>
+                            </t>
+                            <t t-if="!widget.data.top_sla_breached.length">
+                                <li class="list-group-item px-0 py-1 border-0 text-success">Tidak ada tiket SLA breached 🎉</li>
+                            </t>
+                        </ul>
+                    </div>
+
+                    <!-- Top 5 Engineer -->
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #28C76F !important;">
+                        <h6 class="font-weight-bold text-success mb-2"><i class="fa fa-trophy mr-1"/> Top 5 Engineer</h6>
+                        <ul class="list-group list-group-flush small">
+                            <t t-foreach="widget.data.top_engineers" t-as="eng">
+                                <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center border-0">
+                                    <span><i class="fa fa-user-circle-o text-muted mr-1"/><t t-esc="eng.name"/></span>
+                                    <span class="badge badge-success font-weight-bold"><t t-esc="eng.resolved_count"/> Selesai</span>
+                                </li>
+                            </t>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Widget 4: Top Service, Major Incident, Near SLA -->
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <!-- Major Incident -->
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white mb-3" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #dc2626 !important;">
+                        <h6 class="font-weight-bold text-dark mb-2"><i class="fa fa-bullhorn text-danger mr-1"/> Major Incident (Open)</h6>
+                        <ul class="list-group list-group-flush small">
+                            <t t-foreach="widget.data.major_incidents" t-as="mi">
+                                <li class="list-group-item px-0 py-1 d-flex justify-content-between border-0">
+                                    <span class="font-weight-bold text-danger"><t t-esc="mi.name"/> - <t t-esc="mi.title"/></span>
+                                    <span class="badge badge-warning"><t t-esc="mi.engineer"/></span>
+                                </li>
+                            </t>
+                            <t t-if="!widget.data.major_incidents.length">
+                                <li class="list-group-item px-0 py-1 border-0 text-muted">Tidak ada Major Incident aktif</li>
+                            </t>
+                        </ul>
+                    </div>
+
+                    <!-- Near SLA (<30-120 mins) -->
+                    <div class="card border-0 shadow-sm rounded-lg p-3 bg-white" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #FF9F43 !important;">
+                        <h6 class="font-weight-bold text-warning mb-2"><i class="fa fa-clock-o mr-1"/> Near SLA (&lt; 30 - 120 Menit)</h6>
+                        <ul class="list-group list-group-flush small">
+                            <t t-foreach="widget.data.near_sla" t-as="ns">
+                                <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center border-0">
+                                    <span><b><t t-esc="ns.name"/></b> - <t t-esc="ns.title"/></span>
+                                    <span class="badge badge-warning text-dark"><t t-esc="ns.mins_left"/> Mins Left</span>
+                                </li>
+                            </t>
+                            <t t-if="!widget.data.near_sla.length">
+                                <li class="list-group-item px-0 py-1 border-0 text-muted">Semua SLA dalam posisi aman</li>
+                            </t>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Summary Table (Tabel Ringkasan Perbandingan) -->
+            <div class="card border-0 shadow-sm rounded-lg p-3 bg-white mb-4" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="font-weight-bold text-dark mb-0">Summary Table (Ringkasan Perbandingan Periode)</h6>
+                    <div class="d-flex align-items-center">
+                        <input type="text" id="summary_table_search" class="form-control form-control-sm mr-2" placeholder="Search..." style="width: 160px; border-radius: 6px;"/>
+                        <button id="btn_summary_export" class="btn btn-sm btn-outline-secondary font-weight-bold" style="border-radius: 6px;">Export</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle mb-0" style="font-size: 12px;">
+                        <thead style="background: #f8fafc; color: #475569;">
+                            <tr>
+                                <th>Periode</th>
+                                <th>Total Ticket</th>
+                                <th>Open</th>
+                                <th>In Progress</th>
+                                <th>Pending User</th>
+                                <th>Resolved</th>
+                                <th>Closed</th>
+                                <th>Cancelled</th>
+                                <th>Avg Response</th>
+                                <th>Avg Resolution</th>
+                                <th>SLA Achievement</th>
+                                <th>SLA Breached (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="widget.data.periods" t-as="p">
+                                <tr>
+                                    <td class="font-weight-bold text-dark"><t t-esc="p.label"/></td>
+                                    <td class="font-weight-bold text-primary"><t t-esc="p.total"/></td>
+                                    <td><t t-esc="p.open"/></td>
+                                    <td><t t-esc="p.in_progress"/></td>
+                                    <td><t t-esc="p.pending"/></td>
+                                    <td class="text-success font-weight-bold"><t t-esc="p.resolved"/></td>
+                                    <td class="text-muted"><t t-esc="p.closed"/></td>
+                                    <td class="text-danger"><t t-esc="p.cancel"/></td>
+                                    <td>15 Mins</td>
+                                    <td>2.4 Hours</td>
+                                    <td><span class="badge badge-success">96.8%</span></td>
+                                    <td><span class="badge badge-light text-danger">3.2%</span></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="d-flex justify-content-center align-items-center py-2 text-muted small">
+                <span>Data diperbarui terakhir: <b><t t-esc="widget.data.last_updated"/></b></span>
+                <button id="dashboard_refresh_btn_footer" class="btn btn-link btn-sm text-muted p-0 ml-2" title="Refresh Data">
+                    <i class="fa fa-refresh"/>
+                </button>
+            </div>
+
+        </div>
+    </t>
+
+</templates>

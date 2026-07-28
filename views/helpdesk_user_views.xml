@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Inherit Users Tree View: Add Role / Peran Column (Employee/Requester, Engineer, Helpdesk Officer) -->
+        <record id="view_users_tree_helpdesk" model="ir.ui.view">
+            <field name="name">res.users.tree.helpdesk</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="initials" string="Initial"/>
+                    <field name="function" string="Function"/>
+                    <field name="helpdesk_role" string="Role / Peran" widget="badge"
+                           decoration-primary="helpdesk_role == 'agent'"
+                           decoration-success="helpdesk_role == 'manager'"
+                           decoration-info="helpdesk_role == 'user'"/>
+                </xpath>
+                <xpath expr="//field[@name='login']" position="replace">
+                    <field name="email" string="Email"/>
+                    <field name="phone" string="Phone"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit Users Form View: Add Role / Peran Selection Field -->
+        <record id="view_users_form_helpdesk" model="ir.ui.view">
+            <field name="name">res.users.form.helpdesk</field>
+            <field name="model">res.users</field>
+            <field name="inherit_id" ref="base.view_users_form"/>
+            <field name="arch" type="xml">
+                <!-- Delete Login Header Label from oe_title -->
+                <xpath expr="//label[@for='login']" position="replace"/>
+
+                <!-- Delete Field Login from oe_title and keep hidden in background for backend sync -->
+                <xpath expr="//field[@name='login']" position="replace">
+                    <field name="login" invisible="1"/>
+                    <group string="User Identity &amp; Contact Information">
+                        <group>
+                            <field name="initials" string="Initial" placeholder="e.g. AFD"/>
+                            <field name="function" string="Function / Jabatan" placeholder="e.g. Engineer SAP &amp; Keuangan"/>
+                            <field name="helpdesk_role" string="Role / Peran"/>
+                        </group>
+                        <group>
+                            <field name="email" string="Email *" required="1" placeholder="e.g. user@hkinfrastruktur.com"/>
+                            <field name="phone" string="Phone" widget="phone" placeholder="e.g. 0812-3456-7890"/>
+                        </group>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_priority_question_list" model="ir.ui.view">
+            <field name="name">helpdesk.priority.question.list</field>
+            <field name="model">helpdesk.priority.question</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence" widget="handle"/>
+                    <field name="code"/>
+                    <field name="dimension"/>
+                    <field name="question_text"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_priority_question_form" model="ir.ui.view">
+            <field name="name">helpdesk.priority.question.form</field>
+            <field name="model">helpdesk.priority.question</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="code"/>
+                                <field name="dimension"/>
+                                <field name="sequence"/>
+                            </group>
+                            <group>
+                                <field name="question_text"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        <field name="answer_ids">
+                            <tree editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="answer_text"/>
+                                <field name="score"/>
+                                <field name="weight"/>
+                                <field name="description"/>
+                            </tree>
+                        </field>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_priority_question" model="ir.actions.act_window">
+            <field name="name">Priority Questionnaire</field>
+            <field name="res_model">helpdesk.priority.question</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- helpdesk.priority.matrix -->
+        <record id="view_helpdesk_priority_matrix_list" model="ir.ui.view">
+            <field name="name">helpdesk.priority.matrix.list</field>
+            <field name="model">helpdesk.priority.matrix</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="impact_level"/>
+                    <field name="urgency_level"/>
+                    <field name="priority"/>
+                    <field name="label"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_priority_matrix_form" model="ir.ui.view">
+            <field name="name">helpdesk.priority.matrix.form</field>
+            <field name="model">helpdesk.priority.matrix</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="impact_level"/>
+                            <field name="urgency_level"/>
+                            <field name="priority"/>
+                            <field name="label"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_priority_matrix" model="ir.actions.act_window">
+            <field name="name">Priority Matrix</field>
+            <field name="res_model">helpdesk.priority.matrix</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

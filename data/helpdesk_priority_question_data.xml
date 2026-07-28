@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <!-- Q1 -->
+        <record id="helpdesk_priority_question_q1" model="helpdesk.priority.question">
+            <field name="code">V2_Q1</field>
+            <field name="sequence">10</field>
+            <field name="dimension">impact</field>
+            <field name="question_text">Siapa yang terdampak?</field>
+        </record>
+        <record id="helpdesk_priority_answer_q1_1" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q1"/>
+            <field name="sequence">10</field>
+            <field name="answer_text">Seluruh perusahaan</field>
+            <field name="score">5</field>
+            <field name="description">Dampak lintas perusahaan / banyak pengguna</field>
+        </record>
+        <record id="helpdesk_priority_answer_q1_2" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q1"/>
+            <field name="sequence">20</field>
+            <field name="answer_text">Lebih dari 1 departemen</field>
+            <field name="score">4</field>
+            <field name="description">Dampak ke beberapa departemen</field>
+        </record>
+        <record id="helpdesk_priority_answer_q1_3" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q1"/>
+            <field name="sequence">30</field>
+            <field name="answer_text">departemen/proyek</field>
+            <field name="score">3</field>
+            <field name="description">Dampak ke satu unit kerja</field>
+        </record>
+        <record id="helpdesk_priority_answer_q1_4" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q1"/>
+            <field name="sequence">40</field>
+            <field name="answer_text">Tim tertentu</field>
+            <field name="score">2</field>
+            <field name="description">Dampak hanya ke tim tertentu</field>
+        </record>
+        <record id="helpdesk_priority_answer_q1_5" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q1"/>
+            <field name="sequence">50</field>
+            <field name="answer_text">Individu</field>
+            <field name="score">1</field>
+            <field name="description">Dampak hanya ke satu user</field>
+        </record>
+
+        <!-- Q2 -->
+        <record id="helpdesk_priority_question_q2" model="helpdesk.priority.question">
+            <field name="code">V2_Q2</field>
+            <field name="sequence">20</field>
+            <field name="dimension">impact</field>
+            <field name="question_text">Apakah mengganggu operasional?</field>
+        </record>
+        <record id="helpdesk_priority_answer_q2_1" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q2"/>
+            <field name="sequence">10</field>
+            <field name="answer_text">Operasional berhenti total</field>
+            <field name="score">5</field>
+            <field name="description">Proses utama tidak bisa berjalan</field>
+        </record>
+        <record id="helpdesk_priority_answer_q2_2" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q2"/>
+            <field name="sequence">20</field>
+            <field name="answer_text">Operasional terganggu berat</field>
+            <field name="score">4</field>
+            <field name="description">Operasional berjalan namun sangat terbatas</field>
+        </record>
+        <record id="helpdesk_priority_answer_q2_3" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q2"/>
+            <field name="sequence">30</field>
+            <field name="answer_text">Operasional terganggu sebagian</field>
+            <field name="score">3</field>
+            <field name="description">Sebagian proses masih berjalan</field>
+        </record>
+        <record id="helpdesk_priority_answer_q2_4" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q2"/>
+            <field name="sequence">40</field>
+            <field name="answer_text">Operasional tetap berjalan dengan kendala</field>
+            <field name="score">2</field>
+            <field name="description">Ada kendala namun layanan tetap dapat digunakan</field>
+        </record>
+        <record id="helpdesk_priority_answer_q2_5" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q2"/>
+            <field name="sequence">50</field>
+            <field name="answer_text">Tidak mengganggu operasional</field>
+            <field name="score">1</field>
+            <field name="description">Tidak berdampak langsung ke operasional</field>
+        </record>
+
+        <!-- Q3 -->
+        <record id="helpdesk_priority_question_q3" model="helpdesk.priority.question">
+            <field name="code">V2_Q3</field>
+            <field name="sequence">30</field>
+            <field name="dimension">impact</field>
+            <field name="question_text">Layanan yang terdampak?</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_1" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">10</field>
+            <field name="answer_text">SAP / ERP</field>
+            <field name="score">5</field>
+            <field name="description">Layanan bisnis kritikal</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_2" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">20</field>
+            <field name="answer_text">Email / Microsoft 365</field>
+            <field name="score">5</field>
+            <field name="description">Komunikasi dan kolaborasi utama</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_3" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">30</field>
+            <field name="answer_text">Odoo / Aplikasi Operasional/ Attandance</field>
+            <field name="score">4</field>
+            <field name="description">Aplikasi korporat/operasional</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_4" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">40</field>
+            <field name="answer_text">Server / Infrastruktur</field>
+            <field name="score">4</field>
+            <field name="description">Komponen infrastruktur utama</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_5" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">50</field>
+            <field name="answer_text">VPN / Jaringan</field>
+            <field name="score">3</field>
+            <field name="description">Konektivitas kerja</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_6" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">60</field>
+            <field name="answer_text">SharePoint / Power BI</field>
+            <field name="score">2</field>
+            <field name="description">Kolaborasi, laporan, atau dashboard</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_7" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">70</field>
+            <field name="answer_text">HKI Sign, Load Scanner, E-SOP, Time Off</field>
+            <field name="score">2</field>
+            <field name="description">Kolaborasi, laporan, atau dashboard</field>
+        </record>
+        <record id="helpdesk_priority_answer_q3_8" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q3"/>
+            <field name="sequence">80</field>
+            <field name="answer_text">Laptop / Printer / Perangkat User</field>
+            <field name="score">1</field>
+            <field name="description">Perangkat kerja individual</field>
+        </record>
+
+        <!-- Q4 -->
+        <record id="helpdesk_priority_question_q4" model="helpdesk.priority.question">
+            <field name="code">V2_Q4</field>
+            <field name="sequence">40</field>
+            <field name="dimension">urgency</field>
+            <field name="question_text">Apakah ada workaround?</field>
+        </record>
+        <record id="helpdesk_priority_answer_q4_1" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q4"/>
+            <field name="sequence">10</field>
+            <field name="answer_text">Tidak ada workaround</field>
+            <field name="score">5</field>
+            <field name="description">Tidak ada solusi sementara</field>
+        </record>
+        <record id="helpdesk_priority_answer_q4_2" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q4"/>
+            <field name="sequence">20</field>
+            <field name="answer_text">Workaround sangat terbatas</field>
+            <field name="score">4</field>
+            <field name="description">Solusi sementara sulit/terbatas</field>
+        </record>
+        <record id="helpdesk_priority_answer_q4_3" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q4"/>
+            <field name="sequence">30</field>
+            <field name="answer_text">Workaround manual tersedia</field>
+            <field name="score">3</field>
+            <field name="description">Ada cara manual sementara</field>
+        </record>
+        <record id="helpdesk_priority_answer_q4_4" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q4"/>
+            <field name="sequence">40</field>
+            <field name="answer_text">Workaround tersedia penuh</field>
+            <field name="score">2</field>
+            <field name="description">Ada pengganti yang cukup memadai</field>
+        </record>
+        <record id="helpdesk_priority_answer_q4_5" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q4"/>
+            <field name="sequence">50</field>
+            <field name="answer_text">Tidak diperlukan workaround</field>
+            <field name="score">1</field>
+            <field name="description">Tidak perlu penanganan segera</field>
+        </record>
+
+        <!-- Q5 -->
+        <record id="helpdesk_priority_question_q5" model="helpdesk.priority.question">
+            <field name="code">V2_Q5</field>
+            <field name="sequence">50</field>
+            <field name="dimension">urgency</field>
+            <field name="question_text">Apakah terkait deadline proyek/pekerjaan?</field>
+        </record>
+        <record id="helpdesk_priority_answer_q5_1" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q5"/>
+            <field name="sequence">10</field>
+            <field name="answer_text">Harus selesai hari ini</field>
+            <field name="score">5</field>
+            <field name="description">Deadline sangat dekat</field>
+        </record>
+        <record id="helpdesk_priority_answer_q5_2" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q5"/>
+            <field name="sequence">20</field>
+            <field name="answer_text">Menghambat milestone proyek</field>
+            <field name="score">4</field>
+            <field name="description">Mempengaruhi milestone proyek</field>
+        </record>
+        <record id="helpdesk_priority_answer_q5_3" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q5"/>
+            <field name="sequence">30</field>
+            <field name="answer_text">Harus selesai minggu ini</field>
+            <field name="score">3</field>
+            <field name="description">Deadline dalam minggu berjalan</field>
+        </record>
+        <record id="helpdesk_priority_answer_q5_4" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q5"/>
+            <field name="sequence">40</field>
+            <field name="answer_text">Tidak signifikan</field>
+            <field name="score">2</field>
+            <field name="description">Tidak terlalu mendesak</field>
+        </record>
+        <record id="helpdesk_priority_answer_q5_5" model="helpdesk.priority.answer">
+            <field name="question_id" ref="helpdesk_priority_question_q5"/>
+            <field name="sequence">50</field>
+            <field name="answer_text">Tidak ada deadline</field>
+            <field name="score">1</field>
+            <field name="description">Tidak memiliki tenggat waktu penting</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Root Application Menu -->
+        <menuitem id="menu_it_helpdesk_root" name="IT Helpdesk" sequence="10"
+                  groups="group_helpdesk_user"/>
+
+        <!-- 1. Dashboard -->
+        <menuitem id="menu_it_helpdesk_dashboard"
+                  name="Dashboard" parent="menu_it_helpdesk_root"
+                  action="action_helpdesk_analytics_dashboard" sequence="10"/>
+
+        <!-- 2. Ticket (Dropdown) -->
+        <menuitem id="menu_it_helpdesk_tickets_root"
+                  name="Ticket" parent="menu_it_helpdesk_root" sequence="20"/>
+        
+        <!-- 2.1 All Ticket -->
+        <menuitem id="menu_it_helpdesk_all_tickets"
+                  name="All Ticket" parent="menu_it_helpdesk_tickets_root"
+                  action="action_helpdesk_ticket" sequence="10"/>
+        
+        <!-- 2.2 My Ticket (Memunculkan komplainan akun masing-masing) -->
+        <menuitem id="menu_it_helpdesk_my_tickets"
+                  name="My Ticket" parent="menu_it_helpdesk_tickets_root"
+                  action="action_helpdesk_my_ticket" sequence="20"/>
+
+        <!-- 2.3 Assigned Tickets & CR to Me -->
+        <menuitem id="menu_it_helpdesk_assigned_to_me"
+                  name="Assigned Tickets to Me" parent="menu_it_helpdesk_tickets_root"
+                  action="action_helpdesk_assigned_to_me" sequence="30"
+                  groups="group_helpdesk_agent"/>
+        <menuitem id="menu_it_helpdesk_assigned_cr_to_me"
+                  name="Assigned CR to Me" parent="menu_it_helpdesk_tickets_root"
+                  action="action_helpdesk_assigned_cr_to_me" sequence="35"
+                  groups="group_helpdesk_agent"/>
+
+        <!-- 2.4 Create Ticket -->
+        <menuitem id="menu_it_helpdesk_create_ticket"
+                  name="Create Ticket" parent="menu_it_helpdesk_tickets_root"
+                  action="action_helpdesk_create_ticket" sequence="40"/>
+
+        <!-- 5. Knowledge Base -->
+        <menuitem id="menu_it_helpdesk_knowledge_base"
+                  name="Knowledge Base" parent="menu_it_helpdesk_root"
+                  action="action_helpdesk_knowledge" sequence="50"/>
+
+        <!-- 6. Change Request -->
+        <menuitem id="menu_it_helpdesk_change_request"
+                  name="Change Request" parent="menu_it_helpdesk_root" sequence="60"
+                  action="action_helpdesk_change_request"/>
+
+        <!-- 7. Reports -->
+        <menuitem id="menu_it_helpdesk_report_root"
+                  name="Reports" parent="menu_it_helpdesk_root" sequence="70"
+                  action="action_helpdesk_report_tickets"
+                  groups="group_helpdesk_agent"/>
+        <menuitem id="menu_it_helpdesk_report_pivot"
+                  name="Analisis Data &amp; Pivot" parent="menu_it_helpdesk_report_root"
+                  action="action_helpdesk_ticket_pivot" sequence="20"
+                  groups="group_helpdesk_agent"/>
+
+        <!-- 8. Configuration (Dropdown) -->
+        <menuitem id="menu_it_helpdesk_configuration_root"
+                  name="Configuration" parent="menu_it_helpdesk_root" sequence="80"
+                  groups="group_helpdesk_manager"/>
+        <menuitem id="menu_it_helpdesk_config_service"
+                  name="Service Catalog" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_service" sequence="10"/>
+        <menuitem id="menu_it_helpdesk_config_category"
+                  name="Category" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_category" sequence="20"/>
+        <menuitem id="menu_it_helpdesk_config_subcategory"
+                  name="Sub Category" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_subcategory" sequence="30"/>
+        <menuitem id="menu_it_helpdesk_config_location"
+                  name="Location" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_location" sequence="40"/>
+        <menuitem id="menu_it_helpdesk_config_priority_question"
+                  name="Priority Questionnaire" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_priority_question" sequence="60"/>
+        <menuitem id="menu_it_helpdesk_config_priority_matrix"
+                  name="Priority Matrix" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_priority_matrix" sequence="70"/>
+        <menuitem id="menu_it_helpdesk_config_sla"
+                  name="SLA Policy" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_sla" sequence="80"/>
+        <menuitem id="menu_it_helpdesk_config_keyword"
+                  name="Keyword Routing Rules" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_keyword" sequence="90"/>
+        <menuitem id="menu_it_helpdesk_config_users"
+                  name="Users &amp; Roles" parent="menu_it_helpdesk_configuration_root"
+                  action="base.action_res_users" sequence="100"
+                  groups="group_helpdesk_manager"/>
+
+    </data>
+</odoo>
+

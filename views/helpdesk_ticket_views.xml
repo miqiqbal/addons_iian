@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Tree View (Matching Mockup 2: List Ticket) -->
+        <record id="view_helpdesk_ticket_list" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.list</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="arch" type="xml">
+                <tree decoration-danger="sla_resolution_breached" default_order="created_date desc">
+                    <field name="name" string="Ticket No." class="text-primary font-weight-bold"/>
+                    <field name="title" string="Title"/>
+                    <field name="service_id" string="Service"/>
+                    <field name="requester_id" string="Requester"/>
+                    <field name="priority" string="Priority" widget="badge"
+                           decoration-danger="priority == '1'"
+                           decoration-warning="priority == '2'"
+                           decoration-info="priority == '3'"
+                           decoration-success="priority == '4'"/>
+                    <field name="state" string="Status" widget="badge"
+                           decoration-muted="state == 'draft'"
+                           decoration-info="state == 'open'"
+                           decoration-warning="state in ('assigned', 'in_progress')"
+                           decoration-success="state in ('done', 'closed')"
+                           decoration-danger="state == 'reject'"/>
+                    <field name="engineer_id" string="Engineer" widget="many2one_avatar_user"/>
+                    <field name="created_date" string="Created Date"/>
+                    <field name="sla_status_label" string="SLA Status" widget="badge"
+                           decoration-success="sla_status_label == 'on_track'"
+                           decoration-warning="sla_status_label == 'warning'"
+                           decoration-danger="sla_status_label in ('critical', 'breached')"/>
+                    <field name="sla_resolution_breached" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Search -->
+        <record id="view_helpdesk_ticket_search" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.search</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Ticket No"/>
+                    <field name="title"/>
+                    <field name="requester_id"/>
+                    <field name="engineer_id"/>
+                    <field name="service_id"/>
+                    <filter string="My Tickets" name="my_tickets" domain="[('requester_id', '=', uid)]"/>
+                    <filter string="Unassigned" name="unassigned" domain="[('engineer_id', '=', False)]"/>
+                    <filter string="Overdue" name="overdue" domain="[('sla_resolution_breached', '=', True)]"/>
+                    <separator/>
+                    <filter string="Draft" name="state_draft" domain="[('state', '=', 'draft')]"/>
+                    <filter string="Open" name="state_open" domain="[('state', '=', 'open')]"/>
+                    <filter string="Assigned" name="state_assigned" domain="[('state', '=', 'assigned')]"/>
+                    <filter string="Progress" name="state_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                    <filter string="Done" name="state_done" domain="[('state', '=', 'done')]"/>
+                    <filter string="Reject" name="state_reject" domain="[('state', '=', 'reject')]"/>
+                    <filter string="Closed" name="state_closed" domain="[('state', '=', 'closed')]"/>
+                    <separator/>
+                    <filter string="Hari Ini" name="filter_today" domain="[('created_date', '&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                    <filter string="Bulan Ini" name="filter_this_month" domain="[('created_date', '&gt;=', context_today().strftime('%Y-%m-01 00:00:00'))]"/>
+                    <filter string="Tahun Ini" name="filter_this_year" domain="[('created_date', '&gt;=', context_today().strftime('%Y-01-01 00:00:00'))]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                        <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>
+                        <filter string="Service" name="group_service" context="{'group_by': 'service_id'}"/>
+                        <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                        <filter string="Department / Location" name="group_location" context="{'group_by': 'location_id'}"/>
+                        <filter string="Engineer" name="group_engineer" context="{'group_by': 'engineer_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Form (Matching Mockup 3: Detail Ticket Layout) -->
+        <record id="view_helpdesk_ticket_form" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.form</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_publish" string="Publish Ticket" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="action_assign_engineer" string="Assign / Eskalasi ke Engineer" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+                        <button name="action_start_progress" string="Start Progress" type="object" class="btn-primary" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['open', 'assigned'])]}"/>
+                        <button name="action_done" string="Mark as Done" type="object" class="btn-success" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
+                        <button name="action_reject" string="Reject Ticket" type="object" class="btn-danger" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_assign" string="Assign" type="object" invisible="1"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>
+                    </header>
+                    <sheet>
+                        <div class="alert alert-info" role="alert"
+                             attrs="{'invisible': ['|', ('state', '!=', 'new'), ('engineer_id', '!=', False)]}">
+                            Ticket ini belum di-assign ke Engineer
+                        </div>
+                        <!-- Title & Ticket Number Header Area -->
+                        <div class="mb-3">
+                            <h2 class="text-primary font-weight-bold mb-1">
+                                <field name="name" readonly="1" class="oe_inline"/>
+                            </h2>
+                            <h1 class="font-weight-bold text-dark mb-2">
+                                <field name="title" placeholder="Judul Tiket..."/>
+                            </h1>
+                            <div>
+                                <field name="priority" widget="badge" readonly="1"
+                                       decoration-danger="priority == '1'"
+                                       decoration-warning="priority == '2'"
+                                       decoration-info="priority == '3'"
+                                       decoration-success="priority == '4'"/>
+                                <field name="state" widget="badge" class="ml-2" readonly="1"
+                                       decoration-info="state == 'new'"
+                                       decoration-warning="state in ('assigned', 'pending')"
+                                       decoration-primary="state == 'in_progress'"
+                                       decoration-success="state == 'resolved'"
+                                       decoration-muted="state == 'closed'"/>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <!-- Left Main Info & Tabs Area (8 Cols) -->
+                            <div class="col-md-8">
+                                <div class="card p-3 mb-4 bg-white border rounded">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Requester</span>
+                                            <field name="requester_id" font-weight="bold"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Engineer</span>
+                                            <field name="engineer_id"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Department / Location</span>
+                                            <field name="location_id"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Tanggal Create Ticket</span>
+                                            <field name="created_date" readonly="1" class="font-weight-bold"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Batas Konfirmasi Helpdesk (Response SLA)</span>
+                                            <field name="sla_response_deadline" readonly="1" class="text-warning font-weight-bold"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Tanggal Start Progress</span>
+                                            <field name="start_progress_date" readonly="1" class="text-primary font-weight-bold"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Due Date (Batas SLA)</span>
+                                            <field name="sla_resolution_deadline" readonly="1" class="text-danger font-weight-bold"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Status SLA</span>
+                                            <field name="sla_status_label" widget="badge" readonly="1"
+                                                   decoration-success="sla_status_label == 'on_track'"
+                                                   decoration-warning="sla_status_label == 'warning'"
+                                                   decoration-danger="sla_status_label in ('critical', 'breached')"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Phone</span>
+                                            <field name="phone"/>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <span class="text-muted d-block">Email</span>
+                                            <field name="email"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <field name="is_engineer_or_officer" invisible="1"/>
+                                <notebook>
+                                    <page string="Description" name="description">
+                                        <field name="description" placeholder="Deskripsi lengkap masalah..."/>
+                                    </page>
+                                     <page string="Penyelesaian &amp; Bukti Solusi (Engineer)" name="resolution_proof" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
+                                         <div class="card p-3 mb-3 border rounded bg-light">
+                                             <span class="font-weight-bold d-block text-primary mb-2">Apakah Penyelesaian Tersedia pada Knowledge Base?</span>
+                                             <field name="is_kb_solution_available" widget="radio" options="{'horizontal': true}"/>
+                                         </div>
+                                         <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('is_kb_solution_available', '!=', 'yes')]}">
+                                             <label for="selected_knowledge_id" string="Pilih Artikel Knowledge Base Penyelesaian" class="font-weight-bold mb-2 text-success"/>
+                                             <field name="selected_knowledge_id" options="{'no_create': True}" placeholder="Pilih dari daftar Kamus Knowledge Base..."/>
+                                         </div>
+                                         <div attrs="{'invisible': [('is_kb_solution_available', '=', 'yes')]}">
+                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm d-flex justify-content-between align-items-center flex-row">
+                                                 <div>
+                                                     <span class="font-weight-bold d-block text-dark">Publikasikan ke Knowledge Base?</span>
+                                                     <span class="text-muted small">Aktifkan untuk menyimpan teks tutorial &amp; foto bukti penyelesaian ini ke Kamus Solusi Mandiri saat tiket selesai</span>
+                                                 </div>
+                                                 <div>
+                                                     <field name="is_published_to_kb" widget="boolean_toggle"/>
+                                                 </div>
+                                             </div>
+                                             <div class="card p-3 mb-3 border rounded bg-light">
+                                                 <span class="font-weight-bold d-block text-primary mb-2">Pilih Format Jenis Solusi:</span>
+                                                 <field name="solution_type" widget="radio" options="{'horizontal': true}"/>
+                                             </div>
+                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('solution_type', '=', 'images')]}">
+                                                 <label for="resolution" string="Langkah-Langkah / Teks Panduan Penyelesaian Kendala (Tutorial)" class="font-weight-bold mb-2 text-primary"/>
+                                                 <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
+                                             </div>
+                                             <div class="card p-3 border rounded bg-white shadow-sm mt-3" attrs="{'invisible': [('solution_type', '=', 'text')]}">
+                                                 <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary"/>
+                                                 <field name="solution_attachment_ids" widget="many2many_binary"/>
+                                             </div>
+                                         </div>
+                                     </page>
+                                    <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
+                                        <group>
+                                            <group>
+                                                <field name="expected_result"/>
+                                                <field name="excel_link" widget="url"/>
+                                                <field name="registration_no"/>
+                                            </group>
+                                            <group>
+                                                <field name="followup_date_it"/>
+                                                <field name="notes_it"/>
+                                            </group>
+                                        </group>
+                                    </page>
+                                    <page string="Work Log" name="work_log">
+                                        <group>
+                                            <field name="progress_percent" widget="progressbar"/>
+                                            <field name="team_id"/>
+                                        </group>
+                                    </page>
+                                    <page string="Communication" name="communication">
+                                        <div class="oe_chatter">
+                                            <field name="message_follower_ids"/>
+                                            <field name="activity_ids"/>
+                                            <field name="message_ids"/>
+                                        </div>
+                                    </page>
+                                    <page string="Attachment" name="attachment">
+                                        <field name="attachment_ids" widget="many2many_binary"/>
+                                    </page>
+                                    <page string="History" name="history">
+                                        <field name="message_ids" readonly="1" nolabel="1">
+                                            <tree>
+                                                <field name="date"/>
+                                                <field name="author_id"/>
+                                                <field name="subject"/>
+                                            </tree>
+                                        </field>
+                                    </page>
+                                </notebook>
+                            </div>
+
+                            <!-- Right Side Information Card (4 Cols) -->
+                            <div class="col-md-4">
+                                <div class="card p-3 mb-3 bg-light border rounded">
+                                    <h5 class="font-weight-bold mb-3">Information</h5>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Priority</span>
+                                        <field name="priority_label" readonly="1" font-weight="bold"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Service</span>
+                                        <field name="service_id"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Category</span>
+                                        <field name="category_id"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Sub Category</span>
+                                        <field name="subcategory_id"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
+                                        <span class="text-muted">Impact</span>
+                                        <field name="impact_level" readonly="1"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
+                                        <span class="text-muted">Urgency</span>
+                                        <field name="urgency_level" readonly="1"/>
+                                    </div>
+                                </div>
+
+                                <div class="card p-3 bg-light border rounded">
+                                    <h5 class="font-weight-bold mb-3">Attachments</h5>
+                                    <field name="attachment_ids" widget="many2many_binary" string="Files"/>
+                                </div>
+                            </div>
+                        </div>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Kanban -->
+        <record id="view_helpdesk_ticket_kanban" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.kanban</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="state" class="o_kanban_small_column">
+                    <field name="name"/>
+                    <field name="title"/>
+                    <field name="priority"/>
+                    <field name="engineer_id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                    </div>
+                                    <field name="priority" widget="badge"
+                                           decoration-danger="priority == '1'"
+                                           decoration-warning="priority == '2'"
+                                           decoration-info="priority == '3'"
+                                           decoration-success="priority == '4'"/>
+                                </div>
+                                <div><field name="title"/></div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="engineer_id" widget="many2one_avatar_user"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_ticket" model="ir.actions.act_window">
+            <field name="name">All Tickets</field>
+            <field name="res_model">helpdesk.ticket</field>
+            <field name="view_mode">tree,kanban,form</field>
+            <field name="search_view_id" ref="view_helpdesk_ticket_search"/>
+        </record>
+
+        <!-- Field-level restriction (Stage 10): Employee tidak bisa ubah engineer_id/state
+             manual. Field digandakan dengan atribut groups yang saling eksklusif (pola
+             standar Odoo); hanya salah satu yang benar-benar dirender untuk user tertentu. -->
+        <record id="view_helpdesk_ticket_form_field_security" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.form.field.security</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="inherit_id" ref="view_helpdesk_ticket_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header/field[@name='state']" position="replace">
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,open,in_progress,done,closed"
+                           groups="it_helpdesk_v2.group_helpdesk_agent"/>
+                    <field name="state" widget="statusbar" readonly="1"
+                           statusbar_visible="draft,open,in_progress,done,closed"
+                           groups="!it_helpdesk_v2.group_helpdesk_agent"/>
+                </xpath>
+                <xpath expr="//field[@name='engineer_id']" position="replace">
+                    <field name="engineer_id" groups="it_helpdesk_v2.group_helpdesk_agent"/>
+                    <field name="engineer_id" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_agent"/>
+                </xpath>
+                <xpath expr="//button[@name='action_publish']" position="attributes">
+                    <attribute name="class">btn-primary</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Mass Action: Close Selected Tickets (Tutup Tiket Sekaligus) -->
+        <record id="action_server_mass_close_tickets" model="ir.actions.server">
+            <field name="name">Close Selected Tickets (Tutup Tiket Sekaligus)</field>
+            <field name="model_id" ref="model_helpdesk_ticket"/>
+            <field name="binding_model_id" ref="model_helpdesk_ticket"/>
+            <field name="binding_view_types">list</field>
+            <field name="state">code</field>
+            <field name="code"><![CDATA[
+now_dt = datetime.datetime.now()
+for ticket in records:
+    if ticket.state not in ('closed', 'cancelled', 'reject'):
+        vals = {
+            'state': 'closed',
+            'resolved_date': ticket.resolved_date or now_dt,
+            'closed_date': now_dt
+        }
+        if not ticket.resolution:
+            vals['resolution'] = '<p><em>[Sistem Data Impor] Tiket historis yang diimpor dari data lama dan ditutup secara massal.</em></p>'
+        ticket.write(vals)
+        ticket.message_post(body="Tiket ditutup secara massal (Penyelesaian Otomatis Data Impor).")
+]]></field>
+        </record>
+
+    </data>
+</odoo>

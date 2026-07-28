@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <record id="seq_it_helpdesk_incident" model="ir.sequence">
+            <field name="name">IT Helpdesk Incident</field>
+            <field name="code">it.helpdesk.incident</field>
+            <field name="prefix">INC-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="seq_it_helpdesk_service_request" model="ir.sequence">
+            <field name="name">IT Helpdesk Service Request</field>
+            <field name="code">it.helpdesk.service.request</field>
+            <field name="prefix">SR-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="seq_it_helpdesk_work_order" model="ir.sequence">
+            <field name="name">IT Helpdesk Work Order</field>
+            <field name="code">it.helpdesk.work.order</field>
+            <field name="prefix">WO-%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <!-- use_date_range=True: Odoo otomatis membuat sub-counter baru tiap
+             pergantian tanggal, jadi nomor urut CR reset ke 1 tiap hari
+             (sesuai keputusan user), tanpa perlu logic tanggal manual. -->
+        <record id="seq_it_helpdesk_change_request" model="ir.sequence">
+            <field name="name">IT Helpdesk Change Request</field>
+            <field name="code">it.helpdesk.change.request</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="use_date_range" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

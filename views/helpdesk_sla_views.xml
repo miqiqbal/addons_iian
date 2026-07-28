@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_sla_list" model="ir.ui.view">
+            <field name="name">helpdesk.sla.list</field>
+            <field name="model">helpdesk.sla</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="priority"/>
+                    <field name="label"/>
+                    <field name="response_time_value"/>
+                    <field name="response_time_unit"/>
+                    <field name="resolution_time_value"/>
+                    <field name="resolution_time_unit"/>
+                    <field name="warning_percent"/>
+                    <field name="critical_percent"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                    <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_sla_form" model="ir.ui.view">
+            <field name="name">helpdesk.sla.form</field>
+            <field name="model">helpdesk.sla</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="priority"/>
+                                <field name="label"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="update_frequency_text"/>
+                            </group>
+                        </group>
+                        <group string="Response">
+                            <field name="response_time_value"/>
+                            <field name="response_time_unit"/>
+                        </group>
+                        <group string="Resolution">
+                            <field name="resolution_time_value"/>
+                            <field name="resolution_time_unit"/>
+                        </group>
+                        <group string="Status Thresholds &amp; Alert">
+                            <field name="warning_percent"/>
+                            <field name="critical_percent"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_sla" model="ir.actions.act_window">
+            <field name="name">SLA Policy</field>
+            <field name="res_model">helpdesk.sla</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Dashboard Read-Only Tree View for SLA (Klik Baris Langsung Buka Case Tiket) -->
+        <record id="view_helpdesk_sla_tree_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.sla.tree.dashboard</field>
+            <field name="model">helpdesk.sla</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false" delete="false" js_class="helpdesk_drilldown_list">
+                    <field name="priority" string="Kode Prioritas"/>
+                    <field name="label" string="Tingkat Prioritas"/>
+                    <field name="response_time_value" string="Target Respon"/>
+                    <field name="response_time_unit" string="Satuan Respon"/>
+                    <field name="resolution_time_value" string="Target Solusi"/>
+                    <field name="resolution_time_unit" string="Satuan Solusi"/>
+                    <field name="ticket_count" string="Jumlah Case Tiket"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_sla_form_dashboard" model="ir.ui.view">
+            <field name="name">helpdesk.sla.form.dashboard</field>
+            <field name="model">helpdesk.sla</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false" delete="false">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_tickets" type="object" class="oe_stat_button" icon="fa-ticket">
+                                <field name="ticket_count" widget="statinfo" string="Case Tiket"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <h1><field name="label" readonly="1"/></h1>
+                        </div>
+                        <group>
+                            <field name="priority" readonly="1"/>
+                            <field name="response_time_value" readonly="1"/>
+                            <field name="response_time_unit" readonly="1"/>
+                            <field name="resolution_time_value" readonly="1"/>
+                            <field name="resolution_time_unit" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_sla_dashboard" model="ir.actions.act_window">
+            <field name="name">Daftar Jenis Prioritas SLA (Klik Baris untuk Lihat Case Tiket)</field>
+            <field name="res_model">helpdesk.sla</field>
+            <field name="view_mode">tree,form</field>
+            <field name="views" eval="[(ref('view_helpdesk_sla_tree_dashboard'), 'tree'), (ref('view_helpdesk_sla_form_dashboard'), 'form')]"/>
+        </record>
+
+    </data>
+</odoo>

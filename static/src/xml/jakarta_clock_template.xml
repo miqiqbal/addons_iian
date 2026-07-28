@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="it_helpdesk_v2.JakartaClock">
+        <li class="o_jakarta_clock_item d-none d-md-flex align-items-center mr-3 px-2 py-1 rounded" style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 12px; color: #ffffff;">
+            <i class="fa fa-clock-o mr-2" style="color: #28a745; font-size: 14px;"/>
+            <span id="o_jakarta_clock_val" style="font-weight: 600; letter-spacing: 0.3px;">--:--:-- WIB</span>
+        </li>
+    </t>
+
+</templates>

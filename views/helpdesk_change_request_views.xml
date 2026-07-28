@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_change_request_list" model="ir.ui.view">
+            <field name="name">helpdesk.change.request.list</field>
+            <field name="model">helpdesk.change.request</field>
+            <field name="arch" type="xml">
+                <tree string="Change Request">
+                    <field name="code"/>
+                    <field name="request_identification"/>
+                    <field name="category"/>
+                    <field name="department_id" string="Departemen"/>
+                    <field name="dept_manager_id" string="Manager Dept"/>
+                    <field name="manager_it_id" string="Manager IT"/>
+                    <field name="engineer_id" string="Engineer"/>
+                    <field name="state" widget="badge"
+                           decoration-muted="state == 'draft'"
+                           decoration-warning="state in ('dept_approval', 'it_approval')"
+                           decoration-info="state == 'in_progress'"
+                           decoration-success="state in ('done', 'closed')"
+                           decoration-danger="state == 'rejected'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_change_request_form" model="ir.ui.view">
+            <field name="name">helpdesk.change.request.form</field>
+            <field name="model">helpdesk.change.request</field>
+            <field name="arch" type="xml">
+                <form string="Change Request">
+                    <header>
+                        <button name="action_publish" string="Publish" type="object" class="btn-primary font-weight-bold" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="action_approve_dept" string="Approve (Manager Dept)" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'dept_approval')]}"/>
+                        <button name="action_approve_it" string="Approve (Manager IT)" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'it_approval')]}"/>
+                        <button name="action_done" string="Mark as Done" type="object" class="btn-success" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
+                        <button name="action_close" string="Close CR" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': [('state', 'in', ['closed', 'rejected'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_approval,it_approval,in_progress,done,closed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title mb-3">
+                            <span class="text-muted small d-block">No. CR</span>
+                            <h1 class="font-weight-bold text-dark mb-0">
+                                <field name="code" readonly="1"/>
+                            </h1>
+                        </div>
+
+                        <!-- Request Identification Field Box -->
+                        <div class="card p-3 mb-4 border rounded bg-white shadow-sm">
+                            <label for="request_identification" string="Request Identification" class="font-weight-bold mb-2"/>
+                            <field name="request_identification" placeholder="Jelaskan kebutuhan pengajuan perubahan dokumen / sistem secara rinci..."/>
+                        </div>
+
+                        <!-- 2-Column Split Input Area -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <group string="Detail Pengajuan &amp; Kategori">
+                                    <field name="category" string="Kategori"/>
+                                    <field name="module" string="Module" placeholder="Misal: Purchasing, Invoice, BAP..."/>
+                                    <field name="impact_on" string="Impact On"/>
+                                </group>
+                                <group string="Hierarki Approval &amp; Eksekutor">
+                                    <field name="department_id" string="Departemen Terkait" options="{'no_create': True}"/>
+                                    <field name="dept_manager_id" string="Manager Departemen [Terkait]" options="{'no_create': True}"/>
+                                    <field name="manager_it_id" string="Manager IT" options="{'no_create': True}"/>
+                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True}"/>
+                                </group>
+                            </div>
+                            <div class="col-md-6">
+                                <group string="Kontak Pelapor &amp; Catatan">
+                                    <field name="created_by" string="Dibuat Oleh" readonly="1"/>
+                                    <field name="email" string="E-Mail" placeholder="user@hki.co.id"/>
+                                    <field name="phone" string="Phone" placeholder="0812-XXXX-XXXX"/>
+                                    <field name="note" string="Catatan"/>
+                                    <field name="rejection_reason" string="Alasan Penolakan" attrs="{'invisible': [('state', '!=', 'rejected')]}"/>
+                                </group>
+                            </div>
+                        </div>
+
+                        <!-- Tabs: Attachment, Analysis & Solution, Propose Solution -->
+                        <notebook class="mt-4">
+                            <page string="ATTACHMENT" name="attachment">
+                                <div class="p-2">
+                                    <field name="attachment_ids" widget="many2many_binary"/>
+                                </div>
+                            </page>
+                            <page string="ANALYSIS AND SOLUTION" name="analysis_solution">
+                                <div class="p-2">
+                                    <field name="analysis_and_solution" placeholder="Hasil analisa dan solusi teknis..."/>
+                                </div>
+                            </page>
+                            <page string="PROPOSE SOLUTION" name="propose_solution">
+                                <div class="p-2">
+                                    <field name="propose_solution" placeholder="Rekomendasi solusi yang diajukan..."/>
+                                </div>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_change_request" model="ir.actions.act_window">
+            <field name="name">Change Request</field>
+            <field name="res_model">helpdesk.change.request</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record id="action_helpdesk_assigned_cr_to_me" model="ir.actions.act_window">
+            <field name="name">Assigned CR to Me</field>
+            <field name="res_model">helpdesk.change.request</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('engineer_id', '=', uid)]</field>
+        </record>
+
+    </data>
+</odoo>

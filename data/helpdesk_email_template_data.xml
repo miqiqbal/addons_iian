@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- 1. Template Email Notifikasi Penugasan Tiket ke Engineer -->
+        <record id="email_template_helpdesk_engineer_assigned" model="mail.template">
+            <field name="name">IT Helpdesk: Notifikasi Penugasan Tiket Engineer</field>
+            <field name="model_id" ref="model_helpdesk_ticket"/>
+            <field name="subject">[(IT Helpdesk) Tiket Baru Di-assign] ${object.name} - ${object.title}</field>
+            <field name="email_from">${object.company_id.email or object.user_id.email or 'noreply@hki.co.id'}</field>
+            <field name="email_to">${object.engineer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+                        Halo ${object.engineer_id.name or 'Engineer'},
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Anda telah ditugaskan untuk menangani tiket IT Helpdesk baru dengan rincian sebagai berikut:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. Tiket</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.title}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Pelapor (Requester)</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.requester_id.name} (${object.department_id.name or '-'})</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Layanan / Kategori</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.service_id.name or '-'} / ${object.category_id.name or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Prioritas</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.priority_label or object.priority or '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Batas Waktu (Due Date)</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;">${object.sla_resolution_deadline or '-'}</td>
+                        </tr>
+                    </table>
+                    <p style="margin-top: 15px;">
+                        Mohon segera menindaklanjuti tiket ini melalui portal IT Helpdesk.
+                    </p>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.ticket&amp;view_type=form"
+                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Buka Tiket di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- 2. Template Email Warning SLA 80% (Peringatan Mendekati Due Date) -->
+        <record id="email_template_helpdesk_sla_warning" model="mail.template">
+            <field name="name">IT Helpdesk: Peringatan SLA 80% Mendekati Due Date</field>
+            <field name="model_id" ref="model_helpdesk_ticket"/>
+            <field name="subject">[PERINGATAN SLA 80%] Tiket ${object.name} Mendekati Due Date!</field>
+            <field name="email_from">${object.company_id.email or object.user_id.email or 'noreply@hki.co.id'}</field>
+            <field name="email_to">${object.engineer_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #d9534f;">
+                        ⚠️ PERINGATAN SLA 80% - TIKET MENDEKATI DUE DATE
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Halo <b>${object.engineer_id.name or 'Engineer'}</b>, tiket berikut telah mengonsumsi <b>≥80% dari batas waktu SLA</b> yang ditentukan:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #fff3cd;">
+                            <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold; width: 30%;">No. Tiket</td>
+                            <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold; color: #856404;">${object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.title}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Pelapor (Requester)</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.requester_id.name} (${object.department_id.name or '-'})</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Status Pengerjaan</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; color: #0275d8;">${object.state}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Batas Waktu (Due Date)</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;">${object.sla_resolution_deadline or '-'}</td>
+                        </tr>
+                    </table>
+                    <p style="margin-top: 15px; color: #856404; font-weight: bold;">
+                        Mohon diprioritaskan dan segera diselesaikan sebelum batas waktu SLA terlampaui (SLA Breached).
+                    </p>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.ticket&amp;view_type=form"
+                           style="background-color: #d9534f; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Segera Memproses Tiket di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email peringatan ini dikirim 1 kali secara otomatis saat SLA mencapai 80%.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_ticket_create_form" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.create.form</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="arch" type="xml">
+                <form string="Create Ticket">
+                    <header>
+                        <button name="action_publish" string="Publish" type="object" class="btn-primary font-weight-bold" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
+                        <button name="action_assign_engineer" string="Assign / Eskalasi ke Engineer" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+                        <button name="action_start_progress" string="Start Progress" type="object" class="btn-primary font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['open', 'assigned'])]}"/>
+                        <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
+                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_reject" string="Reject Ticket" type="object" class="btn-danger" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>
+                    </header>
+                    <sheet>
+                        <field name="requester_id" invisible="1"/>
+
+                        <div class="row">
+                            <!-- Form Inputs (8 Columns) -->
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <group string="Informasi Tiket">
+                                            <field name="title" string="Judul Kendala" placeholder="Misal: Microphone tidak terdeteksi di laptop"/>
+                                            <field name="ticket_type" string="Ticket Type"/>
+                                            <field name="service_id" string="Service" options="{'no_create': True}"/>
+                                            <field name="category_id" string="Category" options="{'no_create': True}"/>
+                                            <field name="subcategory_id" string="Sub Category" options="{'no_create': True}"/>
+                                            <field name="priority" string="Priority Score" readonly="1" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
+                                        </group>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <group string="Lokasi &amp; Kontak">
+                                            <field name="location_id" string="Department / Location" options="{'no_create': True}"/>
+                                            <field name="phone" string="Phone" placeholder="0812-1234-5678"/>
+                                            <field name="email" string="Email" placeholder="ahmad.fauzi@hki.co.id"/>
+                                            <field name="cc_partner_ids" string="Cc" widget="many2many_tags" placeholder="Pilih user untuk CC"/>
+                                        </group>
+                                        <group string="Waktu Tiket &amp; SLA Target">
+                                            <field name="created_date" string="Tanggal Create Ticket" readonly="1"/>
+                                            <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" class="text-warning font-weight-bold" attrs="{'invisible': [('sla_response_deadline', '=', False)]}"/>
+                                            <field name="start_progress_date" string="Tanggal Start Progress" readonly="1" attrs="{'invisible': [('start_progress_date', '=', False)]}"/>
+                                            <field name="sla_resolution_deadline" string="Tanggal Due Date (SLA)" readonly="1" class="text-danger font-weight-bold" attrs="{'invisible': [('sla_resolution_deadline', '=', False)]}"/>
+                                            <field name="sla_status_label" string="Status SLA" widget="badge" readonly="1"
+                                                   decoration-success="sla_status_label == 'on_track'"
+                                                   decoration-warning="sla_status_label == 'warning'"
+                                                   decoration-danger="sla_status_label in ('critical', 'breached')"
+                                                   attrs="{'invisible': [('sla_resolution_deadline', '=', False)]}"/>
+                                        </group>
+                                        <group string="Attachment">
+                                            <field name="attachment_ids" widget="many2many_binary" nolabel="1"/>
+                                        </group>
+                                    </div>
+                                </div>
+
+                                <!-- 5 Pertanyaan Penentu Prioritas (Dapat Diisi Oleh Semua User) -->
+                                <group string="Penentu Prioritas (5 Pertanyaan)">
+                                    <field name="q1_answer_id" string="1. Siapa yang terdampak?" options="{'no_create': True}"/>
+                                    <field name="q2_answer_id" string="2. Apakah mengganggu operasional?" options="{'no_create': True}"/>
+                                    <field name="q3_answer_id" string="3. Layanan yang terdampak?" options="{'no_create': True}"/>
+                                    <field name="q4_answer_id" string="4. Apakah ada workaround?" options="{'no_create': True}"/>
+                                    <field name="q5_answer_id" string="5. Apakah terkait deadline proyek/pekerjaan?" options="{'no_create': True}"/>
+                                </group>
+
+                                 <field name="is_engineer_or_officer" invisible="1"/>
+                                 <notebook class="mt-4">
+                                       <page string="Penyelesaian &amp; Bukti Solusi (Engineer)" name="resolution_proof" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
+                                           <div class="card p-3 mb-3 border rounded bg-light">
+                                               <span class="font-weight-bold d-block text-primary mb-2">Apakah Penyelesaian Tersedia pada Knowledge Base?</span>
+                                               <field name="is_kb_solution_available" widget="radio" options="{'horizontal': true}"/>
+                                           </div>
+                                           <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('is_kb_solution_available', '!=', 'yes')]}">
+                                               <label for="selected_knowledge_id" string="Pilih Artikel Knowledge Base Penyelesaian" class="font-weight-bold mb-2 text-success"/>
+                                               <field name="selected_knowledge_id" options="{'no_create': True}" placeholder="Pilih dari daftar Kamus Knowledge Base..."/>
+                                           </div>
+                                           <div attrs="{'invisible': [('is_kb_solution_available', '=', 'yes')]}">
+                                               <div class="card p-3 mb-3 border rounded bg-white shadow-sm d-flex justify-content-between align-items-center flex-row">
+                                                   <div>
+                                                       <span class="font-weight-bold d-block text-dark">Publikasikan ke Knowledge Base?</span>
+                                                       <span class="text-muted small">Aktifkan untuk menyimpan teks tutorial &amp; foto bukti penyelesaian ini ke Kamus Solusi Mandiri saat tiket selesai</span>
+                                                   </div>
+                                                   <div>
+                                                       <field name="is_published_to_kb" widget="boolean_toggle"/>
+                                                   </div>
+                                               </div>
+                                               <div class="card p-3 mb-3 border rounded bg-light">
+                                                   <span class="font-weight-bold d-block text-primary mb-2">Pilih Format Jenis Solusi:</span>
+                                                   <field name="solution_type" widget="radio" options="{'horizontal': true}"/>
+                                               </div>
+                                               <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('solution_type', '=', 'images')]}">
+                                                   <label for="resolution" string="Langkah-Langkah / Teks Panduan Penyelesaian Kendala (Tutorial)" class="font-weight-bold mb-2 text-primary"/>
+                                                   <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
+                                               </div>
+                                               <div class="card p-3 border rounded bg-white shadow-sm mt-3" attrs="{'invisible': [('solution_type', '=', 'text')]}">
+                                                   <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary"/>
+                                                   <field name="solution_attachment_ids" widget="many2many_binary"/>
+                                               </div>
+                                           </div>
+                                       </page>
+                                    <page string="Description" name="description">
+                                        <field name="description" placeholder="Jelaskan permasalahan secara detail..."/>
+                                    </page>
+                                </notebook>
+                            </div>
+
+                            <!-- Right Side Guide Box (4 Columns) -->
+                            <div class="col-md-4">
+                                <div class="card p-3 mb-3 bg-light border rounded">
+                                    <h5 class="font-weight-bold mb-2">💡 Panduan</h5>
+                                    <ul class="pl-3 text-muted small mb-0">
+                                        <li class="mb-1">Pastikan informasi yang Anda berikan sudah benar.</li>
+                                        <li>Ticket akan ditangani sesuai prioritas.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="card p-3 bg-light border rounded">
+                                    <h5 class="font-weight-bold mb-2">📎 Contoh Lampiran</h5>
+                                    <ul class="pl-3 text-muted small mb-0">
+                                        <li class="mb-1">Screenshot error</li>
+                                        <li class="mb-1">Log aplikasi / sistem</li>
+                                        <li>Dokumen pendukung lainnya</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_create_ticket" model="ir.actions.act_window">
+            <field name="name">Create Ticket</field>
+            <field name="res_model">helpdesk.ticket</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_helpdesk_ticket_create_form"/>
+            <field name="target">current</field>
+            <field name="context">{'default_ticket_type': 'incident'}</field>
+        </record>
+
+    </data>
+</odoo>

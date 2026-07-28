@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_keyword_tree" model="ir.ui.view">
+            <field name="name">helpdesk.keyword.tree</field>
+            <field name="model">helpdesk.keyword</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="service_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="subcategory_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="keyword_list"/>
+                    <field name="engineer_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_keyword" model="ir.actions.act_window">
+            <field name="name">Keyword Routing Rules</field>
+            <field name="res_model">helpdesk.keyword</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+    </data>
+</odoo>

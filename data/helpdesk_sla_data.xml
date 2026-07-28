@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <record id="helpdesk_sla_p1" model="helpdesk.sla">
+            <field name="priority">1</field>
+            <field name="label">Critical</field>
+            <field name="response_time_value">15</field>
+            <field name="response_time_unit">minute</field>
+            <field name="update_frequency_text">Setiap 1 jam</field>
+            <field name="resolution_time_value">4</field>
+            <field name="resolution_time_unit">hour</field>
+        </record>
+
+        <record id="helpdesk_sla_p2" model="helpdesk.sla">
+            <field name="priority">2</field>
+            <field name="label">High</field>
+            <field name="response_time_value">30</field>
+            <field name="response_time_unit">minute</field>
+            <field name="update_frequency_text">Setiap 4 jam</field>
+            <field name="resolution_time_value">8</field>
+            <field name="resolution_time_unit">working_hour</field>
+        </record>
+
+        <record id="helpdesk_sla_p3" model="helpdesk.sla">
+            <field name="priority">3</field>
+            <field name="label">Medium</field>
+            <field name="response_time_value">4</field>
+            <field name="response_time_unit">working_hour</field>
+            <field name="update_frequency_text">Harian</field>
+            <field name="resolution_time_value">3</field>
+            <field name="resolution_time_unit">working_day</field>
+        </record>
+
+        <record id="helpdesk_sla_p4" model="helpdesk.sla">
+            <field name="priority">4</field>
+            <field name="label">Low</field>
+            <field name="response_time_value">1</field>
+            <field name="response_time_unit">working_day</field>
+            <field name="update_frequency_text">Sesuai kebutuhan</field>
+            <field name="resolution_time_value">5</field>
+            <field name="resolution_time_unit">working_day</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Report Tickets: group by state x service_id -->
+        <record id="view_helpdesk_report_tickets_pivot" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.pivot.tickets</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <pivot string="Report Tickets">
+                    <field name="state" type="row"/>
+                    <field name="service_id" type="col"/>
+                    <field name="ticket_count" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_report_tickets_graph" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.graph.tickets</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <graph string="Report Tickets" type="bar">
+                    <field name="state"/>
+                    <field name="service_id"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_report_tickets" model="ir.actions.act_window">
+            <field name="name">Report Tickets</field>
+            <field name="res_model">helpdesk.ticket.report</field>
+            <field name="view_mode">pivot,graph</field>
+        </record>
+
+        <record id="action_helpdesk_report_tickets_view_pivot" model="ir.actions.act_window.view">
+            <field name="sequence" eval="1"/>
+            <field name="view_mode">pivot</field>
+            <field name="view_id" ref="view_helpdesk_report_tickets_pivot"/>
+            <field name="act_window_id" ref="action_helpdesk_report_tickets"/>
+        </record>
+        <record id="action_helpdesk_report_tickets_view_graph" model="ir.actions.act_window.view">
+            <field name="sequence" eval="2"/>
+            <field name="view_mode">graph</field>
+            <field name="view_id" ref="view_helpdesk_report_tickets_graph"/>
+            <field name="act_window_id" ref="action_helpdesk_report_tickets"/>
+        </record>
+
+        <!-- SLA Analytic: filter breached, group by priority x engineer -->
+        <record id="view_helpdesk_sla_analytic_search" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.search.sla</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <search>
+                    <filter string="Breached" name="filter_breached"
+                            domain="[('sla_resolution_breached', '=', True)]"/>
+                    <filter string="Not Breached" name="filter_not_breached"
+                            domain="[('sla_resolution_breached', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>
+                        <filter string="Engineer" name="group_engineer" context="{'group_by': 'engineer_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_sla_analytic_pivot" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.pivot.sla</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <pivot string="SLA Analytic">
+                    <field name="priority" type="row"/>
+                    <field name="engineer_id" type="row"/>
+                    <field name="ticket_count" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_sla_analytic_graph" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.graph.sla</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <graph string="SLA Analytic" type="bar">
+                    <field name="priority"/>
+                    <field name="engineer_id"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_sla_analytic" model="ir.actions.act_window">
+            <field name="name">SLA Analytic</field>
+            <field name="res_model">helpdesk.ticket.report</field>
+            <field name="view_mode">pivot,graph</field>
+            <field name="search_view_id" ref="view_helpdesk_sla_analytic_search"/>
+        </record>
+
+        <record id="action_helpdesk_sla_analytic_view_pivot" model="ir.actions.act_window.view">
+            <field name="sequence" eval="1"/>
+            <field name="view_mode">pivot</field>
+            <field name="view_id" ref="view_helpdesk_sla_analytic_pivot"/>
+            <field name="act_window_id" ref="action_helpdesk_sla_analytic"/>
+        </record>
+        <record id="action_helpdesk_sla_analytic_view_graph" model="ir.actions.act_window.view">
+            <field name="sequence" eval="2"/>
+            <field name="view_mode">graph</field>
+            <field name="view_id" ref="view_helpdesk_sla_analytic_graph"/>
+            <field name="act_window_id" ref="action_helpdesk_sla_analytic"/>
+        </record>
+
+        <!-- Engineer Performance: group by engineer, measure count + avg durasi resolusi -->
+        <record id="view_helpdesk_engineer_performance_search" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.search.engineer</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <search>
+                    <filter string="Closed" name="filter_closed" domain="[('state', '=', 'closed')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Engineer" name="group_engineer" context="{'group_by': 'engineer_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_engineer_performance_pivot" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.pivot.engineer</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <pivot string="Engineer Performance">
+                    <field name="engineer_id" type="row"/>
+                    <field name="ticket_count" type="measure"/>
+                    <field name="resolution_duration_hours" type="measure"/>
+                </pivot>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_engineer_performance_graph" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.report.graph.engineer</field>
+            <field name="model">helpdesk.ticket.report</field>
+            <field name="arch" type="xml">
+                <graph string="Engineer Performance" type="bar">
+                    <field name="engineer_id"/>
+                    <field name="resolution_duration_hours" type="measure"/>
+                </graph>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_engineer_performance" model="ir.actions.act_window">
+            <field name="name">Engineer Performance</field>
+            <field name="res_model">helpdesk.ticket.report</field>
+            <field name="view_mode">pivot,graph</field>
+            <field name="search_view_id" ref="view_helpdesk_engineer_performance_search"/>
+            <field name="context">{'search_default_filter_closed': 1}</field>
+        </record>
+
+        <record id="action_helpdesk_engineer_performance_view_pivot" model="ir.actions.act_window.view">
+            <field name="sequence" eval="1"/>
+            <field name="view_mode">pivot</field>
+            <field name="view_id" ref="view_helpdesk_engineer_performance_pivot"/>
+            <field name="act_window_id" ref="action_helpdesk_engineer_performance"/>
+        </record>
+        <record id="action_helpdesk_engineer_performance_view_graph" model="ir.actions.act_window.view">
+            <field name="sequence" eval="2"/>
+            <field name="view_mode">graph</field>
+            <field name="view_id" ref="view_helpdesk_engineer_performance_graph"/>
+            <field name="act_window_id" ref="action_helpdesk_engineer_performance"/>
+        </record>
+
+    </data>
+</odoo>
