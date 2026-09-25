@@ -20,7 +20,19 @@ class HelpdeskDashboardKPI(models.TransientModel):
     ticket_closed = fields.Integer(string='Closed')
 
     @api.model
-    def action_get_filtered_tickets(self, filters=None, group_by_state=False):
+    def _parse_date_string(self, date_str):
+        if not date_str or date_str == 'all':
+            return None
+        date_str = str(date_str).strip()
+        if '/' in date_str:
+            parts = date_str.split('/')
+            if len(parts) == 3:
+                return f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+        return date_str
+
+    @api.model
+    def action_get_filtered_tickets(self, filters=None, state_filter=None, group_by_state=False):
+
         filters = filters or {}
         domain = []
 
@@ -30,6 +42,8 @@ class HelpdeskDashboardKPI(models.TransientModel):
         priority = filters.get('priority')
         engineer_id = filters.get('engineer_id')
         date_period = filters.get('date_period')
+        date_from = filters.get('date_from')
+        date_to = filters.get('date_to')
 
         if location_id and location_id != 'all':
             try:
@@ -54,6 +68,15 @@ class HelpdeskDashboardKPI(models.TransientModel):
             except (ValueError, TypeError):
                 pass
 
+        parsed_date_from = self._parse_date_string(date_from)
+        parsed_date_to = self._parse_date_string(date_to)
+
+        if parsed_date_from:
+            domain.append(('created_date', '>=', str(parsed_date_from) + ' 00:00:00'))
+        if parsed_date_to:
+            domain.append(('created_date', '<=', str(parsed_date_to) + ' 23:59:59'))
+
+
         today = fields.Date.today()
         if date_period == 'today':
             domain.append(('created_date', '>=', today.strftime('%Y-%m-%d 00:00:00')))
@@ -67,14 +90,53 @@ class HelpdeskDashboardKPI(models.TransientModel):
             start_of_year = today.replace(month=1, day=1)
             domain.append(('created_date', '>=', start_of_year.strftime('%Y-%m-%d 00:00:00')))
 
-        action = self.env["ir.actions.actions"]._for_xml_id("it_helpdesk_v2.action_helpdesk_ticket")
-        action['domain'] = domain
-        action['name'] = 'Case Tiket Terfilter'
-        if group_by_state:
-            ctx = dict(action.get('context') or {})
-            ctx['search_default_group_state'] = 1
-            action['context'] = ctx
-        return action
+        if state_filter and state_filter not in ('total', 'all', False):
+            domain.append(('state', '=', str(state_filter)))
+
+        state_names = {
+            'open': 'Tiket Open',
+            'assigned': 'Tiket Assigned',
+            'in_progress': 'Tiket Progress',
+            'done': 'Tiket Done',
+            'reject': 'Tiket Reject',
+            'closed': 'Tiket Closed',
+            'draft': 'Tiket Draft',
+        }
+        action_name = state_names.get(state_filter, 'Jumlah Total Ticket' if state_filter == 'all' else 'Daftar Tiket Terfilter')
+
+        return {
+            'domain': domain,
+            'name': action_name,
+        }
+
+
+
+
+    @api.model
+    def get_filtered_tickets_data(self, filters=None, state_filter=None):
+        res = self.action_get_filtered_tickets(filters, state_filter)
+        domain = res.get('domain', [])
+        tickets = self.env['helpdesk.ticket'].search_read(
+            domain,
+            ['id', 'name', 'title', 'service_id', 'requester_id', 'priority', 'state', 'engineer_id', 'created_date', 'sla_status_name', 'sla_status_color'],
+            limit=50,
+            order='created_date desc'
+        )
+        for t in tickets:
+            t['service_name'] = t['service_id'][1] if t['service_id'] else '-'
+            t['requester_name'] = t['requester_id'][1] if t['requester_id'] else '-'
+            t['engineer_name'] = t['engineer_id'][1] if t['engineer_id'] else '-'
+            t['created_date_str'] = str(t['created_date'])[:19] if t['created_date'] else '-'
+        return {
+            'tickets': tickets,
+            'count': len(tickets),
+            'name': res.get('name', 'Daftar Tiket Terfilter'),
+        }
+
+
+
+
+
 
     @api.model
     def _compute_kpi_values(self):
@@ -112,21 +174,25 @@ class HelpdeskDashboardKPI(models.TransientModel):
     def action_open_all_tickets(self):
         action = self.env.ref('it_helpdesk_v2.action_helpdesk_ticket').sudo().read()[0]
         action['name'] = 'Semua Tiket'
+        action.pop('id', None)
         return action
 
     def action_open_services(self):
         action = self.env.ref('it_helpdesk_v2.action_helpdesk_service').sudo().read()[0]
         action['name'] = 'Daftar Service'
+        action.pop('id', None)
         return action
 
     def action_open_categories(self):
         action = self.env.ref('it_helpdesk_v2.action_helpdesk_category').sudo().read()[0]
         action['name'] = 'Daftar Kategori / Topik'
+        action.pop('id', None)
         return action
 
     def action_open_priorities(self):
         action = self.env.ref('it_helpdesk_v2.action_helpdesk_priority_matrix').sudo().read()[0]
         action['name'] = 'Matriks Prioritas'
+        action.pop('id', None)
         return action
 
     def action_open_departments(self):
@@ -134,6 +200,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
         if action:
             act = action.sudo().read()[0]
             act['name'] = 'Daftar Departemen / Proyek'
+            act.pop('id', None)
             return act
         return {
             'type': 'ir.actions.act_window',
@@ -146,7 +213,9 @@ class HelpdeskDashboardKPI(models.TransientModel):
         action = self.env.ref('it_helpdesk_v2.action_helpdesk_ticket').sudo().read()[0]
         action['domain'] = [('state', '=', state_val)]
         action['name'] = 'Tiket (%s)' % title
+        action.pop('id', None)
         return action
+
 
     def action_open_tickets_draft(self):
         return self._open_tickets_by_state('draft', 'Draft')
@@ -200,7 +269,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
             pass
 
     @api.model
-    def get_dashboard_analytics_data(self, date_period=None, location_id=None, service_id=None, category_id=None, priority=None, engineer_id=None):
+    def get_dashboard_analytics_data(self, date_period=None, location_id=None, service_id=None, category_id=None, priority=None, engineer_id=None, date_from=None, date_to=None):
         Ticket = self.env['helpdesk.ticket']
         Service = self.env['helpdesk.service']
         Category = self.env['helpdesk.category']
@@ -230,6 +299,15 @@ class HelpdeskDashboardKPI(models.TransientModel):
             except (ValueError, TypeError):
                 pass
 
+        parsed_date_from = self._parse_date_string(date_from)
+        parsed_date_to = self._parse_date_string(date_to)
+
+        if parsed_date_from:
+            domain.append(('created_date', '>=', str(parsed_date_from) + ' 00:00:00'))
+        if parsed_date_to:
+            domain.append(('created_date', '<=', str(parsed_date_to) + ' 23:59:59'))
+
+
         today = fields.Date.today()
         if date_period == 'today':
             domain.append(('created_date', '>=', today.strftime('%Y-%m-%d 00:00:00')))
@@ -243,20 +321,28 @@ class HelpdeskDashboardKPI(models.TransientModel):
             start_of_year = today.replace(month=1, day=1)
             domain.append(('created_date', '>=', start_of_year.strftime('%Y-%m-%d 00:00:00')))
 
-        tickets = Ticket.search(domain)
-        total_tickets_count = len(tickets)
 
-        # Locations options for filter
+        tickets = Ticket.search(domain)
         locations = Location.search_read([], ['id', 'name'])
+
+        all_tickets = tickets if (domain or date_period or location_id or service_id or category_id or priority or engineer_id) else Ticket.search([])
+        total_tickets_count = len(all_tickets)
+        open_count = sum(1 for t in all_tickets if t.state == 'open')
+        assigned_count = sum(1 for t in all_tickets if t.state == 'assigned')
+        progress_count = sum(1 for t in all_tickets if t.state == 'in_progress')
+        reject_count = sum(1 for t in all_tickets if t.state == 'reject')
+        done_count = sum(1 for t in all_tickets if t.state == 'done')
+        closed_count = sum(1 for t in all_tickets if t.state == 'closed')
 
         # Top KPI Cards
         top_kpis = {
-            'total_ticket': total_tickets_count if total_tickets_count > 0 else Ticket.search_count([]),
-            'total_service': Service.search_count([]),
-            'total_category': Category.search_count([]),
-            'total_location': Location.search_count([]),
-            'total_priority': 4,
-            'total_status': 6,
+            'total_ticket': total_tickets_count,
+            'open_ticket': open_count,
+            'assigned_ticket': assigned_count,
+            'progress_ticket': progress_count,
+            'reject_ticket': reject_count,
+            'done_ticket': done_count,
+            'closed_ticket': closed_count,
             'growth_rate': '12.5%',
         }
 
@@ -291,7 +377,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
         prio_total = sum(prio_counts.values()) or 1
         prio_data = []
         for p_code, name in priority_map.items():
-            count = prio_counts.get(p_code, 0)
+            count = prio_counts.get(p_code, 0)  
             pct = round((count / prio_total * 100), 1)
             prio_data.append({'code': p_code, 'name': name, 'count': count, 'pct': pct})
 
@@ -413,7 +499,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
                 'is_breached': t.sla_resolution_breached,
             })
 
-        # 2. Top 5 SLA Breached
+        # 2. Top 5 SLA Overdue
         breached_tickets = all_t.filtered(lambda t: t.sla_resolution_breached)[:5]
         top_sla_breached_data = []
         for t in breached_tickets:
@@ -436,10 +522,10 @@ class HelpdeskDashboardKPI(models.TransientModel):
         if not top_engineers:
             top_engineers = [{'name': 'Dimas S (Engineer)', 'resolved_count': 18}, {'name': 'Ahmad Fauzi', 'resolved_count': 14}, {'name': 'Budi Santoso', 'resolved_count': 11}]
 
-        # 4. Major Incidents (Open)
-        major_incidents_data = []
-        for t in all_t.filtered(lambda t: getattr(t, 'is_major_incident', False) and t.state not in ('closed', 'reject'))[:5]:
-            major_incidents_data.append({
+        # 4. Tiket Critical (P1) - Open
+        critical_open_data = []
+        for t in all_t.filtered(lambda t: t.priority == '1' and t.state not in ('closed', 'reject'))[:5]:
+            critical_open_data.append({
                 'id': t.id,
                 'name': t.name,
                 'title': t.title,
@@ -447,12 +533,16 @@ class HelpdeskDashboardKPI(models.TransientModel):
                 'engineer': t.engineer_id.name or 'Unassigned',
             })
 
-        # 5. Near SLA (<120 min)
+        # 5. Near SLA (<120 min or status warning/critical)
         near_sla_data = []
         now = fields.Datetime.now()
-        for t in all_t.filtered(lambda t: t.state in ('open', 'in_progress') and t.sla_resolution_deadline):
+        active_tickets = all_t.filtered(
+            lambda t: t.state in ('open', 'assigned', 'in_progress') and t.sla_resolution_deadline
+        )
+        for t in active_tickets:
             diff_min = (t.sla_resolution_deadline - now).total_seconds() / 60.0
-            if 0 < diff_min <= 120:
+            is_near = (0 < diff_min <= 120) or (getattr(t, 'sla_status_label', '') in ('warning', 'critical') and diff_min > 0)
+            if is_near:
                 near_sla_data.append({
                     'id': t.id,
                     'name': t.name,
@@ -460,6 +550,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
                     'mins_left': int(diff_min),
                     'engineer': t.engineer_id.name or 'Unassigned',
                 })
+        near_sla_data = sorted(near_sla_data, key=lambda x: x['mins_left'])[:5]
 
         # Filter Select Dropdowns Options
         services_list = Service.search_read([], ['id', 'name'])
@@ -519,7 +610,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
             'top_sla_breached': top_sla_breached_data,
             'top_engineers': top_engineers,
             'top_services': service_data[:5],
-            'major_incidents': major_incidents_data,
+            'critical_open_tickets': critical_open_data,
             'near_sla': near_sla_data,
             'last_updated': fields.Datetime.now().strftime('%d/%m/%Y %H:%M') + ' WIB',
         }

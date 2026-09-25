@@ -26,10 +26,27 @@
             <field name="category_id" ref="module_helpdesk_category"/>
             <field name="implied_ids" eval="[(4, ref('group_helpdesk_agent')), (4, ref('base.group_erp_manager'))]"/>
             <field name="comment">Akses penuh: semua tiket, pengguna &amp; peran, serta seluruh master data/konfigurasi.</field>
-            <field name="users" eval="[(4, ref('base.user_admin'))]"/>
         </record>
 
-        <!-- Record rules: helpdesk.ticket -->
+        <record id="group_helpdesk_it_manager" model="res.groups">
+            <field name="name">IT Manager</field>
+            <field name="category_id" ref="module_helpdesk_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_helpdesk_agent'))]"/>
+            <field name="comment">Peran khusus Manager IT untuk persetujuan (approval) Change Request &amp; pengawasan sistem.</field>
+        </record>
+
+
+
+        <record id="rule_helpdesk_ticket_base_user" model="ir.rule">
+            <field name="name">Helpdesk Ticket: Base User - akses tiket</field>
+            <field name="model_id" ref="model_helpdesk_ticket"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">0</field>
+        </record>
 
         <record id="rule_helpdesk_ticket_employee" model="ir.rule">
             <field name="name">Helpdesk Ticket: Employee - akses baca semua tiket</field>
@@ -66,14 +83,25 @@
 
         <!-- Record rules: helpdesk.work.order -->
 
-        <record id="rule_helpdesk_work_order_employee" model="ir.rule">
-            <field name="name">Helpdesk Work Order: Employee - work order pada tiket sendiri</field>
+        <record id="rule_helpdesk_work_order_base_user" model="ir.rule">
+            <field name="name">Helpdesk Work Order: Base User - akses penuh</field>
             <field name="model_id" ref="model_helpdesk_work_order"/>
-            <field name="domain_force">[('ticket_id.requester_id', '=', user.id)]</field>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <record id="rule_helpdesk_work_order_employee" model="ir.rule">
+            <field name="name">Helpdesk Work Order: Employee - akses baca semua work order</field>
+            <field name="model_id" ref="model_helpdesk_work_order"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
             <field name="groups" eval="[(4, ref('group_helpdesk_user'))]"/>
             <field name="perm_read">1</field>
-            <field name="perm_write">0</field>
-            <field name="perm_create">0</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
             <field name="perm_unlink">0</field>
         </record>
 
@@ -106,16 +134,28 @@
 
         <!-- Record rules: helpdesk.change.request -->
 
-        <record id="rule_helpdesk_change_request_employee" model="ir.rule">
-            <field name="name">Helpdesk Change Request: Employee - milik sendiri</field>
+        <record id="rule_helpdesk_change_request_base_user" model="ir.rule">
+            <field name="name">Helpdesk Change Request: Base User - akses milik sendiri atau manager</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
-            <field name="domain_force">[('created_by', '=', user.id)]</field>
+            <field name="domain_force">['|', '|', ('created_by', '=', user.id), ('dept_manager_id', '=', user.id), ('manager_it_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">0</field>
+        </record>
+
+        <record id="rule_helpdesk_change_request_employee" model="ir.rule">
+            <field name="name">Helpdesk Change Request: Employee - akses milik sendiri atau manager</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="domain_force">['|', '|', ('created_by', '=', user.id), ('dept_manager_id', '=', user.id), ('manager_it_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('group_helpdesk_user'))]"/>
             <field name="perm_read">1</field>
             <field name="perm_write">1</field>
             <field name="perm_create">1</field>
             <field name="perm_unlink">0</field>
         </record>
+
 
         <record id="rule_helpdesk_change_request_agent" model="ir.rule">
             <field name="name">Helpdesk Change Request: Agent - akses penuh</field>
@@ -137,6 +177,30 @@
             <field name="perm_write">1</field>
             <field name="perm_create">1</field>
             <field name="perm_unlink">1</field>
+        </record>
+
+        <record id="rule_helpdesk_change_request_it_manager" model="ir.rule">
+            <field name="name">Helpdesk Change Request: IT Manager - akses penuh</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('group_helpdesk_it_manager'))]"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+
+
+        <!-- Record rule: res.partner fallback for Helpdesk Users & CC -->
+        <record id="rule_res_partner_helpdesk_access" model="ir.rule">
+            <field name="name">Res Partner: Access for IT Helpdesk Users &amp; CC</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">0</field>
         </record>
 
     </data>

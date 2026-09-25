@@ -146,7 +146,7 @@
             <field name="function">Staff Operasional</field>
             <field name="login">ahmad.fauzi@hki.co.id</field>
             <field name="email">ahmad.fauzi@hki.co.id</field>
-            <field name="password">123456</field>
+            <field name="password">user123</field>
             <field name="partner_id" ref="partner_employee_ahmad"/>
             <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('it_helpdesk_v2.group_helpdesk_user')])]"/>
         </record>

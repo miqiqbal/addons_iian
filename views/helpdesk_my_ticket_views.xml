@@ -45,10 +45,12 @@
                                 </div>
                                 <div class="o_kanban_record_bottom">
                                     <div class="oe_kanban_bottom_left">
-                                        <field name="sla_status_label" widget="badge"
-                                               decoration-success="sla_status_label == 'on_track'"
-                                               decoration-warning="sla_status_label == 'warning'"
-                                               decoration-danger="sla_status_label in ('critical', 'breached')"/>
+                                        <field name="sla_status_color" invisible="1"/>
+                                        <field name="sla_status_name" widget="badge"
+                                               decoration-success="sla_status_color == 'success'"
+                                               decoration-info="sla_status_color == 'info'"
+                                               decoration-warning="sla_status_color == 'warning'"
+                                               decoration-danger="sla_status_color == 'danger'"/>
                                         <span class="ml-2 text-muted small">
                                             Due: <field name="sla_resolution_deadline" widget="date"/>
                                         </span>

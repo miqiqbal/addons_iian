@@ -51,9 +51,9 @@
             <field name="model">helpdesk.ticket.report</field>
             <field name="arch" type="xml">
                 <search>
-                    <filter string="Breached" name="filter_breached"
+                    <filter string="SLA Overdue" name="filter_breached"
                             domain="[('sla_resolution_breached', '=', True)]"/>
-                    <filter string="Not Breached" name="filter_not_breached"
+                    <filter string="Tidak Overdue" name="filter_not_breached"
                             domain="[('sla_resolution_breached', '=', False)]"/>
                     <group expand="0" string="Group By">
                         <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>

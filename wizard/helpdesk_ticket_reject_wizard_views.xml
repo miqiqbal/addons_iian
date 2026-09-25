@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_ticket_reject_wizard_form" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.reject.wizard.form</field>
+            <field name="model">helpdesk.ticket.reject.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Reject Ticket">
+                    <group>
+                        <field name="ticket_id" readonly="1"/>
+                        <field name="reason" placeholder="Masukkan alasan penolakan tiket..."/>
+                    </group>
+                    <footer>
+                        <button string="Konfirmasi Reject" name="action_confirm_reject" type="object" class="btn-danger"/>
+                        <button string="Batal" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_ticket_reject_wizard" model="ir.actions.act_window">
+            <field name="name">Reject Ticket</field>
+            <field name="res_model">helpdesk.ticket.reject.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

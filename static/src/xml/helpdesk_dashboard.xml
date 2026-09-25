@@ -23,12 +23,18 @@
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <!-- Date Range / Quick Period -->
                             <select id="filter_date_range" class="form-control form-control-sm mr-2 bg-white" style="width: 140px; border-radius: 6px;">
-                                <option value="custom">Date Range</option>
+                                <option value="all">Semua Periode</option>
                                 <option value="today">Hari Ini</option>
-                                <option value="week" selected="selected">Minggu Ini</option>
+                                <option value="week">Minggu Ini</option>
                                 <option value="month">Bulan Ini</option>
                                 <option value="year">Tahun Ini</option>
                             </select>
+
+                            <!-- Custom Date From & To -->
+                            <input type="date" id="filter_date_from" class="form-control form-control-sm mr-2 bg-white" title="Tanggal Mulai" style="width: 135px; border-radius: 6px;"/>
+                            <span class="mr-2 text-muted small font-weight-bold">s/d</span>
+                            <input type="date" id="filter_date_to" class="form-control form-control-sm mr-2 bg-white" title="Tanggal Selesai" style="width: 135px; border-radius: 6px;"/>
+
 
                             <!-- Department / Location -->
                             <select id="filter_department" class="form-control form-control-sm mr-2 bg-white" style="width: 160px; border-radius: 6px;">
@@ -92,97 +98,113 @@
                 </div>
             </div>
 
-            <!-- 2. KPI Cards (6 Grid Cards with Hover Effect & Clickable Drill-down) -->
+            <!-- 2. KPI Cards (7 Grid Cards with Smart Clickable Drill-down) -->
             <div class="row mb-4">
                 <!-- Card 1: Total Ticket -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="all" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #714B67 !important; cursor: pointer; transition: transform 0.2s;">
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="all" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #714B67 !important; transition: transform 0.2s;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted small font-weight-bold">Jumlah Total Ticket</span>
                             <div class="rounded-circle p-2" style="background: #f3e8ff; color: #714B67;">
                                 <i class="fa fa-ticket fa-lg"/>
                             </div>
                         </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_ticket"/></div>
-                        <div class="small font-weight-bold" style="color: #28C76F;">
-                            <i class="fa fa-arrow-up mr-1"/> 12.5% <span class="text-muted font-weight-normal">periode sebelumnya</span>
-                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_total"><t t-esc="widget.data.top_kpis.total_ticket"/></div>
+                        <div class="small text-muted">Seluruh Tiket</div>
                     </div>
                 </div>
 
-                <!-- Card 2: Jumlah Service -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="services" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #28C76F !important; cursor: pointer; transition: transform 0.2s;">
+                <!-- Card 2: Tiket Open -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="open" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #EA5455 !important; transition: transform 0.2s;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted small font-weight-bold">Jumlah Service</span>
-                            <div class="rounded-circle p-2" style="background: #e8fadf; color: #28C76F;">
-                                <i class="fa fa-cogs fa-lg"/>
-                            </div>
-                        </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_service"/></div>
-                        <div class="small text-muted">Total Service</div>
-                    </div>
-                </div>
-
-                <!-- Card 3: Jumlah Category -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="categories" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #00CFE8 !important; cursor: pointer; transition: transform 0.2s;">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted small font-weight-bold">Jumlah Category</span>
-                            <div class="rounded-circle p-2" style="background: #e0fbfd; color: #00CFE8;">
+                            <span class="text-muted small font-weight-bold">Tiket Open</span>
+                            <div class="rounded-circle p-2" style="background: #fceaea; color: #EA5455;">
                                 <i class="fa fa-folder-open fa-lg"/>
                             </div>
                         </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_category"/></div>
-                        <div class="small text-muted">Total Category</div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_open"><t t-esc="widget.data.top_kpis.open_ticket"/></div>
+                        <div class="small text-muted">Status Open</div>
                     </div>
                 </div>
 
-                <!-- Card 4: Jumlah Department / Project -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="departments" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #FF9F43 !important; cursor: pointer; transition: transform 0.2s;">
+                <!-- Card 3: Tiket Assigned -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="assigned" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #FF9F43 !important; transition: transform 0.2s;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted small font-weight-bold">Jumlah Dept / Project</span>
+                            <span class="text-muted small font-weight-bold">Tiket Assigned</span>
                             <div class="rounded-circle p-2" style="background: #fff0e1; color: #FF9F43;">
-                                <i class="fa fa-building fa-lg"/>
+                                <i class="fa fa-user-check fa-lg"/>
                             </div>
                         </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_location"/></div>
-                        <div class="small text-muted">Total Department/Project</div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_assigned"><t t-esc="widget.data.top_kpis.assigned_ticket"/></div>
+                        <div class="small text-muted">Telah Ditugaskan</div>
                     </div>
                 </div>
 
-                <!-- Card 5: Jumlah Priority -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="priorities" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #EA5455 !important; cursor: pointer; transition: transform 0.2s;">
+                <!-- Card 4: Tiket Progress -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="in_progress" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #7367F0 !important; transition: transform 0.2s;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted small font-weight-bold">Jumlah Priority</span>
-                            <div class="rounded-circle p-2" style="background: #fceaea; color: #EA5455;">
-                                <i class="fa fa-exclamation-triangle fa-lg"/>
-                            </div>
-                        </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_priority"/></div>
-                        <div class="small text-muted">Priority Level</div>
-                    </div>
-                </div>
-
-                <!-- Card 6: Jumlah Status -->
-                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
-                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="all" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #7367F0 !important; cursor: pointer; transition: transform 0.2s;">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted small font-weight-bold">Jumlah Status</span>
+                            <span class="text-muted small font-weight-bold">Tiket Progress</span>
                             <div class="rounded-circle p-2" style="background: #f3f0ff; color: #7367F0;">
-                                <i class="fa fa-tasks fa-lg"/>
+                                <i class="fa fa-cogs fa-lg"/>
                             </div>
                         </div>
-                        <div class="h2 font-weight-bold text-dark mb-1"><t t-esc="widget.data.top_kpis.total_status"/></div>
-                        <div class="small text-muted">Status Ticket</div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_progress"><t t-esc="widget.data.top_kpis.progress_ticket"/></div>
+                        <div class="small text-muted">Dalam Pengerjaan</div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Tiket Reject -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="reject" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #E83E8C !important; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Tiket Reject</span>
+                            <div class="rounded-circle p-2" style="background: #fce4ec; color: #E83E8C;">
+                                <i class="fa fa-ban fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_reject"><t t-esc="widget.data.top_kpis.reject_ticket"/></div>
+                        <div class="small text-muted">Tiket Ditolak</div>
+                    </div>
+                </div>
+
+                <!-- Card 6: Tiket Done -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="done" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #28C76F !important; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Tiket Done</span>
+                            <div class="rounded-circle p-2" style="background: #e8fadf; color: #28C76F;">
+                                <i class="fa fa-check-circle fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_done"><t t-esc="widget.data.top_kpis.done_ticket"/></div>
+                        <div class="small text-muted">Selesai Ditangani</div>
+                    </div>
+                </div>
+
+                <!-- Card 7: Tiket Closed -->
+                <div class="col-xl col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 o_kpi_clickable_card h-100" data-action-type="closed" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #00CFE8 !important; transition: transform 0.2s;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted small font-weight-bold">Tiket Closed</span>
+                            <div class="rounded-circle p-2" style="background: #e0fbfd; color: #00CFE8;">
+                                <i class="fa fa-archive fa-lg"/>
+                            </div>
+                        </div>
+                        <div class="h2 font-weight-bold text-dark mb-1" id="kpi_val_closed"><t t-esc="widget.data.top_kpis.closed_ticket"/></div>
+                        <div class="small text-muted">Tiket Ditutup</div>
                     </div>
                 </div>
             </div>
 
+
+
+
             <!-- 3. Analytics Row 1 (Service, Category, Priority, Department Horizontal Bar) -->
             <div class="row mb-4">
+
                 <div class="col-xl-3 col-md-6 mb-3">
                     <div class="card border-0 shadow-sm rounded-lg p-3 bg-white h-100" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
                         <h6 class="font-weight-bold text-dark mb-3">Ticket by Service</h6>
@@ -334,11 +356,11 @@
                     </div>
                 </div>
 
-                <!-- Widget 2: Top 5 SLA Breached & Widget 3: Top 5 Engineers -->
+                <!-- Widget 2: Top 5 SLA Overdue & Widget 3: Top 5 Engineers -->
                 <div class="col-xl-3 col-md-6 mb-3">
-                    <!-- Top 5 SLA Breached -->
+                    <!-- Top 5 SLA Overdue -->
                     <div class="card border-0 shadow-sm rounded-lg p-3 bg-white mb-3" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #EA5455 !important;">
-                        <h6 class="font-weight-bold text-danger mb-2"><i class="fa fa-exclamation-circle mr-1"/> Top 5 SLA Breached</h6>
+                        <h6 class="font-weight-bold text-danger mb-2"><i class="fa fa-exclamation-circle mr-1"/> Top 5 SLA Overdue</h6>
                         <ul class="list-group list-group-flush small">
                             <t t-foreach="widget.data.top_sla_breached" t-as="sb">
                                 <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center border-0">
@@ -347,7 +369,7 @@
                                 </li>
                             </t>
                             <t t-if="!widget.data.top_sla_breached.length">
-                                <li class="list-group-item px-0 py-1 border-0 text-success">Tidak ada tiket SLA breached 🎉</li>
+                                <li class="list-group-item px-0 py-1 border-0 text-success">Tidak ada tiket SLA overdue 🎉</li>
                             </t>
                         </ul>
                     </div>
@@ -366,20 +388,20 @@
                     </div>
                 </div>
 
-                <!-- Widget 4: Top Service, Major Incident, Near SLA -->
+                <!-- Widget 4: Top Service, Tiket Critical (P1), Near SLA -->
                 <div class="col-xl-3 col-md-6 mb-3">
-                    <!-- Major Incident -->
+                    <!-- Tiket Critical (P1) - Open -->
                     <div class="card border-0 shadow-sm rounded-lg p-3 bg-white mb-3" style="border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-top: 3px solid #dc2626 !important;">
-                        <h6 class="font-weight-bold text-dark mb-2"><i class="fa fa-bullhorn text-danger mr-1"/> Major Incident (Open)</h6>
+                        <h6 class="font-weight-bold text-dark mb-2"><i class="fa fa-exclamation-triangle text-danger mr-1"/> Tiket Critical (P1) - Open</h6>
                         <ul class="list-group list-group-flush small">
-                            <t t-foreach="widget.data.major_incidents" t-as="mi">
+                            <t t-foreach="widget.data.critical_open_tickets" t-as="mi">
                                 <li class="list-group-item px-0 py-1 d-flex justify-content-between border-0">
                                     <span class="font-weight-bold text-danger"><t t-esc="mi.name"/> - <t t-esc="mi.title"/></span>
                                     <span class="badge badge-warning"><t t-esc="mi.engineer"/></span>
                                 </li>
                             </t>
-                            <t t-if="!widget.data.major_incidents.length">
-                                <li class="list-group-item px-0 py-1 border-0 text-muted">Tidak ada Major Incident aktif</li>
+                            <t t-if="!widget.data.critical_open_tickets.length">
+                                <li class="list-group-item px-0 py-1 border-0 text-muted">Tidak ada tiket Critical (P1) yang masih Open</li>
                             </t>
                         </ul>
                     </div>
@@ -426,7 +448,7 @@
                                 <th>Avg Response</th>
                                 <th>Avg Resolution</th>
                                 <th>SLA Achievement</th>
-                                <th>SLA Breached (%)</th>
+                                <th>SLA Overdue (%)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -459,7 +481,61 @@
                 </button>
             </div>
 
+            <!-- 7. Filtered Tickets Modal Popup -->
+            <style>
+                #kpi_filtered_tickets_modal {
+                    z-index: 1040 !important;
+                }
+                .modal.o_technical_modal {
+                    z-index: 1060 !important;
+                }
+                .modal-backdrop.show:nth-of-type(even) {
+                    z-index: 1055 !important;
+                }
+            </style>
+            <div class="modal fade" id="kpi_filtered_tickets_modal" tabindex="-1" role="dialog" aria-hidden="true">
+
+                <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+                    <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                        <div class="modal-header text-white" style="background: linear-gradient(135deg, #714B67 0%, #4a2842 100%);">
+                            <h5 class="modal-title font-weight-bold" id="kpi_modal_title">
+                                <i class="fa fa-list-alt mr-2"/> <span id="kpi_modal_title_text">Daftar Tiket Terfilter</span>
+                                <span class="badge badge-light text-dark ml-2" id="kpi_modal_count">0</span>
+                            </h5>
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                                <span aria-hidden="true">&#215;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body p-0" style="max-height: 65vh; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>No. Tiket</th>
+                                            <th>Judul Kendala</th>
+                                            <th>Service</th>
+                                            <th>Requester</th>
+                                            <th>Status</th>
+                                            <th>Engineer</th>
+                                            <th>Tanggal Create</th>
+                                            <th>Status SLA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="kpi_modal_tbody">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2">
+                            <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal" style="border-radius: 6px;">Tutup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </t>
+
 
 </templates>

@@ -6,23 +6,60 @@
             <field name="name">helpdesk.keyword.tree</field>
             <field name="model">helpdesk.keyword</field>
             <field name="arch" type="xml">
-                <tree editable="bottom">
+                <tree>
                     <field name="sequence" widget="handle"/>
                     <field name="name"/>
                     <field name="service_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     <field name="subcategory_ids" widget="many2many_tags" options="{'no_create': True}"/>
                     <field name="keyword_list"/>
-                    <field name="engineer_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="engineer_summary" string="PIC IT Auto Assign (Urutan Prioritas)"/>
+                    <field name="enable_auto_close" widget="boolean_toggle" string="Auto Close Tiket"/>
                     <field name="active"/>
                 </tree>
+            </field>
+        </record>
+
+        <!-- Keyword Routing Rules Form View -->
+        <record id="view_helpdesk_keyword_form" model="ir.ui.view">
+            <field name="name">helpdesk.keyword.form</field>
+            <field name="model">helpdesk.keyword</field>
+            <field name="arch" type="xml">
+                <form string="Keyword Routing Rule">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" placeholder="e.g. Lupa Password &amp; Akun Akses"/>
+                                <field name="sequence"/>
+                                <field name="enable_auto_close" widget="boolean_toggle"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="service_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                <field name="subcategory_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        <group string="Kata Kunci Pemicu (Keywords)">
+                            <field name="keyword_list" placeholder="lupa password, reset password, ganti password..."/>
+                        </group>
+                        <group string="PIC IT Auto Assign (Urutan Prioritas Penugasan)">
+                            <field name="engineer_line_ids" nolabel="1">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="user_id" string="Nama Engineer" options="{'no_create': True}"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </sheet>
+                </form>
             </field>
         </record>
 
         <record id="action_helpdesk_keyword" model="ir.actions.act_window">
             <field name="name">Keyword Routing Rules</field>
             <field name="res_model">helpdesk.keyword</field>
-            <field name="view_mode">tree</field>
+            <field name="view_mode">tree,form</field>
         </record>
 
     </data>

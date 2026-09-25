@@ -6,6 +6,7 @@
             <field name="name">Helpdesk: Ticket Created (Requester)</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">Tiket Anda {{ object.name }} telah diterima</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="email_to">{{ object.requester_id.email_formatted }}</field>
             <field name="body_html" type="html">
                 <p>Halo <t t-out="object.requester_id.name or ''"/>,</p>
@@ -22,6 +23,7 @@
             <field name="name">Helpdesk: Ticket Created (Team/Manager)</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">Tiket baru masuk: {{ object.name }}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="body_html" type="html">
                 <p>
                     Tiket baru <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
@@ -36,6 +38,7 @@
             <field name="name">Helpdesk: Ticket Assigned</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">Tiket {{ object.name }} di-assign ke Anda</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="email_to">{{ object.engineer_id.email_formatted }}</field>
             <field name="body_html" type="html">
                 <p>Halo <t t-out="object.engineer_id.name or ''"/>,</p>
@@ -52,6 +55,7 @@
             <field name="name">Helpdesk: SLA Breach</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">SLA Breach: {{ object.name }}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="body_html" type="html">
                 <p>
                     Tiket <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
@@ -66,6 +70,7 @@
             <field name="name">Helpdesk: Ticket Resolved</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">Tiket {{ object.name }} telah diselesaikan</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="email_to">{{ object.requester_id.email_formatted }}</field>
             <field name="body_html" type="html">
                 <p>Halo <t t-out="object.requester_id.name or ''"/>,</p>

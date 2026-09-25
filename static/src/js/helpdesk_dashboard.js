@@ -12,6 +12,9 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             'click #btn_reset_filter': '_onResetFilterClick',
             'click #btn_refresh, #dashboard_refresh_btn_footer': '_onRefreshClick',
             'click .o_kpi_clickable_card': '_onKPICardClick',
+            'click .o_modal_ticket_row': '_onModalTicketRowClick',
+            'click #btn_close_filtered_tickets': '_onCloseFilteredTickets',
+            'click .o_filtered_ticket_row': '_onFilteredTicketRowClick',
             'click .o_ticket_row_click': '_onTicketRowClick',
             'click .o_heatmap_cell': '_onHeatmapCellClick',
             'click .o_trend_period_btn': '_onTrendPeriodChange',
@@ -19,6 +22,10 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             'click #btn_export_pdf': '_onExportPDF',
             'click #btn_print': '_onPrint',
         },
+
+
+
+
 
         init: function (parent, context) {
             this._super.apply(this, arguments);
@@ -44,6 +51,10 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
                 });
             });
         },
+
+
+
+
 
         on_attach_callback: function () {
             this._super.apply(this, arguments);
@@ -96,7 +107,9 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
                     filters.service_id || 'all',
                     filters.category_id || 'all',
                     filters.priority || 'all',
-                    filters.engineer_id || 'all'
+                    filters.engineer_id || 'all',
+                    filters.date_from || 'all',
+                    filters.date_to || 'all'
                 ],
             }).then(function (result) {
                 self.data = result;
@@ -105,7 +118,9 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
 
         _restoreFilterValues: function (filters) {
             if (!filters) return;
-            if (filters.date_period) this.$('#filter_date_period').val(filters.date_period);
+            if (filters.date_period) this.$('#filter_date_range').val(filters.date_period);
+            if (filters.date_from) this.$('#filter_date_from').val(filters.date_from === 'all' ? '' : filters.date_from);
+            if (filters.date_to) this.$('#filter_date_to').val(filters.date_to === 'all' ? '' : filters.date_to);
             if (filters.location_id) this.$('#filter_department').val(filters.location_id);
             if (filters.service_id) this.$('#filter_service').val(filters.service_id);
             if (filters.category_id) this.$('#filter_category').val(filters.category_id);
@@ -113,10 +128,23 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             if (filters.engineer_id) this.$('#filter_engineer').val(filters.engineer_id);
         },
 
+        _updateKPIValues: function (topKpis) {
+            if (!topKpis) return;
+            this.$('#kpi_val_total').text(topKpis.total_ticket || 0);
+            this.$('#kpi_val_open').text(topKpis.open_ticket || 0);
+            this.$('#kpi_val_assigned').text(topKpis.assigned_ticket || 0);
+            this.$('#kpi_val_progress').text(topKpis.progress_ticket || 0);
+            this.$('#kpi_val_reject').text(topKpis.reject_ticket || 0);
+            this.$('#kpi_val_done').text(topKpis.done_ticket || 0);
+            this.$('#kpi_val_closed').text(topKpis.closed_ticket || 0);
+        },
+
         _onFilterClick: function () {
             var self = this;
             var filters = {
-                date_period: this.$('#filter_date_period').val() || 'all',
+                date_period: this.$('#filter_date_range').val() || 'all',
+                date_from: this.$('#filter_date_from').val() || 'all',
+                date_to: this.$('#filter_date_to').val() || 'all',
                 location_id: this.$('#filter_department').val() || 'all',
                 service_id: this.$('#filter_service').val() || 'all',
                 category_id: this.$('#filter_category').val() || 'all',
@@ -125,7 +153,7 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             };
             this.currentFilters = filters;
             this._fetchDashboardData(filters).then(function () {
-                self.renderElement();
+                self._updateKPIValues(self.data.top_kpis);
                 self._scheduleRenderCharts(function () {
                     self._renderCharts();
                     self._restoreFilterValues(filters);
@@ -138,6 +166,8 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             var self = this;
             var filters = {
                 date_period: 'all',
+                date_from: 'all',
+                date_to: 'all',
                 location_id: 'all',
                 service_id: 'all',
                 category_id: 'all',
@@ -146,7 +176,7 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             };
             this.currentFilters = filters;
             this._fetchDashboardData(filters).then(function () {
-                self.renderElement();
+                self._updateKPIValues(self.data.top_kpis);
                 self._scheduleRenderCharts(function () {
                     self._renderCharts();
                     self._restoreFilterValues(filters);
@@ -178,9 +208,12 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             }
         },
 
-        _isDashboardFiltered: function () {
-            var filters = this.currentFilters || {};
+        _hasActiveFilters: function (filters) {
+            filters = filters || this.currentFilters || {};
             return (
+                (filters.date_period && filters.date_period !== 'all') ||
+                (filters.date_from && filters.date_from !== 'all') ||
+                (filters.date_to && filters.date_to !== 'all') ||
                 (filters.location_id && filters.location_id !== 'all') ||
                 (filters.service_id && filters.service_id !== 'all') ||
                 (filters.category_id && filters.category_id !== 'all') ||
@@ -189,47 +222,178 @@ odoo.define('it_helpdesk_v2.AnalyticsDashboard', function (require) {
             );
         },
 
+        _isDashboardFiltered: function () {
+            return this._hasActiveFilters(this.currentFilters);
+        },
+
+
         _updateCardClickState: function () {
-            if (this._isDashboardFiltered()) {
-                this.$('.o_kpi_card').css({
-                    'cursor': 'default',
-                    'opacity': '0.95'
-                }).attr('title', 'Filter sedang aktif (klik kartu dinonaktifkan)');
-            } else {
-                this.$('.o_kpi_card').css({
-                    'cursor': 'pointer',
-                    'opacity': '1.0'
-                }).attr('title', 'Klik untuk melihat detail');
-            }
+            this.$('.o_kpi_clickable_card').css({
+                'cursor': 'pointer',
+                'opacity': '1.0'
+            }).attr('title', 'Klik untuk melihat daftar tiket');
         },
 
         _onKPICardClick: function (ev) {
-            if (this._isDashboardFiltered()) {
-                // Saat dashboard difilter, klik kartu KPI dinonaktifkan
-                return;
+            var self = this;
+            var actionType = $(ev.currentTarget).data('action-type') || 'all';
+
+            // Navigasi Penuh Halaman (Full Page Navigation) dengan Domain Presisi
+            this._rpc({
+                model: 'helpdesk.dashboard.kpi',
+                method: 'action_get_filtered_tickets',
+                args: [this.currentFilters || {}, actionType],
+            }).then(function (res) {
+                var domain = (res && res.domain) ? res.domain : [];
+                self.do_action({
+                    type: 'ir.actions.act_window',
+                    name: res.name || 'Daftar Tiket Terfilter',
+                    res_model: 'helpdesk.ticket',
+                    views: [[false, 'list'], [false, 'form']],
+                    domain: domain,
+                    target: 'current',
+                });
+            });
+        },
+
+
+
+
+        _renderFilteredTicketsModal: function (data) {
+            var self = this;
+            var $tbody = this.$('#kpi_modal_tbody');
+            $tbody.empty();
+
+            this.$('#kpi_modal_title_text').text(data.name || 'Daftar Tiket Terfilter');
+            this.$('#kpi_modal_count').text(data.count || 0);
+
+            if (!data.tickets || data.tickets.length === 0) {
+                $tbody.append('<tr><td colspan="8" class="text-center text-muted py-4">Tidak ada tiket yang sesuai dengan filter ini.</td></tr>');
+            } else {
+                _.each(data.tickets, function (t) {
+                    var stateBadge = '';
+                    if (t.state === 'open') stateBadge = '<span class="badge badge-info">Open</span>';
+                    else if (t.state === 'in_progress') stateBadge = '<span class="badge badge-warning">In Progress</span>';
+                    else if (t.state === 'done') stateBadge = '<span class="badge badge-success">Done</span>';
+                    else if (t.state === 'closed') stateBadge = '<span class="badge badge-secondary">Closed</span>';
+                    else if (t.state === 'reject') stateBadge = '<span class="badge badge-danger">Reject</span>';
+                    else stateBadge = '<span class="badge badge-light">' + (t.state || 'Draft') + '</span>';
+
+                    var slaBadge = '<span class="badge badge-' + (t.sla_status_color || 'secondary') + '">' + (t.sla_status_name || '-') + '</span>';
+
+                    var rowHtml = '<tr class="o_modal_ticket_row" data-ticket-id="' + t.id + '" style="cursor: pointer;">' +
+                        '<td class="font-weight-bold text-primary">' + _.escape(t.name) + '</td>' +
+                        '<td>' + _.escape(t.title) + '</td>' +
+                        '<td>' + _.escape(t.service_name) + '</td>' +
+                        '<td>' + _.escape(t.requester_name) + '</td>' +
+                        '<td>' + stateBadge + '</td>' +
+                        '<td>' + _.escape(t.engineer_name) + '</td>' +
+                        '<td class="text-muted small">' + _.escape(t.created_date_str) + '</td>' +
+                        '<td>' + slaBadge + '</td>' +
+                        '</tr>';
+                    $tbody.append(rowHtml);
+                });
             }
 
-            var self = this;
-            var actionType = $(ev.currentTarget).data('action-type');
-
-            setTimeout(function () {
-                if (actionType === 'services') {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_service_dashboard');
-                } else if (actionType === 'categories') {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_category_dashboard');
-                } else if (actionType === 'departments') {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_location_dashboard');
-                } else if (actionType === 'priorities') {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_sla_dashboard');
-                } else if (actionType === 'status') {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_ticket', {
-                        context: {'search_default_group_state': 1}
-                    });
-                } else {
-                    self.do_action('it_helpdesk_v2.action_helpdesk_ticket');
-                }
-            }, 0);
+            this.$('#kpi_filtered_tickets_modal').modal('show');
         },
+
+        _onModalTicketRowClick: function (ev) {
+            var self = this;
+            var ticketId = $(ev.currentTarget).data('ticket-id');
+            if (ticketId) {
+                this.do_action({
+                    type: 'ir.actions.act_window',
+                    name: 'Detail Tiket',
+                    res_model: 'helpdesk.ticket',
+                    res_id: parseInt(ticketId),
+                    views: [[false, 'form']],
+                    target: 'new',
+                });
+            }
+        },
+
+
+
+
+
+
+
+
+        _renderFilteredTicketsTable: function (data) {
+            var $tbody = this.$('#kpi_filtered_tickets_tbody');
+            $tbody.empty();
+
+            this.$('#kpi_filtered_tickets_title').text(data.name || 'Daftar Tiket Terfilter');
+            this.$('#kpi_filtered_tickets_count').text(data.count || 0);
+
+            if (!data.tickets || data.tickets.length === 0) {
+                $tbody.append('<tr><td colspan="8" class="text-center text-muted py-3">Tidak ada tiket yang sesuai dengan filter ini.</td></tr>');
+            } else {
+                _.each(data.tickets, function (t) {
+                    var priorityBadge = '';
+                    if (t.priority === '1') priorityBadge = '<span class="badge badge-danger">P1 - Critical</span>';
+                    else if (t.priority === '2') priorityBadge = '<span class="badge badge-warning">P2 - High</span>';
+                    else if (t.priority === '3') priorityBadge = '<span class="badge badge-info">P3 - Medium</span>';
+                    else priorityBadge = '<span class="badge badge-success">P4 - Low</span>';
+
+                    var stateBadge = '';
+                    if (t.state === 'open') stateBadge = '<span class="badge badge-info">Open</span>';
+                    else if (t.state === 'in_progress') stateBadge = '<span class="badge badge-warning">In Progress</span>';
+                    else if (t.state === 'done') stateBadge = '<span class="badge badge-success">Done</span>';
+                    else if (t.state === 'closed') stateBadge = '<span class="badge badge-secondary">Closed</span>';
+                    else if (t.state === 'reject') stateBadge = '<span class="badge badge-danger">Reject</span>';
+                    else stateBadge = '<span class="badge badge-light">' + (t.state || 'Draft') + '</span>';
+
+                    var slaBadge = '<span class="badge badge-' + (t.sla_status_color || 'secondary') + '">' + (t.sla_status_name || '-') + '</span>';
+
+                    var rowHtml = '<tr class="o_filtered_ticket_row" data-ticket-id="' + t.id + '" style="cursor: pointer;">' +
+                        '<td class="font-weight-bold text-primary">' + _.escape(t.name) + '</td>' +
+                        '<td>' + _.escape(t.title) + '</td>' +
+                        '<td>' + _.escape(t.service_name) + '</td>' +
+                        '<td>' + _.escape(t.requester_name) + '</td>' +
+                        '<td>' + stateBadge + '</td>' +
+                        '<td>' + _.escape(t.engineer_name) + '</td>' +
+                        '<td class="text-muted small">' + _.escape(t.created_date_str) + '</td>' +
+                        '<td>' + slaBadge + '</td>' +
+                        '</tr>';
+                    $tbody.append(rowHtml);
+                });
+            }
+
+            var $container = this.$('#kpi_filtered_tickets_container');
+            $container.slideDown(200, function () {
+                if ($container.length && $container.offset()) {
+                    $('html, body').animate({
+                        scrollTop: $container.offset().top - 80
+                    }, 300);
+                }
+            });
+        },
+
+        _onCloseFilteredTickets: function () {
+            this.$('#kpi_filtered_tickets_container').slideUp(200);
+        },
+
+        _onFilteredTicketRowClick: function (ev) {
+            var ticketId = $(ev.currentTarget).data('ticket-id');
+            if (ticketId) {
+                this.do_action({
+                    type: 'ir.actions.act_window',
+                    res_model: 'helpdesk.ticket',
+                    res_id: parseInt(ticketId),
+                    views: [[false, 'form']],
+                    target: 'current',
+                });
+            }
+        },
+
+
+
+
+
+
+
 
         _onTicketRowClick: function (ev) {
             var self = this;

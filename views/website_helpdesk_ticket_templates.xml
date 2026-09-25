@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <template id="website_helpdesk_submit_page" name="Helpdesk Submit Ticket">
+            <t t-call="portal.frontend_layout">
+                <!-- Custom Pure JS Searchable Dropdown Styling -->
+                <style>
+                    .searchable-wrapper {
+                        position: relative;
+                        width: 100%;
+                    }
+                    .searchable-input {
+                        background-color: #ffffff !important;
+                        cursor: pointer !important;
+                        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+                        background-repeat: no-repeat;
+                        background-position: right .75rem center;
+                        background-size: 16px 12px;
+                        padding-right: 2rem !important;
+                    }
+                    .searchable-dropdown {
+                        position: absolute;
+                        top: 105%;
+                        left: 0;
+                        right: 0;
+                        max-height: 280px;
+                        background: #ffffff;
+                        border: 1px solid #007bff;
+                        border-radius: .35rem;
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+                        z-index: 1060;
+                        display: none;
+                    }
+                    .searchable-dropdown .search-box-container {
+                        padding: 8px;
+                        position: sticky;
+                        top: 0;
+                        background: #f8f9fa;
+                        border-bottom: 1px solid #dee2e6;
+                        z-index: 2;
+                    }
+                    .searchable-dropdown .search-box-input {
+                        font-size: 0.9rem;
+                        border-radius: 4px;
+                    }
+                    .searchable-dropdown .options-list {
+                        max-height: 220px;
+                        overflow-y: auto;
+                    }
+                    .searchable-dropdown .option-item {
+                        padding: 9px 14px;
+                        cursor: pointer;
+                        font-size: 0.92rem;
+                        color: #212529;
+                        border-bottom: 1px solid #f1f3f5;
+                        transition: background-color 0.15s ease;
+                    }
+                    .searchable-dropdown .option-item:hover,
+                    .searchable-dropdown .option-item.active {
+                        background-color: #007bff;
+                        color: #ffffff !important;
+                    }
+                    .searchable-dropdown .option-item.no-match {
+                        color: #6c757d;
+                        font-style: italic;
+                        cursor: default;
+                        background: #f8f9fa;
+                    }
+                </style>
+
+                <div id="wrap" class="container py-5">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <div class="card shadow-lg border-0 rounded-lg">
+                                <div class="card-header bg-primary text-white p-4 rounded-top">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h3 class="mb-1 text-white font-weight-bold"><i class="fa fa-ticket mr-2"/>Form Pengajuan Tiket IT Helpdesk</h3>
+                                            <p class="mb-0 text-white-50">Silakan isi formulir kendala di bawah ini secara lengkap.</p>
+                                        </div>
+                                        <span class="badge badge-light px-3 py-2 text-primary font-weight-bold" id="step-badge">Langkah 1 dari 2</span>
+                                    </div>
+                                </div>
+
+                                <div class="card-body p-4 p-md-5">
+                                    <t t-if="error and error.get('_general')">
+                                        <div class="alert alert-danger shadow-sm rounded mb-4" t-esc="error['_general']"/>
+                                    </t>
+
+                                    <form method="post" action="/helpdesk/submit/send" id="helpdesk-form">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                        <!-- STEP 1: Informasi User & Detail Kendala -->
+                                        <div id="step1">
+                                            <h5 class="text-primary font-weight-bold mb-3 border-bottom pb-2"><i class="fa fa-user-circle mr-2"/>Informasi Pelapor &amp; Kendala</h5>
+                                            
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold text-secondary">Nama Pelapor</label>
+                                                    <input type="text" class="form-control bg-light" readonly="readonly" t-att-value="current_user.name"/>
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold text-secondary">Email Pelapor</label>
+                                                    <input type="text" class="form-control bg-light" readonly="readonly" t-att-value="current_user.email"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">Nomor Whatsapp / Telepon Kontak <span class="text-danger">*</span></label>
+                                                <input type="text" name="phone" class="form-control" required="required" placeholder="Contoh: 081234567890"
+                                                       t-att-value="form_data and form_data.get('phone') or current_user.phone"/>
+                                                <span class="text-danger small" t-if="error and error.get('phone')" t-esc="error['phone']"/>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">Judul Kendala / Topik <span class="text-danger">*</span></label>
+                                                <input type="text" name="title" class="form-control" required="required" placeholder="Singkat dan jelas, contoh: Tidak bisa akses SAP / Lupa Password"
+                                                       t-att-value="form_data and form_data.get('title')"/>
+                                                <span class="text-danger small" t-if="error and error.get('title')" t-esc="error['title']"/>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="font-weight-bold">Deskripsi Detail Kendala</label>
+                                                <textarea name="description" class="form-control" rows="4" placeholder="Jelaskan detail masalah, pesan error, atau kronologi yang dialami..."
+                                                          t-esc="form_data and form_data.get('description')"/>
+                                            </div>
+
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold">Layanan / Service <span class="text-danger">*</span></label>
+                                                    <select name="service_id" id="service_id" class="form-control" required="required">
+                                                        <option value="">-- Pilih Service --</option>
+                                                        <t t-foreach="services" t-as="srv">
+                                                            <option t-att-value="srv.id"
+                                                                    t-att-selected="form_data and form_data.get('service_id') == str(srv.id)"
+                                                                    t-esc="srv.name"/>
+                                                        </t>
+                                                    </select>
+                                                    <span class="text-danger small" t-if="error and error.get('service_id')" t-esc="error['service_id']"/>
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold">Category <span class="text-danger">*</span></label>
+                                                    <select name="category_id" id="category_id" class="form-control" required="required">
+                                                        <option value="">-- Pilih Category --</option>
+                                                        <t t-foreach="categories" t-as="cat">
+                                                            <option t-att-value="cat.id"
+                                                                    t-att-data-service-id="cat.service_id.id if cat.service_id else ''"
+                                                                    t-att-selected="form_data and form_data.get('category_id') == str(cat.id)"
+                                                                    t-esc="cat.name"/>
+                                                        </t>
+                                                    </select>
+                                                    <span class="text-danger small" t-if="error and error.get('category_id')" t-esc="error['category_id']"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row">
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold">Sub Category</label>
+                                                    <select name="subcategory_id" id="subcategory_id" class="form-control">
+                                                        <option value="">-- Pilih Sub Category --</option>
+                                                        <t t-foreach="subcategories" t-as="subcat">
+                                                            <option t-att-value="subcat.id"
+                                                                    t-att-data-category-id="subcat.category_id.id if subcat.category_id else ''"
+                                                                    t-att-selected="form_data and form_data.get('subcategory_id') == str(subcat.id)"
+                                                                    t-esc="subcat.name"/>
+                                                        </t>
+                                                    </select>
+                                                </div>
+                                                <div class="form-group col-md-6">
+                                                    <label class="font-weight-bold">Departemen / Lokasi <span class="text-danger">*</span></label>
+                                                    <select name="location_id" class="form-control" required="required">
+                                                        <option value="">-- Pilih Lokasi --</option>
+                                                        <t t-foreach="locations" t-as="loc">
+                                                            <option t-att-value="loc.id"
+                                                                    t-att-selected="form_data and form_data.get('location_id') == str(loc.id)"
+                                                                    t-esc="loc.name"/>
+                                                        </t>
+                                                    </select>
+                                                    <span class="text-danger small" t-if="error and error.get('location_id')" t-esc="error['location_id']"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="text-right mt-4">
+                                                <button type="button" id="btn-next" class="btn btn-primary btn-lg px-4 font-weight-bold">
+                                                    Langkah Selanjutnya <i class="fa fa-arrow-right ml-2"/>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- STEP 2: Penentu Prioritas Ticket SLA -->
+                                        <div id="step2" style="display:none;">
+                                            <h5 class="text-primary font-weight-bold mb-3 border-bottom pb-2"><i class="fa fa-tasks mr-2"/>Penentu Prioritas &amp; Tingkat Urgensi SLA</h5>
+                                            <p class="text-muted small mb-4">Mohon jawab pertanyaan di bawah ini untuk menentukan prioritas SLA pengerjaan tiket Anda.</p>
+
+                                            <t t-foreach="priority_questions" t-as="pq">
+                                                <div class="form-group mb-4 bg-light p-3 rounded border">
+                                                    <label class="font-weight-bold text-dark mb-2">
+                                                        <span class="badge badge-primary mr-1"><t t-esc="pq_index + 1"/></span> <t t-esc="pq.question_text"/>
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <select t-attf-name="q#{pq_index + 1}_answer_id" class="form-control custom-select" required="required">
+                                                        <option value="">-- Pilih Jawaban --</option>
+                                                        <t t-foreach="pq.answer_ids" t-as="ans">
+                                                            <option t-att-value="ans.id"
+                                                                    t-att-selected="form_data and form_data.get('q%d_answer_id' % (pq_index + 1)) == str(ans.id)"
+                                                                    t-esc="ans.answer_text"/>
+                                                        </t>
+                                                    </select>
+                                                    <span class="text-danger small"
+                                                          t-if="error and error.get('q%d_answer_id' % (pq_index + 1))"
+                                                          t-esc="error.get('q%d_answer_id' % (pq_index + 1))"/>
+                                                </div>
+                                            </t>
+
+                                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                                <button type="button" id="btn-prev" class="btn btn-outline-secondary font-weight-bold">
+                                                    <i class="fa fa-arrow-left mr-2"/> Kembali ke Langkah 1
+                                                </button>
+                                                <button type="submit" id="btn-submit" class="btn btn-success btn-lg px-5 font-weight-bold shadow-sm">
+                                                    <i class="fa fa-paper-plane mr-2"/> Kirim Tiket Sekarang
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <script type="text/javascript">
+                                        (function () {
+                                            var step1 = document.getElementById('step1');
+                                            var step2 = document.getElementById('step2');
+                                            var btnNext = document.getElementById('btn-next');
+                                            var btnPrev = document.getElementById('btn-prev');
+                                            var btnSubmit = document.getElementById('btn-submit');
+                                            var stepBadge = document.getElementById('step-badge');
+
+                                            function showStep2() {
+                                                step1.style.display = 'none';
+                                                step2.style.display = 'block';
+                                                if (stepBadge) stepBadge.textContent = 'Langkah 2 dari 2';
+                                                window.scrollTo(0, 0);
+                                            }
+
+                                            function showStep1() {
+                                                step2.style.display = 'none';
+                                                step1.style.display = 'block';
+                                                if (stepBadge) stepBadge.textContent = 'Langkah 1 dari 2';
+                                                window.scrollTo(0, 0);
+                                            }
+
+                                            btnNext.addEventListener('click', function () {
+                                                var requiredFields = step1.querySelectorAll('[required]');
+                                                for (var i = 0; i &lt; requiredFields.length; i++) {
+                                                    if (!requiredFields[i].reportValidity()) {
+                                                        return;
+                                                    }
+                                                }
+                                                showStep2();
+                                            });
+
+                                            if (btnPrev) {
+                                                btnPrev.addEventListener('click', function () {
+                                                    showStep1();
+                                                });
+                                            }
+
+                                            function convertToSearchableSelect(selectEl) {
+                                                if (!selectEl || selectEl.dataset.searchableInit) return;
+                                                selectEl.dataset.searchableInit = "true";
+                                                selectEl.style.display = "none";
+
+                                                var wrapper = document.createElement("div");
+                                                wrapper.className = "searchable-wrapper position-relative";
+                                                selectEl.parentNode.insertBefore(wrapper, selectEl);
+                                                wrapper.appendChild(selectEl);
+
+                                                var displayInput = document.createElement("input");
+                                                displayInput.type = "text";
+                                                displayInput.className = (selectEl.className || "form-control") + " searchable-input";
+                                                displayInput.readOnly = true;
+                                                displayInput.placeholder = selectEl.options[0] ? selectEl.options[0].text : "-- Pilih --";
+
+                                                if (selectEl.selectedIndex &gt;= 0 &amp;&amp; selectEl.options[selectEl.selectedIndex] &amp;&amp; selectEl.options[selectEl.selectedIndex].value) {
+                                                    displayInput.value = selectEl.options[selectEl.selectedIndex].text;
+                                                }
+
+                                                var dropdown = document.createElement("div");
+                                                dropdown.className = "searchable-dropdown";
+
+                                                var searchBoxDiv = document.createElement("div");
+                                                searchBoxDiv.className = "search-box-container";
+                                                var searchInput = document.createElement("input");
+                                                searchInput.type = "text";
+                                                searchInput.className = "form-control form-control-sm search-box-input";
+                                                searchInput.placeholder = "🔍 Ketik untuk mencari...";
+                                                searchBoxDiv.appendChild(searchInput);
+                                                dropdown.appendChild(searchBoxDiv);
+
+                                                var listDiv = document.createElement("div");
+                                                listDiv.className = "options-list";
+                                                dropdown.appendChild(listDiv);
+                                                wrapper.appendChild(displayInput);
+                                                wrapper.appendChild(dropdown);
+
+                                                function renderOptions(filterText) {
+                                                    listDiv.innerHTML = "";
+                                                    filterText = (filterText || "").toLowerCase();
+                                                    var matchCount = 0;
+                                                    for (var i = 0; i &lt; selectEl.options.length; i++) {
+                                                        var opt = selectEl.options[i];
+                                                        if (!opt.value &amp;&amp; i === 0) continue;
+                                                        var text = opt.text;
+                                                        if (!filterText || text.toLowerCase().indexOf(filterText) !== -1) {
+                                                            matchCount++;
+                                                            (function(optionVal, optionText) {
+                                                                var item = document.createElement("div");
+                                                                item.className = "option-item";
+                                                                if (selectEl.value === optionVal) item.className += " active";
+                                                                item.textContent = optionText;
+                                                                item.addEventListener("click", function(e) {
+                                                                    e.stopPropagation();
+                                                                    selectEl.value = optionVal;
+                                                                    displayInput.value = optionText;
+                                                                    dropdown.style.display = "none";
+                                                                    var evt = document.createEvent('HTMLEvents');
+                                                                    evt.initEvent('change', true, false);
+                                                                    selectEl.dispatchEvent(evt);
+                                                                });
+                                                                listDiv.appendChild(item);
+                                                            })(opt.value, text);
+                                                        }
+                                                    }
+                                                    if (matchCount === 0) {
+                                                        var emptyItem = document.createElement("div");
+                                                        emptyItem.className = "option-item no-match";
+                                                        emptyItem.textContent = "Tidak ada hasil pencarian";
+                                                        listDiv.appendChild(emptyItem);
+                                                    }
+                                                }
+
+                                                displayInput.addEventListener("click", function(e) {
+                                                    e.stopPropagation();
+                                                    document.querySelectorAll(".searchable-dropdown").forEach(function(d) {
+                                                        if (d !== dropdown) d.style.display = "none";
+                                                    });
+                                                    var isVisible = dropdown.style.display === "block";
+                                                    dropdown.style.display = isVisible ? "none" : "block";
+                                                    if (!isVisible) {
+                                                        renderOptions("");
+                                                        searchInput.value = "";
+                                                        setTimeout(function() { searchInput.focus(); }, 50);
+                                                    }
+                                                });
+
+                                                searchInput.addEventListener("input", function() {
+                                                    renderOptions(searchInput.value);
+                                                });
+
+                                                document.addEventListener("click", function(e) {
+                                                    if (!wrapper.contains(e.target)) {
+                                                        dropdown.style.display = "none";
+                                                    }
+                                                });
+                                            }
+
+                                            document.querySelectorAll('select.form-control, select.custom-select').forEach(function(sel) {
+                                                convertToSearchableSelect(sel);
+                                            });
+
+                                            <t t-if="(error and any(k.startswith('q') and k.endswith('_answer_id') for k in error.keys())) or (form_data and form_data.get('q1_answer_id'))">
+                                                showStep2();
+                                            </t>
+                                        })();
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <template id="website_helpdesk_submit_success_page" name="Helpdesk Submit Ticket Success">
+            <t t-call="portal.frontend_layout">
+                <div id="wrap" class="container py-5">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-7">
+                            <div class="card shadow-lg border-0 rounded-lg text-center p-4 p-md-5">
+                                <div class="mb-3">
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success text-white" style="width: 90px; height: 90px; font-size: 3.5rem;">
+                                        <i class="fa fa-check"/>
+                                    </span>
+                                </div>
+                                
+                                <h2 class="font-weight-bold text-dark mt-2">Terimakasih, tiket Anda berhasil terbuat!</h2>
+                                <p class="text-muted lead mb-4">Laporan kendala Anda telah diterima oleh sistem dan sedang diproses oleh Tim IT Helpdesk.</p>
+
+                                <div class="bg-light p-4 rounded-lg text-left border mb-4">
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4 text-secondary font-weight-bold">Nomor Tiket:</div>
+                                        <div class="col-sm-8 font-weight-bold text-primary h5 mb-0" t-esc="ticket.name"/>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4 text-secondary font-weight-bold">Judul Kendala:</div>
+                                        <div class="col-sm-8 text-dark" t-esc="ticket.title"/>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4 text-secondary font-weight-bold">Skala Prioritas:</div>
+                                        <div class="col-sm-8">
+                                            <span class="badge badge-info px-2 py-1" t-esc="ticket.priority or '-'"/>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2" t-if="ticket.engineer_id">
+                                        <div class="col-sm-4 text-secondary font-weight-bold">Teknisi (Engineer):</div>
+                                        <div class="col-sm-8 font-weight-bold text-success" t-esc="ticket.engineer_id.name"/>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4 text-secondary font-weight-bold">Status Tiket:</div>
+                                        <div class="col-sm-8">
+                                            <span class="badge badge-warning px-2 py-1 text-uppercase" t-esc="ticket.state"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info border-info text-left mb-4 shadow-sm">
+                                    <i class="fa fa-info-circle fa-lg mr-2"/>
+                                    <span>Selengkapnya bisa dilihat pada <strong>IT Helpdesk HKI Apps</strong>.</span>
+                                </div>
+
+                                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                                    <a t-attf-href="/web#id=#{ticket.id}&amp;model=helpdesk.ticket&amp;view_type=form" class="btn btn-primary btn-lg font-weight-bold px-4 mb-2 mb-sm-0 mr-sm-2">
+                                        <i class="fa fa-external-link mr-2"/> Buka Detail Tiket di IT Helpdesk HKI Apps
+                                    </a>
+                                    <a href="/helpdesk/submit" class="btn btn-outline-secondary btn-lg font-weight-bold px-4">
+                                        <i class="fa fa-plus-circle mr-2"/> Buat Tiket Lain
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+    </data>
+</odoo>

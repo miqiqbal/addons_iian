@@ -3,7 +3,7 @@
     'version': '15.0.1.0.0',
     'summary': 'Sistem tiket IT Helpdesk dengan priority engine, SLA, work order, dan change request.',
     'category': 'Services/Helpdesk',
-    'author': 'HKI',
+    'author': 'Indra Febriansyah',
     'license': 'LGPL-3',
     'depends': [
         'base',
@@ -12,7 +12,6 @@
         'resource',
         'hr',
         'board',
-        'hki_web_theme',
     ],
     'data': [
         'security/helpdesk_security.xml',
@@ -21,16 +20,17 @@
         'data/helpdesk_priority_question_data.xml',
         'data/helpdesk_priority_matrix_data.xml',
         'data/helpdesk_sla_data.xml',
-        'data/helpdesk_demo_users.xml',
-        'data/helpdesk_keyword_data.xml',
+        'data/helpdesk_sla_status_data.xml',
         'data/mail_template_data.xml',
         'data/helpdesk_email_template_data.xml',
+        'data/helpdesk_change_request_email_template_data.xml',
         'data/ir_cron_data.xml',
         'views/helpdesk_dashboard_views.xml',
         'data/helpdesk_dashboard_data.xml',
         'views/helpdesk_service_views.xml',
         'views/helpdesk_priority_views.xml',
         'views/helpdesk_sla_views.xml',
+        'views/helpdesk_sla_status_views.xml',
         'views/helpdesk_team_views.xml',
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_work_order_views.xml',
@@ -40,8 +40,13 @@
         'views/helpdesk_keyword_views.xml',
         'views/helpdesk_user_views.xml',
         'views/helpdesk_knowledge_views.xml',
+        'wizard/helpdesk_ticket_reassign_wizard_views.xml',
+        'wizard/helpdesk_ticket_reject_wizard_views.xml',
         'report/helpdesk_report_views.xml',
+
         'views/helpdesk_menus.xml',
+        'views/website_helpdesk_ticket_templates.xml',
+
     ],
     'assets': {
         'web.assets_backend': [
@@ -49,7 +54,9 @@
             'it_helpdesk_v2/static/src/js/helpdesk_dashboard.js',
             'it_helpdesk_v2/static/src/js/helpdesk_dashboard_drilldown.js',
             'it_helpdesk_v2/static/src/scss/helpdesk_dashboard.scss',
+            # 'it_helpdesk_v2/static/src/scss/enterprise_theme.scss',
         ],
+
         'web.assets_qweb': [
             'it_helpdesk_v2/static/src/xml/helpdesk_dashboard.xml',
         ],

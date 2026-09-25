@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+    <data noupdate="1">
 
         <!-- Root Application Menu -->
         <menuitem id="menu_it_helpdesk_root" name="IT Helpdesk" sequence="10"
                   groups="group_helpdesk_user"/>
 
+        <!-- ============================================================ -->
+        <!-- INTEGRASI PARENT MEGA MENU (DEPT. SITD) - ID 886             -->
+        <!-- Sesuai konfirmasi developer, Parent Menu SITD bernilai 886   -->
+        <!-- ============================================================ -->
+        <record id="menu_it_helpdesk_root" model="ir.ui.menu">
+            <field name="custom_parent_id">886</field>
+        </record>
+
         <!-- 1. Dashboard -->
         <menuitem id="menu_it_helpdesk_dashboard"
                   name="Dashboard" parent="menu_it_helpdesk_root"
-                  action="action_helpdesk_analytics_dashboard" sequence="10"/>
+                  action="action_helpdesk_analytics_dashboard" sequence="10"
+                  groups="group_helpdesk_agent,group_helpdesk_manager"/>
 
         <!-- 2. Ticket (Dropdown) -->
         <menuitem id="menu_it_helpdesk_tickets_root"
@@ -18,7 +27,8 @@
         <!-- 2.1 All Ticket -->
         <menuitem id="menu_it_helpdesk_all_tickets"
                   name="All Ticket" parent="menu_it_helpdesk_tickets_root"
-                  action="action_helpdesk_ticket" sequence="10"/>
+                  action="action_helpdesk_ticket" sequence="10"
+                  groups="group_helpdesk_agent,group_helpdesk_manager"/>
         
         <!-- 2.2 My Ticket (Memunculkan komplainan akun masing-masing) -->
         <menuitem id="menu_it_helpdesk_my_tickets"
@@ -45,10 +55,40 @@
                   name="Knowledge Base" parent="menu_it_helpdesk_root"
                   action="action_helpdesk_knowledge" sequence="50"/>
 
-        <!-- 6. Change Request -->
+        <!-- 6. Change Request (Dropdown Menu) -->
         <menuitem id="menu_it_helpdesk_change_request"
-                  name="Change Request" parent="menu_it_helpdesk_root" sequence="60"
-                  action="action_helpdesk_change_request"/>
+                  name="Change Request" parent="menu_it_helpdesk_root" sequence="60"/>
+
+        <!-- 6.0 My Change Request -->
+        <menuitem id="menu_it_helpdesk_cr_my"
+                  name="My Change Request" parent="menu_it_helpdesk_change_request"
+                  action="action_helpdesk_cr_my" sequence="5"/>
+
+        <!-- 6.1 Need My Approval -->
+        <menuitem id="menu_it_helpdesk_cr_need_approval"
+                  name="Need My Approval" parent="menu_it_helpdesk_change_request"
+                  action="action_helpdesk_cr_need_approval" sequence="10"
+                  groups="group_helpdesk_agent,group_helpdesk_it_manager,group_helpdesk_manager"/>
+
+
+        <!-- 6.2 Active Queue & Progress -->
+        <menuitem id="menu_it_helpdesk_cr_active_queue"
+                  name="Active Queue &amp; Progress" parent="menu_it_helpdesk_change_request"
+                  action="action_helpdesk_cr_active_queue" sequence="20"
+                  groups="group_helpdesk_agent,group_helpdesk_it_manager,group_helpdesk_manager"/>
+
+        <!-- 6.3 All Change Requests -->
+        <menuitem id="menu_it_helpdesk_cr_all"
+                  name="All Change Requests" parent="menu_it_helpdesk_change_request"
+                  action="action_helpdesk_cr_all" sequence="30"/>
+
+        <!-- 6.4 CR History & Archives -->
+        <menuitem id="menu_it_helpdesk_cr_archive"
+                  name="CR History &amp; Archives" parent="menu_it_helpdesk_change_request"
+                  action="action_helpdesk_cr_archive" sequence="40"
+                  groups="group_helpdesk_agent,group_helpdesk_it_manager,group_helpdesk_manager"/>
+
+
 
         <!-- 7. Reports -->
         <menuitem id="menu_it_helpdesk_report_root"
@@ -61,33 +101,47 @@
                   groups="group_helpdesk_agent"/>
 
         <!-- 8. Configuration (Dropdown) -->
+        <!-- Root tidak dibatasi groups di sini supaya Engineer bisa melihat cabang
+             SLA Policy & SLA Status; item lain di bawah dibatasi group_helpdesk_manager
+             satu per satu. -->
         <menuitem id="menu_it_helpdesk_configuration_root"
-                  name="Configuration" parent="menu_it_helpdesk_root" sequence="80"
-                  groups="group_helpdesk_manager"/>
+                  name="Configuration" parent="menu_it_helpdesk_root" sequence="80"/>
         <menuitem id="menu_it_helpdesk_config_service"
                   name="Service Catalog" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_service" sequence="10"/>
+                  action="action_helpdesk_service" sequence="10"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_category"
                   name="Category" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_category" sequence="20"/>
+                  action="action_helpdesk_category" sequence="20"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_subcategory"
                   name="Sub Category" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_subcategory" sequence="30"/>
+                  action="action_helpdesk_subcategory" sequence="30"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_location"
                   name="Location" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_location" sequence="40"/>
+                  action="action_helpdesk_location" sequence="40"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_priority_question"
                   name="Priority Questionnaire" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_priority_question" sequence="60"/>
+                  action="action_helpdesk_priority_question" sequence="60"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_priority_matrix"
                   name="Priority Matrix" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_priority_matrix" sequence="70"/>
+                  action="action_helpdesk_priority_matrix" sequence="70"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_sla"
                   name="SLA Policy" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_sla" sequence="80"/>
+                  action="action_helpdesk_sla" sequence="80"
+                  groups="group_helpdesk_manager,group_helpdesk_agent"/>
+        <menuitem id="menu_it_helpdesk_config_sla_status"
+                  name="SLA Status" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_sla_status" sequence="85"
+                  groups="group_helpdesk_manager,group_helpdesk_agent"/>
         <menuitem id="menu_it_helpdesk_config_keyword"
                   name="Keyword Routing Rules" parent="menu_it_helpdesk_configuration_root"
-                  action="action_helpdesk_keyword" sequence="90"/>
+                  action="action_helpdesk_keyword" sequence="90"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_users"
                   name="Users &amp; Roles" parent="menu_it_helpdesk_configuration_root"
                   action="base.action_res_users" sequence="100"

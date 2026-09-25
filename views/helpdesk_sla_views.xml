@@ -13,6 +13,8 @@
                     <field name="response_time_unit"/>
                     <field name="resolution_time_value"/>
                     <field name="resolution_time_unit"/>
+                    <field name="auto_close_value" string="Durasi Auto Close"/>
+                    <field name="auto_close_unit" string="Satuan Auto Close"/>
                     <field name="warning_percent"/>
                     <field name="critical_percent"/>
                     <field name="ticket_count" string="Jumlah Case Tiket"/>
@@ -49,6 +51,10 @@
                         <group string="Resolution">
                             <field name="resolution_time_value"/>
                             <field name="resolution_time_unit"/>
+                        </group>
+                        <group string="Auto Close Post-Resolution (Done -> Closed)">
+                            <field name="auto_close_value" string="Durasi Auto Close"/>
+                            <field name="auto_close_unit" string="Satuan Auto Close"/>
                         </group>
                         <group string="Status Thresholds &amp; Alert">
                             <field name="warning_percent"/>

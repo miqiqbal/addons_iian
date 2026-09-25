@@ -7,7 +7,7 @@
             <field name="name">IT Helpdesk: Notifikasi Penugasan Tiket Engineer</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">[(IT Helpdesk) Tiket Baru Di-assign] ${object.name} - ${object.title}</field>
-            <field name="email_from">${object.company_id.email or object.user_id.email or 'noreply@hki.co.id'}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="email_to">${object.engineer_id.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
@@ -46,12 +46,6 @@
                     <p style="margin-top: 15px;">
                         Mohon segera menindaklanjuti tiket ini melalui portal IT Helpdesk.
                     </p>
-                    <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.ticket&amp;view_type=form"
-                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
-                            Buka Tiket di Odoo
-                        </a>
-                    </div>
                     <p style="margin-top: 30px; font-size: 12px; color: #777777;">
                         Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
                     </p>
@@ -64,7 +58,7 @@
             <field name="name">IT Helpdesk: Peringatan SLA 80% Mendekati Due Date</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="subject">[PERINGATAN SLA 80%] Tiket ${object.name} Mendekati Due Date!</field>
-            <field name="email_from">${object.company_id.email or object.user_id.email or 'noreply@hki.co.id'}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
             <field name="email_to">${object.engineer_id.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
@@ -97,7 +91,7 @@
                         </tr>
                     </table>
                     <p style="margin-top: 15px; color: #856404; font-weight: bold;">
-                        Mohon diprioritaskan dan segera diselesaikan sebelum batas waktu SLA terlampaui (SLA Breached).
+                        Mohon diprioritaskan dan segera diselesaikan sebelum batas waktu SLA terlampaui (SLA Overdue).
                     </p>
                     <div style="margin-top: 25px;">
                         <a href="/web#id=${object.id}&amp;model=helpdesk.ticket&amp;view_type=form"

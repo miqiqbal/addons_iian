@@ -1,0 +1,439 @@
+/* ==========================================================================
+   IT HELPDESK ENTERPRISE SCSS THEME (ODOO 15)
+   Based on IT_Helpdesk_Odoo15_SCSS_Theme_Instructions.md & Reference Design
+   ========================================================================== */
+
+/* 1. Color Palette Variables */
+$it-navy: #000A66;
+$it-blue: #05009E;
+$it-purple: #5146A8;
+$it-red: #9A102B;
+$it-orange: #D27A00;
+$it-bg: #ECEEF7;
+
+$it-card-bg: #FFFFFF;
+$it-card-border: #E3E6F0;
+$it-title-color: #30354A;
+
+/* 2. Top Navbar Horizontal 5-Color Gradient */
+.o_main_navbar {
+    background: linear-gradient(
+        90deg,
+        #000A66 0%,
+        #171071 25%,
+        #5B0B65 50%,
+        #9A102B 75%, 
+        #D27A00 100%
+    ) !important;
+    border-bottom: none !important;
+    height: 50px !important;
+    box-shadow: 0 2px 6px rgba(0, 10, 102, 0.15) !important;
+
+    .o_menu_brand, .o_nav_entry, .o_menu_sections > li > a, .o_menu_toggle {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+        font-size: 13px !important;
+    }
+
+    .o_menu_sections > li.show > a, .o_menu_sections > li > a:hover {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        color: #FFFFFF !important;
+    }
+}
+
+/* 3. Global App Canvas Background (#ECEEF7) */
+.o_action_manager, .o_view_controller {
+    background-color: $it-bg !important;
+}
+
+.o_content {
+    background-color: $it-bg !important;
+    padding: 12px 16px 24px 16px !important;
+    overflow-y: auto !important;
+}
+
+/* 4. Ticket List View Container (Floating White Card) */
+.o_list_view {
+    background-color: #FFFFFF !important;
+    border: 1px solid $it-card-border !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 12px rgba(0, 10, 102, 0.08) !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    min-height: calc(100% - 10px) !important;
+    height: auto !important;
+
+
+    /* Main Table & Separated Row Spacing */
+    .o_list_table {
+        background: transparent !important;
+        border-collapse: separate !important;
+        border-spacing: 0 5px !important;
+        font-size: 11px !important;
+        width: 100% !important;
+
+        /* Table Header Navy (#000A66) */
+        thead tr {
+            background-color: $it-navy !important;
+            color: #FFFFFF !important;
+        }
+
+        thead th {
+            color: #FFFFFF !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            padding: 10px 12px !important;
+            border: none !important;
+            white-space: nowrap !important;
+
+            &:first-child {
+                border-radius: 8px 0 0 8px !important;
+            }
+
+            &:last-child {
+                border-radius: 0 8px 8px 0 !important;
+            }
+        }
+
+        /* Table Rows */
+        tbody tr {
+            background: #FFFFFF !important;
+            box-shadow: 0 1px 4px rgba(0, 10, 102, 0.04) !important;
+            transition: all 0.15s ease-in-out !important;
+
+            &:hover {
+                background-color: #F8F9FD !important;
+                box-shadow: 0 3px 10px rgba(0, 10, 102, 0.09) !important;
+            }
+
+            td {
+                padding: 10px 12px !important;
+                border: none !important;
+                color: $it-title-color !important;
+                vertical-align: middle !important;
+                white-space: nowrap !important;
+
+                &:first-child {
+                    border-radius: 8px 0 0 8px !important;
+                }
+
+                &:last-child {
+                    border-radius: 0 8px 8px 0 !important;
+                }
+            }
+        }
+    }
+}
+
+/* Control Panel Bar Styling */
+.o_control_panel {
+    background: #FFFFFF !important;
+    border: 1px solid $it-card-border !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 8px rgba(0, 10, 102, 0.06) !important;
+    margin: 12px 16px 0 16px !important;
+    padding: 12px 20px !important;
+
+    .o_breadcrumb .active, .breadcrumb-item.active {
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        color: $it-title-color !important;
+    }
+
+    /* Primary Action Button (Create) */
+    .btn-primary, .o_list_button_add {
+        background-color: $it-blue !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 5px !important;
+        padding: 7px 14px !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+
+        &:hover {
+            background-color: #030078 !important;
+        }
+    }
+
+    /* Search Input Box */
+    .o_searchview {
+        border: 1px solid #D6D9E4 !important;
+        border-radius: 6px !important;
+        background: #FFFFFF !important;
+        min-height: 34px !important;
+        padding: 0 12px !important;
+
+        &:focus-within {
+            border-color: $it-blue !important;
+            box-shadow: 0 0 0 2px rgba(5, 0, 158, 0.08) !important;
+        }
+    }
+}
+
+/* 5. Custom Status Badges (Progress, Done, Closed, Cancel) */
+.o_badge, .badge {
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    padding: 4px 9px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 54px !important;
+
+    &.decoration-info, &[data-name*="progress"], &[data-name*="Progress"], &.text-bg-info {
+        background-color: #E8E8F0 !important;
+        color: #626575 !important;
+    }
+
+    &.decoration-success, &[data-name*="done"], &[data-name*="Done"], &.text-bg-success {
+        background-color: #8582D8 !important;
+        color: #FFFFFF !important;
+    }
+
+    &[data-name*="closed"], &[data-name*="Closed"] {
+        background-color: #DDF5E8 !important;
+        color: #28A866 !important;
+    }
+
+    &.decoration-danger, &[data-name*="cancel"], &[data-name*="Cancel"], &[data-name*="rejected"], &.text-bg-danger {
+        background-color: #F5A0A8 !important;
+        color: #9D2430 !important;
+    }
+}
+
+/* 6. Form View Styling (Floating Form Sheet & Notebook Tabs) */
+.o_form_view {
+    background-color: $it-bg !important;
+
+    .o_form_sheet_bg {
+        background-color: $it-bg !important;
+        padding: 16px 20px !important;
+
+        .o_form_sheet {
+            background-color: #FFFFFF !important;
+            border: 1px solid $it-card-border !important;
+            border-radius: 16px !important;
+            box-shadow: 0 2px 12px rgba(0, 10, 102, 0.08) !important;
+            padding: 24px !important;
+            margin: 0 auto !important;
+        }
+
+        .o_statusbar_status {
+            .o_arrow_button.btn-primary, .btn-primary.disabled, .btn-primary {
+                background-color: $it-blue !important;
+                color: #FFFFFF !important;
+                border-radius: 12px !important;
+                font-weight: 600 !important;
+                border: none !important;
+            }
+
+            .o_arrow_button {
+                border-radius: 12px !important;
+                margin-right: 4px !important;
+            }
+        }
+    }
+
+    /* Notebook Tabs Bar & Page Container */
+    .o_notebook {
+        .nav-tabs {
+            border-bottom: 2px solid $it-card-border !important;
+
+            .nav-link {
+                text-transform: uppercase !important;
+                font-size: 11px !important;
+                font-weight: 600 !important;
+                letter-spacing: 0.5px !important;
+                color: #626575 !important;
+                border-radius: 6px 6px 0 0 !important;
+                padding: 8px 16px !important;
+
+                &.active {
+                    background-color: $it-navy !important;
+                    color: #FFFFFF !important;
+                    border: none !important;
+                }
+            }
+        }
+
+        .tab-content {
+            background-color: #FFFFFF !important;
+            border: 1px solid $it-card-border !important;
+            border-radius: 12px !important;
+            padding: 16px !important;
+            margin-top: 10px !important;
+            box-shadow: 0 1px 4px rgba(0, 10, 102, 0.03) !important;
+        }
+    }
+
+    /* 7. Enterprise Chatter Styling (Single Outer Floating Card) */
+    .o_FormRenderer_chatterContainer,
+    .oe_chatter {
+        background-color: #FFFFFF !important;
+        border: 1px solid $it-card-border !important;
+        border-radius: 16px !important;
+        box-shadow: 0 2px 12px rgba(0, 10, 102, 0.08) !important;
+        padding: 20px 24px !important;
+        margin: 20px auto 30px auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        /* Reset inner nested layers to prevent 3-layer box framing */
+        .o_ChatterContainer,
+        .o_Chatter {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Topbar Container */
+        .o_ChatterTopbar,
+        .o_ChatterTopbar_actions,
+        .o_chatter_topbar {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            border-bottom: 1px solid #EAECEF !important;
+            padding-bottom: 14px !important;
+            margin-bottom: 18px !important;
+
+            /* Buttons inside Topbar */
+            .btn,
+            button,
+            .btn-link,
+            .o_ChatterTopbar_button,
+            .o_ChatterTopbar_buttonSendMessage,
+            .o_ChatterTopbar_buttonLogNote,
+            .o_ChatterTopbar_buttonScheduleActivity,
+            .o_chatter_button_new_message,
+            .o_chatter_button_log_note,
+            .o_chatter_button_schedule_activity {
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                color: $it-blue !important;
+                background-color: #F0F2FB !important;
+                border: 1px solid #D6D9E4 !important;
+                border-radius: 8px !important;
+                padding: 6px 14px !important;
+                margin-right: 4px !important;
+                text-decoration: none !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                transition: all 0.15s ease-in-out !important;
+
+                &:hover {
+                    color: #FFFFFF !important;
+                    background-color: $it-blue !important;
+                    border-color: $it-blue !important;
+                }
+            }
+
+            /* Followers Button */
+            .o_ChatterTopbar_followerListMenu,
+            .o_ChatterTopbar_buttonFollowers,
+            .o_ChatterTopbar_buttonFollow,
+            .o_followers {
+                .btn, button, .btn-link {
+                    background-color: transparent !important;
+                    border: none !important;
+                    color: #626575 !important;
+
+                    &:hover {
+                        background-color: transparent !important;
+                        color: $it-blue !important;
+                    }
+                }
+            }
+        }
+
+        /* Thread Messages & Cards */
+        .o_Message,
+        .o_thread_message,
+        .o_mail_thread .o_thread_message {
+            background-color: #F8F9FD !important;
+            border-radius: 12px !important;
+            padding: 14px 18px !important;
+            margin-bottom: 12px !important;
+            border: 1px solid #EAECEF !important;
+
+            .o_Message_core,
+            .o_thread_message_core {
+                color: $it-title-color !important;
+            }
+        }
+    }
+}
+
+/* Root-level Fallback for Single Outer Chatter Container Alignment */
+.o_form_sheet_bg > .o_FormRenderer_chatterContainer,
+.o_form_sheet_bg > .oe_chatter,
+.o_action_manager .o_FormRenderer_chatterContainer,
+.o_action_manager .oe_chatter {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E3E6F0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 12px rgba(0, 10, 102, 0.08) !important;
+    padding: 20px 24px !important;
+    margin: 20px auto 30px auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.o_FormRenderer_chatterContainer .o_ChatterContainer,
+.o_FormRenderer_chatterContainer .o_Chatter,
+.oe_chatter .o_ChatterContainer,
+.oe_chatter .o_Chatter {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* 8. Kanban View Styling (Outer Floating Card Container for Knowledge Base & Cards) */
+.o_kanban_view {
+    background-color: #FFFFFF !important;
+    border: 1px solid $it-card-border !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 12px rgba(0, 10, 102, 0.08) !important;
+    padding: 24px !important;
+    margin: 0 !important;
+    min-height: calc(100% - 10px) !important;
+
+    /* Kanban Card Items (Kartu Solusi) */
+    .o_kanban_record {
+        background-color: #F9FAFC !important;
+        border: 1px solid #D0D5EE !important;
+        border-left: 4px solid $it-blue !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0, 10, 102, 0.05) !important;
+        padding: 16px 20px !important;
+        margin-bottom: 16px !important;
+        transition: all 0.2s ease-in-out !important;
+
+        &:hover {
+            background-color: #FFFFFF !important;
+            border-color: $it-blue !important;
+            border-left-color: $it-navy !important;
+            box-shadow: 0 6px 18px rgba(0, 10, 102, 0.14) !important;
+            transform: translateY(-3px);
+        }
+    }
+}
+
+
+
+
+
+
+
+

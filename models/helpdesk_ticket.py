@@ -1,7 +1,17 @@
-from odoo import api, fields, models
+import re
+from datetime import timedelta
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from .helpdesk_priority_matrix import LEVEL_SELECTION
+
+
+def _is_html_empty(html_content):
+    if not html_content:
+        return True
+    clean = re.sub(r'<[^>]*>', '', str(html_content))
+    clean = clean.replace('&nbsp;', '').replace('&#160;', '').replace('\xa0', '').strip()
+    return not bool(clean)
 
 TICKET_PRIORITY_SELECTION = [
     ('1', 'P1 - Critical'), ('2', 'P2 - High'),
@@ -58,16 +68,14 @@ class HelpdeskTicket(models.Model):
     followup_date_it = fields.Char(string='Tanggal_TL_Laporan_(IT)')
     notes_it = fields.Text(string='Catatan')
     service_id = fields.Many2one('helpdesk.service', string='Service')
-    category_id = fields.Many2one('helpdesk.category', string='Category')
-    subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category')
+    category_id = fields.Many2one('helpdesk.category', string='Category', domain="[('service_id', '=?', service_id)]")
+    subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category', domain="[('category_id', '=?', category_id)]")
     description = fields.Html()
     attachment_ids = fields.Many2many('ir.attachment', string='Lampiran')
     resolution = fields.Html(string='Langkah-Langkah / Penjelasan Solusi Kendala (Tutorial)')
     solution_type = fields.Selection([
-        ('text', 'Teks Tutorial Saja'),
-        ('images', 'Kumpulan Capture / Foto Saja'),
-        ('hybrid', 'Teks & Capture (Kombinasi Inline)')
-    ], string='Format Jenis Solusi', default='hybrid')
+        ('text', 'Teks Tutorial Saja')
+    ], string='Format Jenis Solusi', default='text')
     solution_attachment_ids = fields.Many2many(
         'ir.attachment', 'helpdesk_ticket_solution_rel', 'ticket_id', 'attachment_id',
         string='Bukti Foto / File Penyelesaian')
@@ -82,6 +90,10 @@ class HelpdeskTicket(models.Model):
     knowledge_id = fields.Many2one('helpdesk.knowledge', string='Artikel Knowledge Base Linked', copy=False)
     is_engineer_or_officer = fields.Boolean(
         compute='_compute_is_engineer_or_officer')
+    can_reject = fields.Boolean(
+        compute='_compute_can_reject')
+    rejection_reason = fields.Text(
+        string='Alasan Penolakan', copy=False, readonly=True)
 
     @api.onchange('selected_knowledge_id')
     def _onchange_selected_knowledge_id(self):
@@ -95,6 +107,19 @@ class HelpdeskTicket(models.Model):
         is_agent_or_mgr = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')
         for ticket in self:
             ticket.is_engineer_or_officer = is_agent_or_mgr
+
+    @api.depends_context('uid')
+    def _compute_can_reject(self):
+        is_mgr = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')
+        is_agent = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent')
+        for ticket in self:
+            if is_mgr:
+                ticket.can_reject = True
+            elif is_agent:
+                ticket.can_reject = False
+            else:
+                ticket.can_reject = True
+
     engineer_id = fields.Many2one('res.users', string='Engineer', tracking=True)
     engineer_name = fields.Char(string='PIC_IT')
     team_id = fields.Many2one('helpdesk.team')
@@ -106,11 +131,38 @@ class HelpdeskTicket(models.Model):
     first_response_date = fields.Datetime()
     resolved_date = fields.Datetime()
     closed_date = fields.Datetime()
+    auto_close_deadline = fields.Datetime(string='Batas Waktu Auto Close (Hari Kerja)', readonly=True)
+    enable_auto_close = fields.Boolean(
+        string='Auto Close Aktif', compute='_compute_enable_auto_close', store=True, readonly=False,
+        help='Otomatis menutup tiket secara otomatis setelah status Done (High 4 hari, Med 3 hari, Low 2 hari kerja)'
+    )
     last_update = fields.Datetime(compute='_compute_last_update', store=True)
     customer_rating = fields.Selection(CUSTOMER_RATING_SELECTION)
-    is_major_incident = fields.Boolean()
     is_security_incident = fields.Boolean()
     progress_percent = fields.Float(compute='_compute_progress')
+
+    @api.depends('service_id', 'service_id.name', 'category_id', 'subcategory_id')
+    def _compute_enable_auto_close(self):
+        Keyword = self.env['helpdesk.keyword']
+        for ticket in self:
+            service_name = (ticket.service_id.name or '').upper() if ticket.service_id else ''
+            if 'KEAMANAN' in service_name or 'SECURITY' in service_name:
+                ticket.enable_auto_close = False
+                continue
+
+            matching_keywords = Keyword.search([('active', '=', True)])
+            matched_rule = False
+            for rule in matching_keywords:
+                if (ticket.service_id and ticket.service_id in rule.service_ids) or \
+                   (ticket.category_id and ticket.category_id in rule.category_ids) or \
+                   (ticket.subcategory_id and ticket.subcategory_id in rule.subcategory_ids):
+                    matched_rule = rule
+                    break
+
+            if matched_rule:
+                ticket.enable_auto_close = matched_rule.enable_auto_close
+            else:
+                ticket.enable_auto_close = True
 
     # Priority engine (questionnaire dari Stage 3 & 4)
     q1_answer_id = fields.Many2one(
@@ -153,16 +205,22 @@ class HelpdeskTicket(models.Model):
     sla_resolution_breached = fields.Boolean(
         compute='_compute_sla_status', store=True)
     start_progress_date = fields.Datetime(string='Tanggal Start Progress', readonly=True)
+    publish_date = fields.Datetime(string='Tanggal Start (Publish)', readonly=True)
     sla_warning_sent = fields.Boolean(string='SLA Warning Email Sent', default=False, copy=False)
 
     SLA_STATUS_SELECTION = [
         ('on_track', 'On Track'),
         ('warning', 'Warning'),
         ('critical', 'Critical Warning'),
-        ('breached', 'SLA Breached')
+        ('breached', 'SLA Overdue')
     ]
     sla_status_label = fields.Selection(
-        SLA_STATUS_SELECTION, string='SLA Status', compute='_compute_sla_status_label', store=False)
+        SLA_STATUS_SELECTION, string='SLA Status Code', compute='_compute_sla_status_label', store=False)
+    sla_status_name = fields.Char(
+        string='SLA Status', compute='_compute_sla_status_label', store=False)
+    sla_status_color = fields.Selection(
+        [('success', 'Success'), ('info', 'Info'), ('warning', 'Warning'), ('danger', 'Danger')],
+        string='Warna SLA Status', compute='_compute_sla_status_label', store=False)
 
     work_order_ids = fields.One2many('helpdesk.work.order', 'ticket_id')
     work_order_count = fields.Integer(compute='_compute_work_order_count')
@@ -251,13 +309,13 @@ class HelpdeskTicket(models.Model):
             ticket.priority = priority
             ticket.sla_id = sla.id if sla else False
 
-    @api.depends('sla_id', 'created_date')
+    @api.depends('sla_id', 'created_date', 'publish_date')
     def _compute_sla_deadline(self):
         for ticket in self:
-            if ticket.sla_id and ticket.created_date:
-                ticket.sla_response_deadline = ticket.sla_id.get_deadline(ticket.created_date)
-                ticket.sla_resolution_deadline = ticket.sla_id.get_resolution_deadline(
-                    ticket.created_date)
+            start_ref = ticket.publish_date or ticket.created_date or ticket.create_date
+            if ticket.sla_id and start_ref:
+                ticket.sla_response_deadline = ticket.sla_id.get_deadline(start_ref)
+                ticket.sla_resolution_deadline = ticket.sla_id.get_resolution_deadline(start_ref)
             else:
                 ticket.sla_response_deadline = False
                 ticket.sla_resolution_deadline = False
@@ -279,11 +337,22 @@ class HelpdeskTicket(models.Model):
     @api.depends('created_date', 'create_date', 'sla_resolution_deadline', 'resolved_date', 'state')
     def _compute_sla_status_label(self):
         now = fields.Datetime.now()
+        status_map = {s.code: s for s in self.env['helpdesk.sla.status'].sudo().search([])}
+        fallback_name = dict(self.SLA_STATUS_SELECTION)
+        fallback_color = {
+            'on_track': 'success', 'warning': 'warning', 'critical': 'danger', 'breached': 'danger'}
+
+        def apply_status(ticket, code):
+            ticket.sla_status_label = code
+            status = status_map.get(code)
+            ticket.sla_status_name = status.name if status else fallback_name.get(code)
+            ticket.sla_status_color = status.color if status else fallback_color.get(code)
+
         for ticket in self:
             c_date = ticket.created_date or ticket.create_date
             deadline = ticket.sla_resolution_deadline
             if not c_date or not deadline:
-                ticket.sla_status_label = 'on_track'
+                apply_status(ticket, 'on_track')
                 continue
 
             ref_date = (ticket.resolved_date or ticket.closed_date or now) if ticket.state in ('done', 'closed') else now
@@ -292,7 +361,7 @@ class HelpdeskTicket(models.Model):
 
             total_sec = (deadline - c_date).total_seconds()
             if total_sec <= 0:
-                ticket.sla_status_label = 'breached' if ref_date > deadline else 'on_track'
+                apply_status(ticket, 'breached' if ref_date > deadline else 'on_track')
                 continue
 
             used_sec = (ref_date - c_date).total_seconds()
@@ -302,13 +371,13 @@ class HelpdeskTicket(models.Model):
             crit_ratio = (ticket.sla_id.critical_percent / 100.0) if ticket.sla_id and ticket.sla_id.critical_percent else 0.90
 
             if ref_date > deadline or used_ratio >= 1.0:
-                ticket.sla_status_label = 'breached'
+                apply_status(ticket, 'breached')
             elif used_ratio >= crit_ratio:
-                ticket.sla_status_label = 'critical'
+                apply_status(ticket, 'critical')
             elif used_ratio >= warn_ratio:
-                ticket.sla_status_label = 'warning'
+                apply_status(ticket, 'warning')
             else:
-                ticket.sla_status_label = 'on_track'
+                apply_status(ticket, 'on_track')
 
     def _send_engineer_assignment_email(self):
         template = self.env.ref('it_helpdesk_v2.email_template_helpdesk_engineer_assigned', raise_if_not_found=False)
@@ -384,48 +453,73 @@ class HelpdeskTicket(models.Model):
             self.email = self.requester_id.email or self.requester_id.partner_id.email or ''
             self.phone = self.requester_id.phone or self.requester_id.mobile or self.requester_id.partner_id.phone or self.requester_id.partner_id.mobile or ''
 
+    def _get_engineer_daily_ticket_count(self, user_id):
+        """Hitung jumlah tiket aktif yang ditugaskan ke engineer pada hari ini"""
+        today_start = fields.Datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        return self.search_count([
+            ('engineer_id', '=', user_id),
+            ('create_date', '>=', today_start),
+            ('state', 'not in', ('closed', 'reject'))
+        ])
+
+    def _get_failover_engineer(self, primary_engineer_id):
+        """Cari engineer alternatif jika engineer utama sudah penuh kuotanya (Round-Robin / Least Loaded)"""
+        agent_group = self.env.ref('it_helpdesk_v2.group_helpdesk_agent', raise_if_not_found=False)
+        if not agent_group:
+            return False
+
+        engineers = agent_group.users.filtered(lambda u: u.id != primary_engineer_id and u.active)
+        available_engineers = []
+        for eng in engineers:
+            count = self._get_engineer_daily_ticket_count(eng.id)
+            quota = eng.max_daily_quota or 5
+            if count < quota:
+                available_engineers.append((eng.id, count))
+
+        if available_engineers:
+            available_engineers.sort(key=lambda x: x[1])
+            return available_engineers[0][0]
+        return False
+
     def _auto_route_engineer(self, vals):
         content_to_check = "%s %s" % (vals.get('title', self.title or ''), vals.get('description', self.description or ''))
         content_lower = content_to_check.lower()
 
-        KeywordModel = self.env['helpdesk.keyword']
-        keywords = KeywordModel.search([('active', '=', True)], order='sequence, id')
-
-        matched_rule = False
         subcat_id = vals.get('subcategory_id', self.subcategory_id.id if self else False)
         cat_id = vals.get('category_id', self.category_id.id if self else False)
         srv_id = vals.get('service_id', self.service_id.id if self else False)
 
-        # 1. First Priority: Keyword Match in Title / Description (Explicit User Intent, e.g. Lupa Password)
+        keywords = self.env['helpdesk.keyword'].search([('active', '=', True)], order='sequence, id')
+        best_rule = False
+        max_score = 0
+
         for rule in keywords:
-            if not rule.keyword_list:
-                continue
-            words = [k.strip().lower() for k in rule.keyword_list.split(',') if k.strip()]
-            words.sort(key=len, reverse=True)
-            if any(w in content_lower for w in words):
-                matched_rule = rule
-                break
+            score = 0
 
-        # 2. Second Priority: Explicit Subcategory Match
-        if not matched_rule and subcat_id:
-            for rule in keywords:
-                if rule.subcategory_ids and subcat_id in rule.subcategory_ids.ids:
-                    matched_rule = rule
-                    break
+            # 1. Subcategory match (+8 points)
+            if subcat_id and rule.subcategory_ids and subcat_id in rule.subcategory_ids.ids:
+                score += 8
 
-        # 3. Third Priority: Explicit Category Match
-        if not matched_rule and cat_id:
-            for rule in keywords:
-                if rule.category_ids and cat_id in rule.category_ids.ids:
-                    matched_rule = rule
-                    break
+            # 2. Category match (+4 points - e.g. Category SAP)
+            if cat_id and rule.category_ids and cat_id in rule.category_ids.ids:
+                score += 4
 
-        # 4. Fourth Priority: Broad Service Fallback
-        if not matched_rule and srv_id:
-            for rule in keywords:
-                if rule.service_ids and srv_id in rule.service_ids.ids:
-                    matched_rule = rule
-                    break
+            # 3. Keyword match (+2 points - e.g. Title/Description contains keyword)
+            if rule.keyword_list:
+                words = [k.strip().lower() for k in rule.keyword_list.split(',') if k.strip()]
+                words.sort(key=len, reverse=True)
+                if any(w in content_lower for w in words):
+                    score += 2
+
+            # 4. Service match (+1 point - e.g. Layanan Aplikasi)
+            if srv_id and rule.service_ids and srv_id in rule.service_ids.ids:
+                score += 1
+
+            if score > max_score:
+                max_score = score
+                best_rule = rule
+
+        matched_rule = best_rule if max_score > 0 else False
 
         if matched_rule:
             if not vals.get('service_id') and matched_rule.service_ids:
@@ -437,8 +531,21 @@ class HelpdeskTicket(models.Model):
 
         if not vals.get('engineer_id'):
             engineer_id = False
-            if matched_rule and matched_rule.engineer_ids:
-                engineer_id = matched_rule.engineer_ids[0].id
+            if matched_rule and (matched_rule.engineer_line_ids or matched_rule.engineer_ids):
+                # Ambil engineer sesuai urutan persis saat diinput user di form (bebas dari pengurutan abjad)
+                rule_engineers = matched_rule.get_ordered_engineers()
+                if rule_engineers:
+                    avail_rule_engs = []
+                    for eng in rule_engineers:
+                        cnt = self._get_engineer_daily_ticket_count(eng.id)
+                        qta = eng.max_daily_quota or 5
+                        if cnt < qta:
+                            avail_rule_engs.append((eng.id, cnt))
+                    if avail_rule_engs:
+                        # Pilih engineer pertama yang kuotanya masih tersedia sesuai urutan urut input user
+                        engineer_id = avail_rule_engs[0][0]
+                    else:
+                        engineer_id = rule_engineers[0].id
             elif vals.get('subcategory_id'):
                 subcat = self.env['helpdesk.subcategory'].browse(vals['subcategory_id'])
                 if subcat.engineer_id:
@@ -462,6 +569,14 @@ class HelpdeskTicket(models.Model):
                 engineer_id = self.env.uid
 
             if engineer_id:
+                # Cek kuota harian engineer utama & lakukan auto-failover jika penuh
+                primary_eng = self.env['res.users'].browse(engineer_id)
+                daily_count = self._get_engineer_daily_ticket_count(engineer_id)
+                quota = primary_eng.max_daily_quota or 5
+                if daily_count >= quota:
+                    failover_id = self._get_failover_engineer(engineer_id)
+                    if failover_id:
+                        engineer_id = failover_id
                 vals['engineer_id'] = engineer_id
 
     @api.model_create_multi
@@ -485,6 +600,13 @@ class HelpdeskTicket(models.Model):
                 vals['state'] = 'draft'
 
         tickets = super().create(vals_list)
+        for ticket in tickets:
+            atts = ticket.attachment_ids | ticket.solution_attachment_ids
+            if atts:
+                atts.sudo().write({
+                    'res_model': 'helpdesk.ticket',
+                    'res_id': ticket.id,
+                })
         tickets._send_creation_notifications()
         for ticket in tickets:
             if ticket.engineer_id:
@@ -513,7 +635,10 @@ class HelpdeskTicket(models.Model):
             if not ticket.phone: missing.append('Phone')
             if missing:
                 raise UserError('Mohon lengkapi kolom berikut sebelum mempublikasikan tiket:\n• ' + '\n• '.join(missing))
-            vals = {'state': 'open'}
+            vals = {
+                'state': 'open',
+                'publish_date': ticket.publish_date or fields.Datetime.now()
+            }
             ticket.write(vals)
 
     def action_save_draft(self):
@@ -580,13 +705,43 @@ class HelpdeskTicket(models.Model):
         }
 
     def write(self, vals):
-        if vals.get('state') == 'in_progress':
+        if vals.get('state') == 'open':
+            for ticket in self:
+                if not ticket.publish_date:
+                    vals['publish_date'] = fields.Datetime.now()
+
+        if vals.get('state') in ('in_progress', 'done', 'resolved', 'closed'):
             for ticket in self:
                 if not ticket.start_progress_date:
                     vals['start_progress_date'] = fields.Datetime.now()
 
+        # Validasi Ketat Wajib Isi Solusi saat status diubah menjadi Done
+        if vals.get('state') == 'done':
+            for ticket in self:
+                kb_opt = vals.get('is_kb_solution_available', ticket.is_kb_solution_available)
+                if kb_opt == 'yes':
+                    selected_kb = vals.get('selected_knowledge_id', ticket.selected_knowledge_id)
+                    if not selected_kb:
+                        raise UserError('Gagal mengubah status ke Done! Mohon pilih artikel Knowledge Base penyelesaian terlebih dahulu!')
+                else:
+                    res_val = vals.get('resolution', ticket.resolution)
+                    att_val = vals.get('solution_attachment_ids', ticket.solution_attachment_ids)
+                    has_text = not _is_html_empty(res_val)
+                    has_images = bool(att_val)
+                    if not has_text and not has_images:
+                        raise UserError('Gagal mengubah status ke Done! Anda wajib mengisikan Langkah-Langkah Solusi (Teks Panduan) atau mengunggah Lampiran Bukti Foto Penyelesaian terlebih dahulu.')
+
         old_engineers = {t.id: t.engineer_id.id for t in self}
         res = super().write(vals)
+
+        if 'attachment_ids' in vals or 'solution_attachment_ids' in vals:
+            for ticket in self:
+                atts = ticket.attachment_ids | ticket.solution_attachment_ids
+                if atts:
+                    atts.sudo().write({
+                        'res_model': 'helpdesk.ticket',
+                        'res_id': ticket.id,
+                    })
 
         if 'engineer_id' in vals:
             for ticket in self:
@@ -598,15 +753,10 @@ class HelpdeskTicket(models.Model):
                 if ticket.is_published_to_kb:
                     ticket._sync_knowledge_base()
         return res
-        if 'is_published_to_kb' in vals or 'resolution' in vals or 'solution_attachment_ids' in vals or 'solution_type' in vals:
-            for ticket in self:
-                if ticket.is_published_to_kb:
-                    ticket._sync_knowledge_base()
-        return res
 
     def _sync_knowledge_base(self):
         for ticket in self:
-            has_text = bool(ticket.resolution and ticket.resolution.replace('<p>', '').replace('</p>', '').replace('<br>', '').replace('&nbsp;', '').strip())
+            has_text = not _is_html_empty(ticket.resolution)
             has_images = bool(ticket.solution_attachment_ids)
             if not has_text and not has_images:
                 continue
@@ -652,17 +802,19 @@ class HelpdeskTicket(models.Model):
                 ) % (kb_title, self.env.user.name)
 
             else:
-                # Validasi Wajib Isi Bukti / Solusi Penyelesaian (Sesuai Format Pilihan)
-                sol_type = ticket.solution_type or 'hybrid'
-                has_text = bool(ticket.resolution and ticket.resolution.replace('<p>', '').replace('</p>', '').replace('<br>', '').replace('&nbsp;', '').strip())
+                # Validasi Ketat Wajib Isi Solusi / Foto Bukti
+                has_text = not _is_html_empty(ticket.resolution)
                 has_images = bool(ticket.solution_attachment_ids)
 
-                if sol_type == 'text' and not has_text:
-                    raise UserError('Mohon lengkapi Teks Tutorial Penyelesaian Kendala terlebih dahulu sebelum mengklik Mark as Done!')
-                elif sol_type == 'images' and not has_images:
-                    raise UserError('Mohon unggah minimal 1 Foto Screenshot / File Bukti Penyelesaian terlebih dahulu sebelum mengklik Mark as Done!')
-                elif sol_type == 'hybrid' and not (has_text or has_images):
-                    raise UserError('Mohon lengkapi Teks Tutorial atau unggah Bukti Foto Screenshot Penyelesaian terlebih dahulu sebelum mengklik Mark as Done!')
+                if not has_text and not has_images:
+                    raise UserError('Gagal menyelesaikan tiket! Anda wajib mengisikan Langkah-Langkah Solusi (Teks Panduan) atau mengunggah Lampiran Bukti Foto Penyelesaian terlebih dahulu sebelum mengklik Mark as Done!')
+
+                if has_text and has_images:
+                    sol_type = 'hybrid'
+                elif has_text:
+                    sol_type = 'text'
+                else:
+                    sol_type = 'images'
 
                 if ticket.is_published_to_kb:
                     ticket._sync_knowledge_base()
@@ -686,16 +838,61 @@ class HelpdeskTicket(models.Model):
                     "• <b>Diselesaikan Oleh</b>: %s"
                 ) % (format_label, attachment_count, kb_status, text_preview, self.env.user.name)
 
-            ticket.write({
+            now_dt = fields.Datetime.now()
+            vals_done = {
                 'state': 'done',
-                'resolved_date': fields.Datetime.now()
-            })
+                'resolved_date': now_dt
+            }
+            if not ticket.start_progress_date:
+                vals_done['start_progress_date'] = now_dt
+
+            # Hitung Batas Waktu Auto Close berdasarkan Konfigurasi SLA & Hari Kerja
+            if ticket.enable_auto_close:
+                sla = ticket.sla_id or self.env['helpdesk.sla'].search([('priority', '=', ticket.priority)], limit=1)
+                if sla:
+                    vals_done['auto_close_deadline'] = sla.get_auto_close_deadline(now_dt)
+                else:
+                    p_code = ticket.priority or '3'
+                    work_days = 4 if p_code in ('1', '2') else 3 if p_code == '3' else 2
+                    calendar = self.env.company.resource_calendar_id
+                    if calendar:
+                        try:
+                            vals_done['auto_close_deadline'] = calendar.plan_days(work_days, now_dt, compute_leaves=True)
+                        except Exception:
+                            vals_done['auto_close_deadline'] = now_dt + timedelta(days=work_days)
+                    else:
+                        vals_done['auto_close_deadline'] = now_dt + timedelta(days=work_days)
+            else:
+                vals_done['auto_close_deadline'] = False
+
+            ticket.write(vals_done)
 
             # Post explicit resolution action details to Chatter history log
             if log_body:
+                if ticket.enable_auto_close and vals_done.get('auto_close_deadline'):
+                    deadline_str = fields.Datetime.to_string(vals_done['auto_close_deadline'])
+                    log_body += "<br/>• <b>Auto Close Target</b>: %s (Otomatis ditutup dalam %s hari kerja)" % (
+                        deadline_str,
+                        "4" if ticket.priority in ('1', '2') else "3" if ticket.priority == '3' else "2"
+                    )
                 ticket.message_post(body=log_body, subtype_xmlid='mail.mt_note')
 
+    def action_open_reject_wizard(self):
+        self.ensure_one()
+        return {
+            'name': _('Reject Ticket'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'helpdesk.ticket.reject.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_ticket_id': self.id},
+        }
+
     def action_reject(self):
+        return self.action_open_reject_wizard()
+
+
+    def action_cancel(self):
         for ticket in self:
             ticket.write({'state': 'reject'})
 
@@ -706,14 +903,103 @@ class HelpdeskTicket(models.Model):
                 'closed_date': fields.Datetime.now()
             })
 
+    def action_reopen_progress(self):
+        """Dikembalikan dari status Done/Closed ke status Progress oleh Helpdesk Officer / Manager"""
+        now = fields.Datetime.now()
+        for ticket in self:
+            if ticket.state not in ('done', 'closed'):
+                continue
+            vals = {
+                'state': 'in_progress',
+                'resolved_date': False,
+                'closed_date': False,
+                'auto_close_deadline': False,
+            }
+            if ticket.sla_id:
+                vals['sla_resolution_deadline'] = ticket.sla_id.get_resolution_deadline(now)
+            ticket.write(vals)
+            ticket.message_post(
+                body=_("⚠️ <b>Tiket Dikembalikan ke Status Progress</b><br/>Status tiket dikembalikan ke <b>Progress</b> oleh Officer/Manager <b>%s</b> untuk dikerjakan ulang.<br/><i>Durasi SLA Resolution Due Date diaktifkan dan dihitung ulang sesuai tingkat prioritas (%s).</i>") % (self.env.user.name, ticket.priority or '-'),
+                message_type='notification'
+            )
+            if ticket.engineer_id:
+                ticket._send_engineer_assignment_email()
+
+    def action_reopen_assigned(self):
+        """Dikembalikan dari status Done/Closed ke status Assigned oleh Helpdesk Officer / Manager"""
+        now = fields.Datetime.now()
+        for ticket in self:
+            if ticket.state not in ('done', 'closed'):
+                continue
+            vals = {
+                'state': 'assigned',
+                'resolved_date': False,
+                'closed_date': False,
+                'auto_close_deadline': False,
+            }
+            if ticket.sla_id:
+                vals['sla_resolution_deadline'] = ticket.sla_id.get_resolution_deadline(now)
+            ticket.write(vals)
+            ticket.message_post(
+                body=_("⚠️ <b>Tiket Dibuka Kembali (Assigned)</b><br/>Status tiket dikembalikan ke <b>Assigned</b> oleh Officer/Manager <b>%s</b> karena laporan kendala belum sepenuhnya terselesaikan.<br/><i>Durasi SLA Resolution Due Date diaktifkan dan dihitung ulang sesuai tingkat prioritas (%s).</i>") % (self.env.user.name, ticket.priority or '-'),
+                message_type='notification'
+            )
+            if ticket.engineer_id:
+                ticket._send_engineer_assignment_email()
+
+    @api.model
+    def _cron_auto_close_tickets(self):
+        """Cron Job: Penutupan otomatis tiket berstatus Done setelah melewati batas hari kerja Auto Close"""
+        now = fields.Datetime.now()
+        tickets = self.search([
+            ('state', '=', 'done'),
+            ('enable_auto_close', '=', True),
+            ('auto_close_deadline', '!=', False),
+            ('auto_close_deadline', '<=', now)
+        ])
+        for ticket in tickets:
+            ticket.write({
+                'state': 'closed',
+                'closed_date': now,
+            })
+            days_label = "4 hari kerja (High)" if ticket.priority in ('1', '2') else "3 hari kerja (Medium)" if ticket.priority == '3' else "2 hari kerja (Low)"
+            ticket.message_post(
+                body=_("🤖 <b>Auto Close Tiket Otomatis</b><br/>Tiket telah ditutup secara otomatis oleh sistem setelah melewati batas waktu %s pasca penyelesaian.") % days_label,
+                message_type='notification'
+            )
+
+    def action_open_reassign_wizard(self):
+        """Membuka pop-up wizard untuk pengalihan/eskalasi engineer manual"""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Eskalasi / Reassign Ticket',
+            'res_model': 'helpdesk.ticket.reassign.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_ticket_id': self.id,
+                'default_current_engineer_id': self.engineer_id.id if self.engineer_id else False,
+            }
+        }
+
     def _send_creation_notifications(self):
         template_requester = self.env.ref(
-            'it_helpdesk.mail_template_ticket_created_requester', raise_if_not_found=False)
+            'it_helpdesk_v2.mail_template_ticket_created_requester', raise_if_not_found=False)
         template_manager = self.env.ref(
-            'it_helpdesk.mail_template_ticket_created_manager', raise_if_not_found=False)
+            'it_helpdesk_v2.mail_template_ticket_created_manager', raise_if_not_found=False)
         for ticket in self:
+            if ticket.cc_partner_ids:
+                try:
+                    ticket.message_subscribe(partner_ids=ticket.cc_partner_ids.ids)
+                except Exception:
+                    pass
             if template_requester:
-                template_requester.send_mail(ticket.id, force_send=False)
+                cc_emails = [p.email for p in ticket.cc_partner_ids if p.email]
+                email_vals = {}
+                if cc_emails:
+                    email_vals['email_cc'] = ','.join(cc_emails)
+                template_requester.send_mail(ticket.id, force_send=False, email_values=email_vals if email_vals else None)
             if template_manager:
                 teams = self.env['helpdesk.team'].search(
                     [('service_ids', 'in', ticket.service_id.ids)])
@@ -732,7 +1018,7 @@ class HelpdeskTicket(models.Model):
             ('sla_resolution_breached', '=', False),
         ])
         template = self.env.ref(
-            'it_helpdesk.mail_template_ticket_sla_breach', raise_if_not_found=False)
+            'it_helpdesk_v2.mail_template_ticket_sla_breach', raise_if_not_found=False)
         for ticket in tickets:
             ticket.sla_resolution_breached = True
             ticket.message_post(
@@ -769,3 +1055,13 @@ class HelpdeskTicket(models.Model):
             'views': [(self.env.ref('it_helpdesk.view_helpdesk_ticket_form').id, 'form')],
             'target': 'current',
         }
+
+
+class IrAttachment(models.Model):
+    _inherit = 'ir.attachment'
+
+    @api.model
+    def check(self, mode, values=None):
+        if mode == 'read' and self.env.user.has_group('base.group_user'):
+            return True
+        return super().check(mode, values=values)

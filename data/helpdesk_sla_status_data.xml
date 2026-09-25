@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <data>
+
+        <record id="sla_status_on_track" model="helpdesk.sla.status">
+            <field name="code">on_track</field>
+            <field name="name">On Track</field>
+            <field name="color">success</field>
+        </record>
+
+        <record id="sla_status_warning" model="helpdesk.sla.status">
+            <field name="code">warning</field>
+            <field name="name">Warning</field>
+            <field name="color">warning</field>
+        </record>
+
+        <record id="sla_status_critical" model="helpdesk.sla.status">
+            <field name="code">critical</field>
+            <field name="name">Critical Warning</field>
+            <field name="color">danger</field>
+        </record>
+
+        <record id="sla_status_breached" model="helpdesk.sla.status">
+            <field name="code">breached</field>
+            <field name="name">SLA Overdue</field>
+            <field name="color">danger</field>
+        </record>
+
+    </data>
+</odoo>

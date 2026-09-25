@@ -25,10 +25,12 @@
                            decoration-danger="state == 'reject'"/>
                     <field name="engineer_id" string="Engineer" widget="many2one_avatar_user"/>
                     <field name="created_date" string="Created Date"/>
-                    <field name="sla_status_label" string="SLA Status" widget="badge"
-                           decoration-success="sla_status_label == 'on_track'"
-                           decoration-warning="sla_status_label == 'warning'"
-                           decoration-danger="sla_status_label in ('critical', 'breached')"/>
+                    <field name="sla_status_color" invisible="1"/>
+                    <field name="sla_status_name" string="SLA Status" widget="badge"
+                           decoration-success="sla_status_color == 'success'"
+                           decoration-info="sla_status_color == 'info'"
+                           decoration-warning="sla_status_color == 'warning'"
+                           decoration-danger="sla_status_color == 'danger'"/>
                     <field name="sla_resolution_breached" invisible="1"/>
                 </tree>
             </field>
@@ -80,21 +82,31 @@
                 <form>
                     <header>
                         <button name="action_publish" string="Publish Ticket" type="object" class="btn-primary" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                        <button name="action_assign_engineer" string="Assign / Eskalasi ke Engineer" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+                        <button name="action_assign_engineer" string="Assign / Eskalasi ke Engineer" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'open')]}"/>
+                        <button name="action_open_reassign_wizard" string="Eskalasi / Reassign Engineer" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'in', ['draft', 'closed', 'reject'])]}"/>
                         <button name="action_start_progress" string="Start Progress" type="object" class="btn-primary" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['open', 'assigned'])]}"/>
                         <button name="action_done" string="Mark as Done" type="object" class="btn-success" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
-                        <button name="action_reject" string="Reject Ticket" type="object" class="btn-danger" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'in', ['done', 'closed', 'reject'])]}"/>
-                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
+                        <button name="action_reopen_assigned" string="Kembalikan ke Assigned (Reopen)" type="object" class="btn-outline-danger font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
+                        <button name="action_open_reject_wizard" string="Reject Ticket" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                         <button name="action_assign" string="Assign" type="object" invisible="1"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>
                     </header>
                     <sheet>
+                        <field name="can_reject" invisible="1"/>
+                        <div class="alert alert-danger" role="alert"
+                             attrs="{'invisible': [('state', '!=', 'reject')]}">
+                            <strong>Tiket Ditolak (Reject):</strong>
+                            <field name="rejection_reason" readonly="1" class="d-block mt-1"/>
+                        </div>
                         <div class="alert alert-info" role="alert"
                              attrs="{'invisible': ['|', ('state', '!=', 'new'), ('engineer_id', '!=', False)]}">
                             Ticket ini belum di-assign ke Engineer
                         </div>
                         <!-- Title & Ticket Number Header Area -->
                         <div class="mb-3">
+                            <h5 class="font-weight-bold text-primary mb-1">INFORMASI TIKET</h5>
                             <h2 class="text-primary font-weight-bold mb-1">
                                 <field name="name" readonly="1" class="oe_inline"/>
                             </h2>
@@ -151,10 +163,12 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Status SLA</span>
-                                            <field name="sla_status_label" widget="badge" readonly="1"
-                                                   decoration-success="sla_status_label == 'on_track'"
-                                                   decoration-warning="sla_status_label == 'warning'"
-                                                   decoration-danger="sla_status_label in ('critical', 'breached')"/>
+                                            <field name="sla_status_color" invisible="1"/>
+                                            <field name="sla_status_name" widget="badge" readonly="1"
+                                                   decoration-success="sla_status_color == 'success'"
+                                                   decoration-info="sla_status_color == 'info'"
+                                                   decoration-warning="sla_status_color == 'warning'"
+                                                   decoration-danger="sla_status_color == 'danger'"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Phone</span>
@@ -169,9 +183,32 @@
 
                                 <field name="is_engineer_or_officer" invisible="1"/>
                                 <notebook>
-                                    <page string="Description" name="description">
-                                        <field name="description" placeholder="Deskripsi lengkap masalah..."/>
-                                    </page>
+                                     <page string="Description" name="description">
+                                         <field name="description" placeholder="Deskripsi lengkap masalah..."/>
+                                     </page>
+                                     <page string="SLA Time" name="sla_time">
+                                         <div class="card p-3 border-0 bg-white">
+                                             <group>
+                                                 <group string="Informasi Siklus Waktu Tiket">
+                                                     <field name="publish_date" string="Tanggal Open Ticket" readonly="1"/>
+                                                     <field name="start_progress_date" string="Tanggal Start" readonly="1"/>
+                                                     <field name="resolved_date" string="Tanggal Done" readonly="1"/>
+                                                 </group>
+                                                 <group string="Target &amp; Status SLA">
+                                                     <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
+                                                     <field name="sla_resolution_deadline" string="Tanggal Due Date" readonly="1"/>
+                                                     <field name="enable_auto_close" string="Auto Close Aktif" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                                     <field name="auto_close_deadline" string="Batas Waktu Auto Close" readonly="1" attrs="{'invisible': [('enable_auto_close', '=', False)]}"/>
+                                                     <field name="sla_status_color" invisible="1"/>
+                                                     <field name="sla_status_name" string="Status SLA" widget="badge" readonly="1"
+                                                            decoration-success="sla_status_color == 'success'"
+                                                            decoration-info="sla_status_color == 'info'"
+                                                            decoration-warning="sla_status_color == 'warning'"
+                                                            decoration-danger="sla_status_color == 'danger'"/>
+                                                 </group>
+                                             </group>
+                                         </div>
+                                     </page>
                                      <page string="Penyelesaian &amp; Bukti Solusi (Engineer)" name="resolution_proof" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
                                          <div class="card p-3 mb-3 border rounded bg-light">
                                              <span class="font-weight-bold d-block text-primary mb-2">Apakah Penyelesaian Tersedia pada Knowledge Base?</span>
@@ -191,15 +228,11 @@
                                                      <field name="is_published_to_kb" widget="boolean_toggle"/>
                                                  </div>
                                              </div>
-                                             <div class="card p-3 mb-3 border rounded bg-light">
-                                                 <span class="font-weight-bold d-block text-primary mb-2">Pilih Format Jenis Solusi:</span>
-                                                 <field name="solution_type" widget="radio" options="{'horizontal': true}"/>
-                                             </div>
-                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('solution_type', '=', 'images')]}">
+                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm">
                                                  <label for="resolution" string="Langkah-Langkah / Teks Panduan Penyelesaian Kendala (Tutorial)" class="font-weight-bold mb-2 text-primary"/>
                                                  <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
                                              </div>
-                                             <div class="card p-3 border rounded bg-white shadow-sm mt-3" attrs="{'invisible': [('solution_type', '=', 'text')]}">
+                                             <div class="card p-3 border rounded bg-white shadow-sm mt-3">
                                                  <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary"/>
                                                  <field name="solution_attachment_ids" widget="many2many_binary"/>
                                              </div>
@@ -260,11 +293,11 @@
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Category</span>
-                                        <field name="category_id"/>
+                                        <field name="category_id" domain="[('service_id', '=?', service_id)]"/>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Sub Category</span>
-                                        <field name="subcategory_id"/>
+                                        <field name="subcategory_id" domain="[('category_id', '=?', category_id)]"/>
                                     </div>
                                     <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
                                         <span class="text-muted">Impact</span>

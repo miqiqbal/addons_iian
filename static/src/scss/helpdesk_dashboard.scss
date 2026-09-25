@@ -1,4 +1,6 @@
-.o_action_manager, .o_action, .o_content {
+.o_action_manager,
+.o_action,
+.o_content {
     overflow: auto !important;
 }
 
@@ -9,6 +11,8 @@
     background-color: #f8fafc;
 
     .o_kpi_clickable_card {
+
+
         border-radius: 10px !important;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -38,7 +42,22 @@
             transform: scale(1.05);
         }
     }
+}
 
+/* Make Form View Sheet Full Width across the screen */
+.o_form_view {
+    .o_form_sheet_bg {
+        padding: 15px !important;
+
+        .o_form_sheet {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+        }
+    }
+}
+
+.o_helpdesk_analytics_dashboard {
     .btn-group-toggle .btn {
         border-color: #cbd5e1;
 

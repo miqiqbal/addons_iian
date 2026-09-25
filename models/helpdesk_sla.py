@@ -21,6 +21,8 @@ class HelpdeskSLA(models.Model):
     update_frequency_text = fields.Char()
     resolution_time_value = fields.Float(required=True)
     resolution_time_unit = fields.Selection(TIME_UNIT_SELECTION, required=True)
+    auto_close_value = fields.Float(string='Durasi Auto Close (Nilai)', default=4.0)
+    auto_close_unit = fields.Selection(TIME_UNIT_SELECTION, string='Satuan Auto Close', default='working_day')
     warning_percent = fields.Float(string='Batas Warning (%)', default=80.0, help='Persentase durasi SLA untuk memicu status Warning & Email Alert')
     critical_percent = fields.Float(string='Batas Critical (%)', default=90.0, help='Persentase durasi SLA untuk memicu status Critical Warning')
     active = fields.Boolean(default=True)
@@ -49,14 +51,22 @@ class HelpdeskSLA(models.Model):
 
     def _compute_deadline(self, start_datetime, value, unit):
         self.ensure_one()
-        if unit == 'minute':
-            return start_datetime + timedelta(minutes=value)
-        if unit == 'hour':
-            return start_datetime + timedelta(hours=value)
+        if not start_datetime:
+            return False
         calendar = self.env.company.resource_calendar_id
-        if unit == 'working_hour':
+        if not calendar:
+            if unit == 'minute':
+                return start_datetime + timedelta(minutes=value)
+            if unit in ('hour', 'working_hour'):
+                return start_datetime + timedelta(hours=value)
+            return start_datetime + timedelta(days=value)
+
+        if unit == 'minute':
+            return calendar.plan_hours(value / 60.0, start_datetime, compute_leaves=True)
+        if unit in ('hour', 'working_hour'):
             return calendar.plan_hours(value, start_datetime, compute_leaves=True)
         return calendar.plan_days(value, start_datetime, compute_leaves=True)
+
 
     def get_deadline(self, start_datetime):
         self.ensure_one()
@@ -67,3 +77,9 @@ class HelpdeskSLA(models.Model):
         self.ensure_one()
         return self._compute_deadline(
             start_datetime, self.resolution_time_value, self.resolution_time_unit)
+
+    def get_auto_close_deadline(self, start_datetime):
+        self.ensure_one()
+        val = self.auto_close_value or (4.0 if self.priority in ('1', '2') else 3.0 if self.priority == '3' else 2.0)
+        unit = self.auto_close_unit or 'working_day'
+        return self._compute_deadline(start_datetime, val, unit)

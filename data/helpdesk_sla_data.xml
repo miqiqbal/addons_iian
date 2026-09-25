@@ -9,7 +9,7 @@
             <field name="response_time_unit">minute</field>
             <field name="update_frequency_text">Setiap 1 jam</field>
             <field name="resolution_time_value">4</field>
-            <field name="resolution_time_unit">hour</field>
+            <field name="resolution_time_unit">working_hour</field>
         </record>
 
         <record id="helpdesk_sla_p2" model="helpdesk.sla">
