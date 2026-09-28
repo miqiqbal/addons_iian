@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- noupdate="1" WAJIB: post_init_hook (hooks.py) menimpa arch placeholder
+         di bawah dengan action id asli setelah instalasi pertama. Tanpa
+         noupdate, setiap upgrade modul (-u) akan menulis ulang XML ini dan
+         mengembalikan arch ke placeholder kosong, menimpa hasil hook. -->
+    <data noupdate="1">
+
+        <!-- Arch di sini cuma placeholder 2 kolom kosong; isi <action> dengan ID
+             numerik asli ditulis oleh post_init_hook (lihat hooks.py) setelah
+             semua action window di atas selesai dibuat, karena ID-nya baru
+             tersedia setelah data ini di-load, bukan saat XML ini ditulis. -->
+        <record id="view_helpdesk_dashboard_board" model="ir.ui.view">
+            <field name="name">Helpdesk Dashboard</field>
+            <field name="model">board.board</field>
+            <field name="arch" type="xml">
+                <form string="Helpdesk Dashboard">
+                    <board style="2-2">
+                        <column></column>
+                        <column></column>
+                    </board>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_dashboard" model="ir.actions.act_window">
+            <field name="name">Helpdesk Dashboard</field>
+            <field name="res_model">board.board</field>
+            <field name="view_mode">form</field>
+            <field name="usage">menu</field>
+            <field name="view_id" ref="view_helpdesk_dashboard_board"/>
+        </record>
+
+    </data>
+</odoo>

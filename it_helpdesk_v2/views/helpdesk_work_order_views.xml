@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_helpdesk_work_order_list" model="ir.ui.view">
+            <field name="name">helpdesk.work.order.list</field>
+            <field name="model">helpdesk.work.order</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="task"/>
+                    <field name="created_on"/>
+                    <field name="assign_to"/>
+                    <field name="service_id"/>
+                    <field name="category_id"/>
+                    <field name="subcategory_id"/>
+                    <field name="starting_at"/>
+                    <field name="deadline_at"/>
+                    <field name="progress" widget="progressbar"/>
+                    <field name="status" widget="badge"
+                           decoration-info="status == 'open'"
+                           decoration-warning="status == 'done'"
+                           decoration-success="status == 'closed'"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_work_order_form" model="ir.ui.view">
+            <field name="name">helpdesk.work.order.form</field>
+            <field name="model">helpdesk.work.order</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <field name="status" widget="statusbar" statusbar_visible="open,done,closed"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="task"/>
+                            <h1><field name="task" placeholder="Task..."/></h1>
+                        </div>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="ticket_id"/>
+                                <field name="assign_to"/>
+                                <field name="created_on"/>
+                            </group>
+                            <group>
+                                <field name="service_id" readonly="1"/>
+                                <field name="category_id" readonly="1"/>
+                                <field name="subcategory_id" readonly="1"/>
+                                <field name="starting_at"/>
+                                <field name="deadline_at"/>
+                                <field name="progress" widget="progressbar"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_work_order" model="ir.actions.act_window">
+            <field name="name">All Work Order</field>
+            <field name="res_model">helpdesk.work.order</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Smart button "Work Order" di form detail tiket (Stage 7), ditunda dari
+             Stage 6/7 karena model ini baru ada sekarang. -->
+        <record id="view_helpdesk_ticket_form_work_order_button" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.form.work.order.button</field>
+            <field name="model">helpdesk.ticket</field>
+            <field name="inherit_id" ref="view_helpdesk_ticket_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet/div[hasclass('alert-info')]" position="before">
+                    <div class="oe_button_box" name="button_box">
+                        <button type="object" name="action_view_work_orders"
+                                class="oe_stat_button" icon="fa-wrench">
+                            <field name="work_order_count" widget="statinfo" string="Work Order"/>
+                        </button>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

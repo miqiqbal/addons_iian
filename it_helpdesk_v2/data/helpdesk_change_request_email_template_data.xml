@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- 1. Notifikasi CR menunggu approval Manager Departemen -->
+        <record id="email_template_cr_dept_approval" model="mail.template">
+            <field name="name">IT Helpdesk: CR Menunggu Approval Manager Dept</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="subject">[CR Menunggu Approval Anda] ${object.code or object.name}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_to">${object.dept_manager_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+                        Halo ${object.dept_manager_id.name or 'Manager'},
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Ada pengajuan Change Request baru yang menunggu approval Anda selaku Manager Departemen:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Kategori</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.category or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Departemen</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Diajukan Oleh</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.created_by.name or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Review &amp; Approve di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- 2. Notifikasi CR menunggu approval Manager IT -->
+        <record id="email_template_cr_it_approval" model="mail.template">
+            <field name="name">IT Helpdesk: CR Menunggu Approval Manager IT</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="subject">[CR Menunggu Approval IT] ${object.code or object.name}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_to">${object.manager_it_id.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+                        Halo ${object.manager_it_id.name or 'Manager IT'},
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Change Request berikut sudah disetujui oleh Manager Departemen dan kini menunggu approval Anda selaku Manager IT:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Kategori</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.category or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Departemen</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Disetujui Manager Dept</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.dept_manager_id.name or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Review &amp; Approve di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- 3. Notifikasi CR ditolak -->
+        <record id="email_template_cr_rejected" model="mail.template">
+            <field name="name">IT Helpdesk: CR Ditolak</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="subject">[CR Ditolak] ${object.code or object.name}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_to">${object.created_by.email or object.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #d9534f;">
+                        Change Request Anda Ditolak
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Halo ${object.created_by.name or ''}, Change Request berikut telah ditolak:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #fff3cd;">
+                            <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold;">Alasan Penolakan</td>
+                            <td style="padding: 10px; border: 1px solid #ffeeba; color: #856404; font-weight: bold;">${object.rejection_reason or '-'}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Lihat Detail di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- 4. Notifikasi CR selesai -->
+        <record id="email_template_cr_done" model="mail.template">
+            <field name="name">IT Helpdesk: CR Selesai</field>
+            <field name="model_id" ref="model_helpdesk_change_request"/>
+            <field name="subject">[CR Selesai] ${object.code or object.name}</field>
+            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_to">${object.created_by.email or object.email}</field>
+            <field name="body_html" type="html">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #28a745;">
+                        Change Request Anda Telah Selesai
+                    </p>
+                    <p style="margin-top: 10px;">
+                        Halo ${object.created_by.name or ''}, Change Request berikut telah selesai diproses:
+                    </p>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Engineer / PIC IT</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.engineer_id.name or '-'}</td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 25px;">
+                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                           style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            Lihat Detail di Odoo
+                        </a>
+                    </div>
+                    <p style="margin-top: 30px; font-size: 12px; color: #777777;">
+                        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+                    </p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>
