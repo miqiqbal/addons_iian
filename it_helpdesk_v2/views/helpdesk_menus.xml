@@ -11,7 +11,7 @@
         <!-- Sesuai konfirmasi developer, Parent Menu SITD bernilai 886   -->
         <!-- ============================================================ -->
         <record id="menu_it_helpdesk_root" model="ir.ui.menu">
-            <field name="custom_parent_id" eval="886"/>
+            <field name="custom_parent_id" eval="882"/>
         </record>
 
         <!-- 1. Dashboard -->

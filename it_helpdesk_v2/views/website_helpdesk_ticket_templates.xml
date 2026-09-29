@@ -291,7 +291,7 @@
                                                 var searchInput = document.createElement("input");
                                                 searchInput.type = "text";
                                                 searchInput.className = "form-control form-control-sm search-box-input";
-                                                searchInput.placeholder = "🔍 Ketik untuk mencari...";
+                                                searchInput.placeholder = "Ketik untuk mencari...";
                                                 searchBoxDiv.appendChild(searchInput);
                                                 dropdown.appendChild(searchBoxDiv);
 

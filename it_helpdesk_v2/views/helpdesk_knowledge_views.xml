@@ -35,7 +35,7 @@
                             <div class="oe_kanban_global_click p-3 border rounded shadow-sm bg-white" style="border-radius:10px;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="font-weight-bold text-primary" style="font-size:16px;">
-                                        📚 <t t-esc="record.name.value"/>
+                                        <i class="fa fa-book mr-1"/> <t t-esc="record.name.value"/>
                                     </div>
                                     <span t-if="record.is_quick_solution.raw_value" class="badge badge-success">Quick Solution</span>
                                 </div>
@@ -102,7 +102,7 @@
 
                         <!-- Attachment Section -->
                         <div class="card p-3 border rounded bg-light mt-4">
-                            <span class="font-weight-bold text-secondary mb-2 d-block">📎 Attachment / File Tambahan</span>
+                            <span class="font-weight-bold text-secondary mb-2 d-block"><i class="fa fa-paperclip mr-1"/> Attachment / File Tambahan</span>
                             <field name="attachment_ids" widget="many2many_binary"/>
                         </div>
                     </sheet>

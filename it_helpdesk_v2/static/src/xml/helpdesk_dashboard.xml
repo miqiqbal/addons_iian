@@ -369,7 +369,7 @@
                                 </li>
                             </t>
                             <t t-if="!widget.data.top_sla_breached.length">
-                                <li class="list-group-item px-0 py-1 border-0 text-success">Tidak ada tiket SLA overdue 🎉</li>
+                                <li class="list-group-item px-0 py-1 border-0 text-success">Tidak ada tiket SLA overdue <i class="fa fa-check-circle ml-1"/></li>
                             </t>
                         </ul>
                     </div>
