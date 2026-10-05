@@ -92,13 +92,25 @@
                                 <div class="card p-3 border-0 bg-white">
                                     <group>
                                         <group string="Informasi Siklus Waktu Tiket">
-                                            <field name="publish_date" string="Tanggal Open Ticket" readonly="1"/>
-                                            <field name="start_progress_date" string="Tanggal Start" readonly="1"/>
-                                            <field name="resolved_date" string="Tanggal Done" readonly="1"/>
+                                            <!-- Non-IT Admin View -->
+                                            <field name="publish_date" string="Tanggal Open Ticket" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="start_progress_date" string="Tanggal Start" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="resolved_date" string="Tanggal Done" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_manager"/>
+
+                                            <!-- IT Admin View -->
+                                            <field name="publish_date" string="Tanggal Open Ticket" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="start_progress_date" string="Tanggal Start" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="resolved_date" string="Tanggal Done" groups="it_helpdesk_v2.group_helpdesk_manager"/>
                                         </group>
                                         <group string="Target &amp; Status SLA">
-                                            <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
-                                            <field name="sla_resolution_deadline" string="Tanggal Due Date" readonly="1"/>
+                                            <!-- Non-IT Admin View -->
+                                            <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="sla_resolution_deadline" string="Tanggal Due Date" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_manager"/>
+
+                                            <!-- IT Admin View -->
+                                            <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                            <field name="sla_resolution_deadline" string="Tanggal Due Date" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+
                                             <field name="sla_status_color" invisible="1"/>
                                             <field name="sla_status_name" string="Status SLA" widget="badge" readonly="1"
                                                    decoration-success="sla_status_color == 'success'"
@@ -108,6 +120,23 @@
                                         </group>
                                     </group>
                                 </div>
+                            </page>
+                            <page string="History" name="history">
+                                <field name="message_ids" readonly="1" nolabel="1" groups="!it_helpdesk_v2.group_helpdesk_manager">
+                                    <tree>
+                                        <field name="date"/>
+                                        <field name="author_id"/>
+                                        <field name="subject"/>
+                                    </tree>
+                                </field>
+                                <field name="message_ids" nolabel="1" groups="it_helpdesk_v2.group_helpdesk_manager">
+                                    <tree editable="bottom">
+                                        <field name="date"/>
+                                        <field name="author_id"/>
+                                        <field name="subject"/>
+                                        <field name="body" widget="html"/>
+                                    </tree>
+                                </field>
                             </page>
                             <page string="Penyelesaian &amp; Bukti Solusi (Engineer)" name="resolution_proof" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
                                 <div class="card p-3 mb-3 border rounded bg-light">

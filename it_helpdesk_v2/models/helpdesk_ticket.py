@@ -205,9 +205,9 @@ class HelpdeskTicket(models.Model):
     sla_resolution_time_value = fields.Float(related='sla_id.resolution_time_value')
     sla_resolution_time_unit = fields.Selection(related='sla_id.resolution_time_unit')
     sla_response_deadline = fields.Datetime(
-        compute='_compute_sla_deadline', store=True, readonly=False)
+        compute='_compute_sla_deadline', inverse='_inverse_sla_response_deadline', store=True, readonly=False)
     sla_resolution_deadline = fields.Datetime(
-        compute='_compute_sla_deadline', store=True, readonly=False)
+        compute='_compute_sla_deadline', inverse='_inverse_sla_resolution_deadline', store=True, readonly=False)
     sla_response_breached = fields.Boolean(
         compute='_compute_sla_status', store=True)
     sla_resolution_breached = fields.Boolean(
@@ -327,6 +327,12 @@ class HelpdeskTicket(models.Model):
             else:
                 ticket.sla_response_deadline = False
                 ticket.sla_resolution_deadline = False
+
+    def _inverse_sla_response_deadline(self):
+        pass
+
+    def _inverse_sla_resolution_deadline(self):
+        pass
 
     @api.depends(
         'sla_response_deadline', 'sla_resolution_deadline',
