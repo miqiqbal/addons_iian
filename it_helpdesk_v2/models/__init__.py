@@ -1,5 +1,6 @@
 from . import helpdesk_service
 from . import helpdesk_category
+from . import helpdesk_cr_type
 from . import helpdesk_location
 from . import helpdesk_priority_question
 from . import helpdesk_priority_matrix
@@ -15,5 +16,6 @@ from . import helpdesk_ticket_report
 from . import res_users
 from . import helpdesk_knowledge
 from . import ir_ui_menu
+
 
 

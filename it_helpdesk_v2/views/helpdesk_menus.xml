@@ -18,7 +18,7 @@
         <menuitem id="menu_it_helpdesk_dashboard"
                   name="Dashboard" parent="menu_it_helpdesk_root"
                   action="action_helpdesk_analytics_dashboard" sequence="10"
-                  groups="group_helpdesk_agent,group_helpdesk_manager"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
 
         <!-- 2. Ticket (Dropdown) -->
         <menuitem id="menu_it_helpdesk_tickets_root"
@@ -28,7 +28,7 @@
         <menuitem id="menu_it_helpdesk_all_tickets"
                   name="All Ticket" parent="menu_it_helpdesk_tickets_root"
                   action="action_helpdesk_ticket" sequence="10"
-                  groups="group_helpdesk_agent,group_helpdesk_manager"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
         
         <!-- 2.2 My Ticket (Memunculkan komplainan akun masing-masing) -->
         <menuitem id="menu_it_helpdesk_my_tickets"
@@ -39,11 +39,11 @@
         <menuitem id="menu_it_helpdesk_assigned_to_me"
                   name="Assigned Tickets to Me" parent="menu_it_helpdesk_tickets_root"
                   action="action_helpdesk_assigned_to_me" sequence="30"
-                  groups="group_helpdesk_agent"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_assigned_cr_to_me"
                   name="Assigned CR to Me" parent="menu_it_helpdesk_tickets_root"
                   action="action_helpdesk_assigned_cr_to_me" sequence="35"
-                  groups="group_helpdesk_agent"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
 
         <!-- 2.4 Create Ticket -->
         <menuitem id="menu_it_helpdesk_create_ticket"
@@ -70,7 +70,6 @@
                   action="action_helpdesk_cr_need_approval" sequence="10"
                   groups="group_helpdesk_agent,group_helpdesk_it_manager,group_helpdesk_manager"/>
 
-
         <!-- 6.2 Active Queue & Progress -->
         <menuitem id="menu_it_helpdesk_cr_active_queue"
                   name="Active Queue &amp; Progress" parent="menu_it_helpdesk_change_request"
@@ -86,26 +85,22 @@
         <menuitem id="menu_it_helpdesk_cr_archive"
                   name="CR History &amp; Archives" parent="menu_it_helpdesk_change_request"
                   action="action_helpdesk_cr_archive" sequence="40"
-                  groups="group_helpdesk_agent,group_helpdesk_it_manager,group_helpdesk_manager"/>
-
-
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
 
         <!-- 7. Reports -->
         <menuitem id="menu_it_helpdesk_report_root"
                   name="Reports" parent="menu_it_helpdesk_root" sequence="70"
                   action="action_helpdesk_report_tickets"
-                  groups="group_helpdesk_agent"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_report_pivot"
                   name="Analisis Data &amp; Pivot" parent="menu_it_helpdesk_report_root"
                   action="action_helpdesk_ticket_pivot" sequence="20"
-                  groups="group_helpdesk_agent"/>
+                  groups="group_helpdesk_it_manager,group_helpdesk_manager"/>
 
         <!-- 8. Configuration (Dropdown) -->
-        <!-- Root tidak dibatasi groups di sini supaya Engineer bisa melihat cabang
-             SLA Policy & SLA Status; item lain di bawah dibatasi group_helpdesk_manager
-             satu per satu. -->
         <menuitem id="menu_it_helpdesk_configuration_root"
-                  name="Configuration" parent="menu_it_helpdesk_root" sequence="80"/>
+                  name="Configuration" parent="menu_it_helpdesk_root" sequence="80"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_service"
                   name="Service Catalog" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_service" sequence="10"
@@ -117,6 +112,10 @@
         <menuitem id="menu_it_helpdesk_config_subcategory"
                   name="Sub Category" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_subcategory" sequence="30"
+                  groups="group_helpdesk_manager"/>
+        <menuitem id="menu_it_helpdesk_config_cr_type"
+                  name="CR Type" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_cr_type" sequence="35"
                   groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_location"
                   name="Location" parent="menu_it_helpdesk_configuration_root"
@@ -133,11 +132,11 @@
         <menuitem id="menu_it_helpdesk_config_sla"
                   name="SLA Policy" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_sla" sequence="80"
-                  groups="group_helpdesk_manager,group_helpdesk_agent"/>
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_sla_status"
                   name="SLA Status" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_sla_status" sequence="85"
-                  groups="group_helpdesk_manager,group_helpdesk_agent"/>
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_keyword"
                   name="Keyword Routing Rules" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_keyword" sequence="90"

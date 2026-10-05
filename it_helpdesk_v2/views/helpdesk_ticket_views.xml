@@ -89,7 +89,7 @@
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                         <button name="action_reopen_assigned" string="Kembalikan ke Assigned (Reopen)" type="object" class="btn-outline-danger font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                         <button name="action_open_reject_wizard" string="Reject Ticket" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
-                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                         <button name="action_assign" string="Assign" type="object" invisible="1"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>
                     </header>
@@ -190,9 +190,11 @@
                                          <div class="card p-3 border-0 bg-white">
                                              <group>
                                                  <group string="Informasi Siklus Waktu Tiket">
-                                                     <field name="publish_date" string="Tanggal Open Ticket" readonly="1"/>
-                                                     <field name="start_progress_date" string="Tanggal Start" readonly="1"/>
-                                                     <field name="resolved_date" string="Tanggal Done" readonly="1"/>
+                                                     <field name="is_admin" invisible="1"/>
+                                                      <field name="publish_date" string="Tanggal Open Ticket" readonly="1"/>
+                                                      <field name="start_progress_date" string="Tanggal Start" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                      <field name="resolved_date" string="Tanggal Done" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                      <field name="closed_date" string="Tanggal Closed" attrs="{'readonly': [('is_admin', '=', False)]}"/>
                                                  </group>
                                                  <group string="Target &amp; Status SLA">
                                                      <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>

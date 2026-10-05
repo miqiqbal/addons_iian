@@ -16,7 +16,7 @@
                         <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                         <button name="action_reopen_assigned" string="Kembalikan ke Assigned (Reopen)" type="object" class="btn-outline-danger font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
-                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                         <button name="action_open_reject_wizard" string="Reject Ticket" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'done', 'closed', 'reject'])]}"/>
 
                         <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>

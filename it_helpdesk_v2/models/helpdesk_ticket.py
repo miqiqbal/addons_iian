@@ -94,6 +94,14 @@ class HelpdeskTicket(models.Model):
         compute='_compute_can_reject')
     rejection_reason = fields.Text(
         string='Alasan Penolakan', copy=False, readonly=True)
+    is_admin = fields.Boolean(
+        compute='_compute_is_admin')
+
+    @api.depends_context('uid')
+    def _compute_is_admin(self):
+        has_admin = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager') or self.env.is_superuser()
+        for ticket in self:
+            ticket.is_admin = has_admin
 
     @api.onchange('selected_knowledge_id')
     def _onchange_selected_knowledge_id(self):
@@ -752,6 +760,22 @@ class HelpdeskTicket(models.Model):
             for ticket in self:
                 if ticket.is_published_to_kb:
                     ticket._sync_knowledge_base()
+
+        # Synchronize Chatter message timestamp when date fields are modified by IT Admin / Backdate
+        if 'resolved_date' in vals or 'closed_date' in vals or 'start_progress_date' in vals:
+            for ticket in self:
+                if 'resolved_date' in vals and vals['resolved_date']:
+                    msgs = ticket.message_ids.filtered(
+                        lambda m: 'AKSI PENYELESAIAN TIKET' in (m.body or '') or 'RESOLVED LOG' in (m.body or '') or 'Done' in (m.body or '') or 'Selesai' in (m.body or '')
+                    )
+                    if msgs:
+                        msgs.sudo().write({'date': vals['resolved_date']})
+                if 'closed_date' in vals and vals['closed_date']:
+                    msgs = ticket.message_ids.filtered(
+                        lambda m: 'Closed' in (m.body or '') or 'Tutup' in (m.body or '')
+                    )
+                    if msgs:
+                        msgs.sudo().write({'date': vals['closed_date']})
         return res
 
     def _sync_knowledge_base(self):
@@ -875,7 +899,9 @@ class HelpdeskTicket(models.Model):
                         deadline_str,
                         "4" if ticket.priority in ('1', '2') else "3" if ticket.priority == '3' else "2"
                     )
-                ticket.message_post(body=log_body, subtype_xmlid='mail.mt_note')
+                msg = ticket.message_post(body=log_body, subtype_xmlid='mail.mt_note')
+                if msg and ticket.resolved_date:
+                    msg.sudo().write({'date': ticket.resolved_date})
 
     def action_open_reject_wizard(self):
         self.ensure_one()

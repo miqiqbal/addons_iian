@@ -10,24 +10,28 @@
                     <field name="code"/>
                     <field name="queue_number" string="No. Antrian"/>
                     <field name="request_identification"/>
-                    <field name="category"/>
+                    <field name="cr_type_id" string="CR Type"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="subcategory_id" string="Sub Category"/>
+                    <field name="target_department_id" string="CR to Departement"/>
                     <field name="created_by" string="Requester"/>
-                    <field name="location_id" string="Departemen Terkait"/>
+                    <field name="department_id" string="Placement / Unit Kerja"/>
                     <field name="dept_manager_id" string="Manager Dept"/>
+                    <field name="kadept_manager_id" string="Kadept Terkait"/>
+                    <field name="bpo_kadept_manager_id" string="Kadept BPO"/>
                     <field name="manager_it_id" string="Manager IT"/>
+                    <field name="kadept_it_manager_id" string="Kadept IT"/>
                     <field name="engineer_id" string="Engineer"/>
                     <field name="estimated_completion_date" string="Estimasi Selesai"/>
                     <field name="create_date" string="Created Date"/>
 
                     <field name="state" widget="badge"
                            decoration-muted="state == 'draft'"
-                           decoration-warning="state in ('dept_approval', 'it_approval')"
+                           decoration-warning="state in ('dept_mgr_approval', 'kadept_approval', 'bpo_approval', 'it_mgr_review', 'it_kadept_approval')"
                            decoration-info="state == 'in_progress'"
                            decoration-success="state in ('done', 'closed')"
                            decoration-danger="state == 'rejected'"/>
                 </tree>
-
-
             </field>
         </record>
 
@@ -37,23 +41,32 @@
             <field name="arch" type="xml">
                 <form string="Change Request">
                     <header>
-                        <field name="can_approve_dept" invisible="1"/>
-                        <field name="can_approve_it" invisible="1"/>
+                        <field name="can_approve_dept_mgr" invisible="1"/>
+                        <field name="can_approve_kadept" invisible="1"/>
+                        <field name="can_approve_bpo" invisible="1"/>
+                        <field name="can_review_it_mgr" invisible="1"/>
+                        <field name="can_approve_it_kadept" invisible="1"/>
                         <field name="can_reopen" invisible="1"/>
+                        <field name="can_reject" invisible="1"/>
+                        <field name="is_target_dept_it" invisible="1"/>
+
                         <button name="action_publish" string="Publish" type="object" class="btn-primary font-weight-bold" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
-                        <button name="action_approve_dept" string="Approve (Manager Dept)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'dept_approval'), ('can_approve_dept', '=', False)]}"/>
-                        <button name="action_approve_it" string="Approve (Manager IT)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'it_approval'), ('can_approve_it', '=', False)]}"/>
+                        
+                        <!-- Approval Flow Buttons -->
+                        <button name="action_approve_dept_mgr" string="Approve (Manager Dept)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'dept_mgr_approval'), ('can_approve_dept_mgr', '=', False)]}"/>
+                        <button name="action_approve_kadept" string="Approve (Kadept Terkait)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'kadept_approval'), ('can_approve_kadept', '=', False)]}"/>
+                        <button name="action_approve_bpo" string="Approve (Kadept BPO)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'bpo_approval'), ('can_approve_bpo', '=', False)]}"/>
+                        <button name="action_review_it_mgr" string="Review &amp; Assign (Manager IT)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'it_mgr_review'), ('can_review_it_mgr', '=', False)]}"/>
+                        <button name="action_approve_it_kadept" string="Approve (Kadept IT)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'it_kadept_approval'), ('can_approve_it_kadept', '=', False)]}"/>
 
-                        <button name="action_done" string="Mark as Done" type="object" class="btn-success" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
-
+                        <!-- Progress & Resolution Buttons -->
+                        <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" attrs="{'invisible': ['|', ('state', 'not in', ['done', 'closed']), ('can_reopen', '=', False)]}"/>
                         <button name="action_close" string="Close CR" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
+                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'closed', 'rejected'])]}"/>
 
-                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': [('state', 'in', ['draft', 'closed', 'rejected'])]}"/>
-
-                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_approval,it_approval,in_progress,done,closed"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_mgr_approval,kadept_approval,bpo_approval,it_mgr_review,it_kadept_approval,in_progress,done,closed"/>
                     </header>
-
 
                     <sheet>
                         <!-- Queue Info Banner (Bank Style) -->
@@ -62,7 +75,6 @@
                             <div class="d-flex align-items-center">
                                 <i class="fa fa-list-ol fa-2x mr-3 text-info" title="Informasi Antrian CR"/>
                                 <div>
-
                                     <h5 class="mb-1 font-weight-bold text-info">INFORMASI ANTRIAN CHANGE REQUEST</h5>
                                     <div>
                                         • <strong>Nomor Antrian Anda:</strong> <span class="badge badge-primary font-weight-bold px-2 py-1 ml-1"><field name="queue_number" readonly="1"/></span>
@@ -76,7 +88,6 @@
                         </div>
 
                         <div class="oe_title mb-3">
-
                             <span class="text-muted small d-block">No. CR</span>
                             <h1 class="font-weight-bold text-dark mb-0">
                                 <field name="code" readonly="1"/>
@@ -86,27 +97,29 @@
                         <!-- Request Identification Field Box -->
                         <div class="card p-3 mb-4 border rounded bg-white shadow-sm">
                             <label for="request_identification" string="Request Identification" class="font-weight-bold mb-2"/>
-                            <field name="request_identification" placeholder="Jelaskan kebutuhan pengajuan perubahan dokumen / sistem secara rinci..."/>
+                            <field name="request_identification" placeholder="Jelaskan kebutuhan pengajuan perubahan dokumen / sistem secara rinci..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                         </div>
 
                         <!-- 2-Column Split Input Area -->
                         <div class="row">
                             <div class="col-md-6">
-                                <group string="Detail Pengajuan &amp; Kategori">
-                                    <field name="category" string="Kategori"/>
-                                    <field name="module" string="Module" placeholder="Misal: Purchasing, Invoice, BAP..."/>
-                                    <field name="impact_on" string="Impact On"/>
+                                <group string="Detail Pengajuan">
+                                    <field name="cr_type_id" string="CR Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="category_id" string="Category" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="target_department_id" string="CR to Departement" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="impact_on" string="Impact On" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="module" string="Module" placeholder="Misal: Purchasing, Invoice, BAP..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </group>
                                 <group string="Hierarki Approval &amp; Eksekutor">
-                                    <field name="location_id" string="Departemen Terkait" options="{'no_create': True}"/>
-                                    <field name="dept_manager_id" string="Manager Departemen [Terkait]" options="{'no_create': True}"/>
-
-                                    <field name="manager_it_id" string="Manager IT" options="{'no_create': True}"/>
-                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'in', ['draft', 'dept_approval', 'done', 'closed', 'rejected'])]}"/>
-                                    <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'required': [('state', '=', 'it_approval')], 'readonly': [('state', 'in', ['draft', 'dept_approval', 'done', 'closed', 'rejected'])]}"/>
-
-
-
+                                    <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True}" readonly="1"/>
+                                    <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True}"/>
+                                    <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True}"/>
+                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)]}"/>
+                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True}"/>
+                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True}"/>
+                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
+                                    <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
                                 </group>
                             </div>
                             <div class="col-md-6">
@@ -114,13 +127,14 @@
                                     <field name="created_by" string="Dibuat Oleh" readonly="1"/>
                                     <field name="email" string="E-Mail" placeholder="user@hki.co.id"/>
                                     <field name="phone" string="Phone" placeholder="0812-XXXX-XXXX"/>
+                                    <field name="is_admin" invisible="1"/>
                                     <field name="enable_auto_close" string="Aktifkan Auto Close"/>
+                                    <field name="resolved_date" string="Tanggal Done" attrs="{'readonly': [('is_admin', '=', False)], 'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                                     <field name="auto_close_deadline" string="Batas Auto Close (3 Hari Kerja)" attrs="{'invisible': [('state', '!=', 'done')]}"/>
-                                    <field name="closed_date" string="Tanggal Closed" attrs="{'invisible': [('state', '!=', 'closed')]}"/>
+                                    <field name="closed_date" string="Tanggal Closed" attrs="{'readonly': [('is_admin', '=', False)], 'invisible': [('state', '!=', 'closed')]}"/>
                                     <field name="note" string="Catatan"/>
                                     <field name="rejection_reason" string="Alasan Penolakan" attrs="{'invisible': [('state', '!=', 'rejected')]}"/>
                                 </group>
-
                             </div>
                         </div>
 
@@ -165,9 +179,8 @@
             <field name="name">Need My Approval</field>
             <field name="res_model">helpdesk.change.request</field>
             <field name="view_mode">tree,form</field>
-            <field name="domain">[('state', 'in', ['dept_approval', 'it_approval'])]</field>
+            <field name="domain">[('state', 'in', ['dept_mgr_approval', 'kadept_approval', 'bpo_approval', 'it_mgr_review', 'it_kadept_approval'])]</field>
         </record>
-
 
         <!-- Action 2: Active Queue & Progress -->
         <record id="action_helpdesk_cr_active_queue" model="ir.actions.act_window">
@@ -193,7 +206,6 @@
             <field name="domain">[('state', 'in', ['done', 'closed', 'rejected'])]</field>
         </record>
 
-
         <record id="action_helpdesk_change_request" model="ir.actions.act_window">
             <field name="name">Change Request</field>
             <field name="res_model">helpdesk.change.request</field>
@@ -206,7 +218,6 @@
             <field name="view_mode">tree,form</field>
             <field name="domain">[('engineer_id', '=', uid)]</field>
         </record>
-
 
     </data>
 </odoo>

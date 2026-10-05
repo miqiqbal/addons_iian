@@ -36,6 +36,7 @@
         'views/helpdesk_work_order_views.xml',
         'views/helpdesk_create_ticket_views.xml',
         'views/helpdesk_my_ticket_views.xml',
+        'views/helpdesk_cr_type_views.xml',
         'views/helpdesk_change_request_views.xml',
         'views/helpdesk_keyword_views.xml',
         'views/helpdesk_user_views.xml',

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Tree View CR Type -->
+        <record id="view_helpdesk_cr_type_tree" model="ir.ui.view">
+            <field name="name">helpdesk.cr.type.tree</field>
+            <field name="model">helpdesk.cr.type</field>
+            <field name="arch" type="xml">
+                <tree string="Change Request Types" editable="bottom">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="description"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View CR Type -->
+        <record id="view_helpdesk_cr_type_form" model="ir.ui.view">
+            <field name="name">helpdesk.cr.type.form</field>
+            <field name="model">helpdesk.cr.type</field>
+            <field name="arch" type="xml">
+                <form string="Change Request Type">
+                    <sheet>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}"/>
+                        <group>
+                            <group>
+                                <field name="name" placeholder="Misal: Penambahan Fitur, Perubahan SOP..."/>
+                                <field name="code" placeholder="Misal: ENH, BUG, SOP..."/>
+                            </group>
+                            <group>
+                                <field name="active" widget="boolean_toggle"/>
+                            </group>
+                        </group>
+                        <group string="Deskripsi">
+                            <field name="description" placeholder="Penjelasan detail mengenai tipe CR ini..."/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action CR Type -->
+        <record id="action_helpdesk_cr_type" model="ir.actions.act_window">
+            <field name="name">CR Type</field>
+            <field name="res_model">helpdesk.cr.type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Klik untuk menambahkan Master Data Tipe Change Request baru!
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

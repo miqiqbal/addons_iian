@@ -47,3 +47,4 @@ def post_init_hook(cr, registry):
     env['ir.rule'].clear_caches()
 
     view.write({'arch': DASHBOARD_ARCH % actions})
+
