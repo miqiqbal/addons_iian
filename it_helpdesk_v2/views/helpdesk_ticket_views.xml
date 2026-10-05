@@ -151,15 +151,15 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Batas Konfirmasi Helpdesk (Response SLA)</span>
-                                            <field name="sla_response_deadline" readonly="1" class="text-warning font-weight-bold"/>
+                                            <field name="sla_response_deadline" attrs="{'readonly': [('is_admin', '=', False)]}" class="text-warning font-weight-bold"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Tanggal Start Progress</span>
-                                            <field name="start_progress_date" readonly="1" class="text-primary font-weight-bold"/>
+                                            <field name="start_progress_date" attrs="{'readonly': [('is_admin', '=', False)]}" class="text-primary font-weight-bold"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Due Date (Batas SLA)</span>
-                                            <field name="sla_resolution_deadline" readonly="1" class="text-danger font-weight-bold"/>
+                                            <field name="sla_resolution_deadline" attrs="{'readonly': [('is_admin', '=', False)]}" class="text-danger font-weight-bold"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Status SLA</span>
@@ -191,16 +191,16 @@
                                              <group>
                                                  <group string="Informasi Siklus Waktu Tiket">
                                                      <field name="is_admin" invisible="1"/>
-                                                      <field name="publish_date" string="Tanggal Open Ticket" readonly="1"/>
-                                                      <field name="start_progress_date" string="Tanggal Start" attrs="{'readonly': [('is_admin', '=', False)]}"/>
-                                                      <field name="resolved_date" string="Tanggal Done" attrs="{'readonly': [('is_admin', '=', False)]}"/>
-                                                      <field name="closed_date" string="Tanggal Closed" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                     <field name="publish_date" string="Tanggal Open Ticket" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                     <field name="start_progress_date" string="Tanggal Start" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                     <field name="resolved_date" string="Tanggal Done" attrs="{'readonly': [('is_admin', '=', False)]}"/>
+                                                     <field name="closed_date" string="Tanggal Closed" attrs="{'readonly': [('is_admin', '=', False)]}"/>
                                                  </group>
                                                  <group string="Target &amp; Status SLA">
-                                                     <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" readonly="1" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
-                                                     <field name="sla_resolution_deadline" string="Tanggal Due Date" readonly="1"/>
+                                                     <field name="sla_response_deadline" string="Batas Konfirmasi Helpdesk (Response SLA)" attrs="{'readonly': [('is_admin', '=', False)]}" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
+                                                     <field name="sla_resolution_deadline" string="Tanggal Due Date" attrs="{'readonly': [('is_admin', '=', False)]}"/>
                                                      <field name="enable_auto_close" string="Auto Close Aktif" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
-                                                     <field name="auto_close_deadline" string="Batas Waktu Auto Close" readonly="1" attrs="{'invisible': [('enable_auto_close', '=', False)]}"/>
+                                                     <field name="auto_close_deadline" string="Batas Waktu Auto Close" attrs="{'readonly': [('is_admin', '=', False)], 'invisible': [('enable_auto_close', '=', False)]}"/>
                                                      <field name="sla_status_color" invisible="1"/>
                                                      <field name="sla_status_name" string="Status SLA" widget="badge" readonly="1"
                                                             decoration-success="sla_status_color == 'success'"
@@ -270,11 +270,13 @@
                                         <field name="attachment_ids" widget="many2many_binary"/>
                                     </page>
                                     <page string="History" name="history">
-                                        <field name="message_ids" readonly="1" nolabel="1">
-                                            <tree>
+                                        <field name="is_admin" invisible="1"/>
+                                        <field name="message_ids" attrs="{'readonly': [('is_admin', '=', False)]}" nolabel="1">
+                                            <tree editable="bottom">
                                                 <field name="date"/>
                                                 <field name="author_id"/>
                                                 <field name="subject"/>
+                                                <field name="body" widget="html"/>
                                             </tree>
                                         </field>
                                     </page>

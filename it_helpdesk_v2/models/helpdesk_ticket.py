@@ -205,15 +205,15 @@ class HelpdeskTicket(models.Model):
     sla_resolution_time_value = fields.Float(related='sla_id.resolution_time_value')
     sla_resolution_time_unit = fields.Selection(related='sla_id.resolution_time_unit')
     sla_response_deadline = fields.Datetime(
-        compute='_compute_sla_deadline', store=True)
+        compute='_compute_sla_deadline', store=True, readonly=False)
     sla_resolution_deadline = fields.Datetime(
-        compute='_compute_sla_deadline', store=True)
+        compute='_compute_sla_deadline', store=True, readonly=False)
     sla_response_breached = fields.Boolean(
         compute='_compute_sla_status', store=True)
     sla_resolution_breached = fields.Boolean(
         compute='_compute_sla_status', store=True)
-    start_progress_date = fields.Datetime(string='Tanggal Start Progress', readonly=True)
-    publish_date = fields.Datetime(string='Tanggal Start (Publish)', readonly=True)
+    start_progress_date = fields.Datetime(string='Tanggal Start Progress')
+    publish_date = fields.Datetime(string='Tanggal Start (Publish)')
     sla_warning_sent = fields.Boolean(string='SLA Warning Email Sent', default=False, copy=False)
 
     SLA_STATUS_SELECTION = [
