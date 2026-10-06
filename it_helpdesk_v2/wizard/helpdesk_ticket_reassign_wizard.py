@@ -10,7 +10,7 @@ class HelpdeskTicketReassignWizard(models.TransientModel):
     current_engineer_id = fields.Many2one('res.users', string='Engineer saat Ini', related='ticket_id.engineer_id', readonly=True)
     new_engineer_id = fields.Many2one(
         'res.users', string='Engineer Penerima Baru', required=True,
-        domain=lambda self: [('groups_id', 'in', [self.env.ref('it_helpdesk_v2.group_helpdesk_agent').id])]
+        domain=[('share', '=', False)]
     )
     reason = fields.Text(string='Alasan Pengalihan / Eskalasi', required=True)
 

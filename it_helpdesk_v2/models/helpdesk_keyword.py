@@ -10,7 +10,7 @@ class HelpdeskKeywordEngineer(models.Model):
     keyword_id = fields.Many2one('helpdesk.keyword', string='Keyword Rule', ondelete='cascade', required=True)
     user_id = fields.Many2one(
         'res.users', string='Engineer', required=True,
-        domain=lambda self: [('groups_id', 'in', [self.env.ref('it_helpdesk_v2.group_helpdesk_agent').id])]
+        domain=[('share', '=', False)]
     )
 
 
