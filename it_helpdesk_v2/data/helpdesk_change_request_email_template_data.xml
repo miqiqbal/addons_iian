@@ -7,7 +7,7 @@
             <field name="name">IT Helpdesk: CR Menunggu Approval Manager Dept</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
             <field name="subject">[CR Menunggu Approval Anda] ${object.code or object.name}</field>
-            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">${object.dept_manager_id.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
@@ -57,7 +57,7 @@
             <field name="name">IT Helpdesk: CR Menunggu Approval Manager IT</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
             <field name="subject">[CR Menunggu Approval IT] ${object.code or object.name}</field>
-            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">${object.manager_it_id.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
@@ -107,7 +107,7 @@
             <field name="name">IT Helpdesk: CR Ditolak</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
             <field name="subject">[CR Ditolak] ${object.code or object.name}</field>
-            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">${object.created_by.email or object.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
@@ -149,7 +149,7 @@
             <field name="name">IT Helpdesk: CR Selesai</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
             <field name="subject">[CR Selesai] ${object.code or object.name}</field>
-            <field name="email_from">rahmadana908@gmail.com</field>
+            <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">${object.created_by.email or object.email}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
