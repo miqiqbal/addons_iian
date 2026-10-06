@@ -36,8 +36,8 @@
                             </group>
                             <group>
                                 <field name="service_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                                <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                                <field name="subcategory_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                                <field name="category_ids" widget="many2many_tags" options="{'no_create': True}" domain="[('service_id', 'in', service_ids)] if service_ids else []"/>
+                                <field name="subcategory_ids" widget="many2many_tags" options="{'no_create': True}" domain="[('category_id', 'in', category_ids)] if category_ids else []"/>
                             </group>
                         </group>
                         <group string="Kata Kunci Pemicu (Keywords)">

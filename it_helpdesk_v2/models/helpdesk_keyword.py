@@ -43,6 +43,25 @@ class HelpdeskKeyword(models.Model):
     )
     active = fields.Boolean(default=True)
 
+    @api.onchange('service_ids')
+    def _onchange_service_ids(self):
+        if self.service_ids:
+            valid_cats = self.category_ids.filtered(lambda c: c.service_id in self.service_ids)
+            if len(valid_cats) != len(self.category_ids):
+                self.category_ids = valid_cats
+            return {'domain': {'category_ids': [('service_id', 'in', self.service_ids.ids)]}}
+        return {'domain': {'category_ids': [('id', '!=', False)]}}
+
+    @api.onchange('category_ids')
+    def _onchange_category_ids(self):
+        if self.category_ids:
+            valid_subcats = self.subcategory_ids.filtered(lambda s: s.category_id in self.category_ids)
+            if len(valid_subcats) != len(self.subcategory_ids):
+                self.subcategory_ids = valid_subcats
+            return {'domain': {'subcategory_ids': [('category_id', 'in', self.category_ids.ids)]}}
+        return {'domain': {'subcategory_ids': [('id', '!=', False)]}}
+
+
     @api.depends('engineer_line_ids', 'engineer_line_ids.sequence', 'engineer_line_ids.user_id', 'engineer_ids')
     def _compute_engineer_summary(self):
         for rec in self:
