@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Inherit HR Department Form View: Add Kadept Field -->
+        <record id="view_department_form_helpdesk" model="ir.ui.view">
+            <field name="name">hr.department.form.helpdesk</field>
+            <field name="model">hr.department</field>
+            <field name="inherit_id" ref="hr.view_department_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='manager_id']" position="after">
+                    <field name="kadept_id" string="Head of Placement / Kepala Dept."/>
+                </xpath>
+            </field>
+        </record>
+
+                <!-- Inherit HR Employee Form View: Add Kadept & Indirect Manager Fields -->
+        <record id="view_employee_form_helpdesk" model="ir.ui.view">
+            <field name="name">hr.employee.form.helpdesk</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='parent_id']" position="attributes">
+                    <attribute name="string">Direct Manager</attribute>
+                </xpath>
+                <xpath expr="//field[@name='department_id']" position="after">
+                    <field name="kadept_id" string="Head of Placement / Kepala Dept."/>
+                    <field name="indirect_manager_id" string="Indirect Manager"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>

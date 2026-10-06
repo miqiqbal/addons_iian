@@ -40,6 +40,7 @@
         'views/helpdesk_change_request_views.xml',
         'views/helpdesk_keyword_views.xml',
         'views/helpdesk_user_views.xml',
+        'views/hr_employee_views.xml',
         'views/helpdesk_knowledge_views.xml',
         'wizard/helpdesk_ticket_reassign_wizard_views.xml',
         'wizard/helpdesk_ticket_reject_wizard_views.xml',

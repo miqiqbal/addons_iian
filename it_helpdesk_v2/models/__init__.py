@@ -15,6 +15,7 @@ from . import helpdesk_dashboard_kpi
 from . import helpdesk_ticket_report
 from . import res_users
 from . import helpdesk_knowledge
+from . import hr_employee
 from . import ir_ui_menu
 
 

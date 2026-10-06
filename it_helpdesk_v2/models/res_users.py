@@ -60,9 +60,49 @@ class ResUsers(models.Model):
                 vals['login'] = vals['email']
             elif vals.get('login') and not vals.get('email'):
                 vals['email'] = vals['login']
-        return super().create(vals_list)
+        users = super().create(vals_list)
+        for user in users:
+            user._sync_hr_employee()
+        return users
 
     def write(self, vals):
         if vals.get('email') and 'login' not in vals:
             vals['login'] = vals['email']
-        return super().write(vals)
+        res = super().write(vals)
+        if any(f in vals for f in ['name', 'email', 'phone', 'function']):
+            for user in self:
+                user._sync_hr_employee()
+        return res
+
+    def _sync_hr_employee(self):
+        """Menghubungkan/membuat data hr.employee secara otomatis jika belum ada."""
+        self.ensure_one()
+        if self.share or not self.active or self.id in (1, 2):  # Skip system users if needed
+            pass
+        Emp = self.env['hr.employee'].sudo()
+        emp = Emp.search([('user_id', '=', self.id)], limit=1)
+        email = self.email or self.login
+        if not emp and email:
+            emp = Emp.search(['|', ('work_email', '=ilike', email), ('private_email', '=ilike', email)], limit=1)
+        if not emp and self.name:
+            emp = Emp.search([('name', '=ilike', self.name)], limit=1)
+
+        emp_vals = {
+            'name': self.name,
+            'user_id': self.id,
+            'work_email': email or '',
+            'work_phone': self.phone or '',
+            'job_title': self.function or '',
+        }
+        if emp:
+            update_vals = {}
+            if not emp.user_id:
+                update_vals['user_id'] = self.id
+            if not emp.work_email and emp_vals['work_email']:
+                update_vals['work_email'] = emp_vals['work_email']
+            if update_vals:
+                emp.write(update_vals)
+        else:
+            if self.name:
+                Emp.create(emp_vals)
+

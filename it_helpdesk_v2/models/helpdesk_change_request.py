@@ -44,16 +44,17 @@ class HelpdeskChangeRequest(models.Model):
     # ---------------------------------------------------------
     def _get_dept_manager_user(self, employee):
         """Mendapatkan User Approval Manager Dept Terkait:
-        1. Cek indirect_manager dan kadep_id.
-        2. Jika indirect_manager != kadep_id -> indirect_manager.user_id.
-        3. Jika indirect_manager == kadep_id -> parent_id.user_id (Direct Manager).
+        1. Cek indirect_manager_id / indirect_manager dan kadept_id.
+        2. Jika indirect_manager != kadept -> indirect_manager.user_id.
+        3. Jika indirect_manager == kadept -> parent_id.user_id (Direct Manager).
         4. Fallback jika kosong.
         """
         if not employee:
             return False
-        kadep = getattr(employee, 'kadep_id', False) or getattr(employee, 'kadept_id', False) or getattr(employee, 'head_of_placement_id', False)
-        indirect_mgr = getattr(employee, 'indirect_manager', False) or getattr(employee, 'indirect_manager_id', False)
-        direct_mgr = getattr(employee, 'parent_id', False) or getattr(employee, 'expense_manager_id', False) or getattr(employee, 'leave_manager_id', False)
+        employee = employee.sudo()
+        kadep = employee.kadept_id or getattr(employee, 'kadep_id', False) or getattr(employee, 'head_of_placement_id', False)
+        indirect_mgr = employee.indirect_manager_id or getattr(employee, 'indirect_manager', False)
+        direct_mgr = employee.parent_id or getattr(employee, 'expense_manager_id', False) or getattr(employee, 'leave_manager_id', False)
 
         # Step 1: Jika Indirect Manager != Head of Placement -> gunakan Indirect Manager
         if indirect_mgr and indirect_mgr != kadep and indirect_mgr.user_id:
@@ -71,28 +72,35 @@ class HelpdeskChangeRequest(models.Model):
         return False
 
     def _get_kadept_manager_user(self, employee):
-        """Mendapatkan User Approval Kadept Terkait (Head of Placement / kadep_id)"""
+        """Mendapatkan User Approval Kadept Terkait (Head of Placement / kadept_id)"""
         if not employee:
             return False
-        kadep = getattr(employee, 'kadep_id', False) or getattr(employee, 'kadept_id', False) or getattr(employee, 'head_of_placement_id', False)
+        employee = employee.sudo()
+        kadep = employee.kadept_id or getattr(employee, 'kadep_id', False) or getattr(employee, 'head_of_placement_id', False)
         if kadep and kadep.user_id:
             return kadep.user_id.id
-        if employee.department_id and employee.department_id.manager_id and employee.department_id.manager_id.user_id:
-            return employee.department_id.manager_id.user_id.id
+        if employee.department_id:
+            dept = employee.department_id.sudo()
+            dept_kadep = dept.kadept_id or getattr(dept, 'kadep_id', False)
+            if dept_kadep and dept_kadep.user_id:
+                return dept_kadep.user_id.id
+            if dept.manager_id and dept.manager_id.user_id:
+                return dept.manager_id.user_id.id
         return False
 
     def _get_bpo_kadept_manager_user(self, department):
         """Mendapatkan User Approval Kadept BPO berdasarkan CR to Departement (target_department_id)"""
         if not department:
             return False
-        kadep = getattr(department, 'kadep_id', False) or getattr(department, 'kadept_id', False)
+        department = department.sudo()
+        kadep = department.kadept_id or getattr(department, 'kadep_id', False)
         if kadep and kadep.user_id:
             return kadep.user_id.id
         if department.manager_id and department.manager_id.user_id:
             return department.manager_id.user_id.id
 
         # Cari karyawan di departemen target dengan jabatan Kadept
-        kadept_emp = self.env['hr.employee'].search([
+        kadept_emp = self.env['hr.employee'].sudo().search([
             ('department_id', '=', department.id),
             '|', '|',
             ('job_id.name', 'ilike', 'Kepala Departemen'),
@@ -103,20 +111,63 @@ class HelpdeskChangeRequest(models.Model):
             return kadept_emp.user_id.id
         return False
 
+    def _get_employee_for_user(self, user):
+        """Mendapatkan hr.employee dari res.users secara cerdas & terintegrasi:
+        1. Cari berdasarkan user_id == user.id
+        2. Cari berdasarkan work_email / private_email == user.email atau login
+        3. Cari berdasarkan name == user.name
+        4. Otomatis menghubungkan user_id ke employee jika ditemukan via email/name.
+        5. Otomatis membuatkan record hr.employee baru jika belum ada.
+        """
+        if not user:
+            return self.env['hr.employee']
+        user = user.sudo()
+        Emp = self.env['hr.employee'].sudo()
+        emp = Emp.search([('user_id', '=', user.id)], limit=1)
+        if emp:
+            return emp
+
+        email = user.email or user.login
+        if email:
+            emp = Emp.search(['|', ('work_email', '=ilike', email), ('private_email', '=ilike', email)], limit=1)
+            if emp:
+                if not emp.user_id:
+                    emp.write({'user_id': user.id})
+                return emp
+
+        if user.name:
+            emp = Emp.search([('name', '=ilike', user.name)], limit=1)
+            if emp:
+                if not emp.user_id:
+                    emp.write({'user_id': user.id})
+                return emp
+
+        if email or user.name:
+            emp = Emp.create({
+                'name': user.name,
+                'user_id': user.id,
+                'work_email': email or '',
+                'work_phone': user.phone or '',
+                'job_title': user.function or '',
+            })
+            return emp
+
+        return Emp
+
     @api.model
     def _default_dept_manager(self):
-        employee = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        employee = self._get_employee_for_user(self.env.user)
         return self._get_dept_manager_user(employee)
 
     @api.model
     def _default_kadept_manager(self):
-        employee = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        employee = self._get_employee_for_user(self.env.user)
         return self._get_kadept_manager_user(employee)
 
     @api.model
     def _default_manager_it(self):
         # 1. Cek karyawan dengan job_id ID 4992 atau nama 'Manager IT'
-        emp = self.env['hr.employee'].search([
+        emp = self.env['hr.employee'].sudo().search([
             '|', ('job_id', '=', 4992),
             ('job_id.name', 'ilike', 'Manager IT')
         ], limit=1)
@@ -125,12 +176,12 @@ class HelpdeskChangeRequest(models.Model):
         # 2. Cek user dengan group IT Manager
         it_manager_group = self.env.ref('it_helpdesk_v2.group_helpdesk_it_manager', raise_if_not_found=False)
         if it_manager_group:
-            user = self.env['res.users'].search([('groups_id', 'in', [it_manager_group.id])], limit=1)
+            user = self.env['res.users'].sudo().search([('groups_id', 'in', [it_manager_group.id])], limit=1)
             if user:
                 return user.id
         manager_group = self.env.ref('it_helpdesk_v2.group_helpdesk_manager', raise_if_not_found=False)
         if manager_group:
-            user = self.env['res.users'].search([('groups_id', 'in', [manager_group.id])], limit=1)
+            user = self.env['res.users'].sudo().search([('groups_id', 'in', [manager_group.id])], limit=1)
             if user:
                 return user.id
         return False
@@ -138,7 +189,7 @@ class HelpdeskChangeRequest(models.Model):
     @api.model
     def _default_kadept_it_manager(self):
         # 1. Cek karyawan dengan job_id ID 2174 atau nama 'Kepala Departemen Sistem, IT & Digitalisasi'
-        emp = self.env['hr.employee'].search([
+        emp = self.env['hr.employee'].sudo().search([
             '|', ('job_id', '=', 2174),
             '|', ('job_id.name', 'ilike', 'Kepala Departemen Sistem, IT & Digitalisasi'),
             ('job_id.name', 'ilike', 'Kepala Departemen Sistem')
@@ -146,7 +197,7 @@ class HelpdeskChangeRequest(models.Model):
         if emp and emp.user_id:
             return emp.user_id.id
         # 2. Fallback: Kadept departemen IT / Digitalisasi
-        it_dept = self.env['hr.department'].search([
+        it_dept = self.env['hr.department'].sudo().search([
             '|', '|',
             ('name', 'ilike', 'Sistem, TI'),
             ('name', 'ilike', 'Sistem, IT'),
@@ -160,10 +211,11 @@ class HelpdeskChangeRequest(models.Model):
 
     @api.model
     def _default_department_id(self):
-        employee = self.env['hr.employee'].search([('user_id', '=', self.env.uid)], limit=1)
+        employee = self._get_employee_for_user(self.env.user)
         if employee and employee.department_id:
             return employee.department_id.id
         return False
+
 
     # ---------------------------------------------------------
     # Approvers & Hierarki Fields
@@ -291,7 +343,7 @@ class HelpdeskChangeRequest(models.Model):
         if self.created_by:
             self.email = self.created_by.email or self.created_by.partner_id.email or ''
             self.phone = self.created_by.phone or self.created_by.mobile or self.created_by.partner_id.phone or self.created_by.partner_id.mobile or ''
-            employee = self.env['hr.employee'].search([('user_id', '=', self.created_by.id)], limit=1)
+            employee = self._get_employee_for_user(self.created_by)
             if employee:
                 self.department_id = employee.department_id.id if employee.department_id else False
                 self.dept_manager_id = self._get_dept_manager_user(employee)

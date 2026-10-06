@@ -47,4 +47,39 @@ def post_init_hook(cr, registry):
     env['ir.rule'].clear_caches()
 
     view.write({'arch': DASHBOARD_ARCH % actions})
+    sync_all_users_to_employees(env)
+
+
+def sync_all_users_to_employees(env):
+    """Menghubungkan/membuat data hr.employee secara otomatis untuk seluruh res.users."""
+    users = env['res.users'].sudo().search([('active', '=', True), ('share', '=', False)])
+    Emp = env['hr.employee'].sudo()
+    for user in users:
+        if user.id in (1, 2) and user.login in ('root', 'OdooBot'):
+            continue
+        emp = Emp.search([('user_id', '=', user.id)], limit=1)
+        email = user.email or user.login
+        if not emp and email:
+            emp = Emp.search(['|', ('work_email', '=ilike', email), ('private_email', '=ilike', email)], limit=1)
+        if not emp and user.name:
+            emp = Emp.search([('name', '=ilike', user.name)], limit=1)
+
+        emp_vals = {
+            'name': user.name,
+            'user_id': user.id,
+            'work_email': email or '',
+            'work_phone': user.phone or '',
+            'job_title': user.function or '',
+        }
+        if emp:
+            update_vals = {}
+            if not emp.user_id:
+                update_vals['user_id'] = user.id
+            if not emp.work_email and emp_vals['work_email']:
+                update_vals['work_email'] = emp_vals['work_email']
+            if update_vals:
+                emp.write(update_vals)
+        else:
+            if user.name:
+                Emp.create(emp_vals)
 
