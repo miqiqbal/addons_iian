@@ -631,6 +631,19 @@ class HelpdeskTicket(models.Model):
     def init(self):
         super().init()
         try:
+            self.env.cr.execute("""
+                UPDATE ir_model_data
+                SET noupdate = false
+                WHERE module = 'it_helpdesk_v2'
+                  AND model = 'mail.template';
+
+                UPDATE mail_template
+                SET email_from = 'system.itd@hkinfrastruktur.com'
+                WHERE id IN (
+                    SELECT res_id FROM ir_model_data
+                    WHERE module = 'it_helpdesk_v2' AND model = 'mail.template'
+                );
+            """)
             self.env['ir.ui.view'].clear_caches()
             dash_menu = self.env.ref('it_helpdesk_v2.menu_it_helpdesk_dashboard', raise_if_not_found=False)
             dash_action = self.env.ref('it_helpdesk_v2.action_helpdesk_analytics_dashboard', raise_if_not_found=False)
@@ -1031,14 +1044,14 @@ class HelpdeskTicket(models.Model):
                 email_vals = {}
                 if cc_emails:
                     email_vals['email_cc'] = ','.join(cc_emails)
-                template_requester.send_mail(ticket.id, force_send=False, email_values=email_vals if email_vals else None)
+                template_requester.send_mail(ticket.id, force_send=True, email_values=email_vals if email_vals else None)
             if template_manager:
                 teams = self.env['helpdesk.team'].search(
                     [('service_ids', 'in', ticket.service_id.ids)])
                 partners = teams.manager_id.partner_id
                 if partners:
                     template_manager.send_mail(
-                        ticket.id, force_send=False,
+                        ticket.id, force_send=True,
                         email_values={'recipient_ids': [(6, 0, partners.ids)]})
 
     def cron_check_sla_breach(self):
@@ -1059,7 +1072,7 @@ class HelpdeskTicket(models.Model):
             partners = ticket.engineer_id.partner_id | ticket.team_id.manager_id.partner_id
             if template and partners:
                 template.send_mail(
-                    ticket.id, force_send=False,
+                    ticket.id, force_send=True,
                     email_values={'recipient_ids': [(6, 0, partners.ids)]})
 
     def action_view_work_orders(self):

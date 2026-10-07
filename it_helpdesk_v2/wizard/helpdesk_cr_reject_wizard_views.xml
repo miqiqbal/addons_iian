@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_helpdesk_cr_reject_wizard_form" model="ir.ui.view">
+            <field name="name">helpdesk.cr.reject.wizard.form</field>
+            <field name="model">helpdesk.cr.reject.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Reject Change Request">
+                    <group>
+                        <field name="cr_id" invisible="1"/>
+                        <field name="reason" placeholder="Tuliskan alasan penolakan / catatan revisi pengajuan CR ini secara jelas..." required="1"/>
+                    </group>
+                    <footer>
+                        <button string="Konfirmasi Reject &amp; Kembalikan ke Draft" name="action_confirm_reject" type="object" class="btn-danger"/>
+                        <button string="Batal" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_helpdesk_cr_reject_wizard" model="ir.actions.act_window">
+            <field name="name">Reject Change Request</field>
+            <field name="res_model">helpdesk.cr.reject.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+    </data>
+</odoo>

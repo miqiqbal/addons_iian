@@ -44,6 +44,7 @@
         'views/helpdesk_knowledge_views.xml',
         'wizard/helpdesk_ticket_reassign_wizard_views.xml',
         'wizard/helpdesk_ticket_reject_wizard_views.xml',
+        'wizard/helpdesk_cr_reject_wizard_views.xml',
         'report/helpdesk_report_views.xml',
 
         'views/helpdesk_menus.xml',

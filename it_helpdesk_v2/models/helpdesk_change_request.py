@@ -17,7 +17,7 @@ class HelpdeskChangeRequest(models.Model):
     cr_type_id = fields.Many2one('helpdesk.cr.type', string='CR Type', tracking=True)
     category_id = fields.Many2one('helpdesk.category', string='Category', tracking=True)
     subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category', domain="[('category_id', '=?', category_id)]", tracking=True)
-    target_department_id = fields.Many2one('hr.department', string='CR to Departement', tracking=True)
+    target_department_id = fields.Many2one('hr.department', string='CR to Departement', domain="[('name', '=ilike', 'Departemen %')]", tracking=True)
     impact_on = fields.Selection(
         [
             ('scope', 'Scope'),
@@ -93,13 +93,35 @@ class HelpdeskChangeRequest(models.Model):
         if not department:
             return False
         department = department.sudo()
+        dept_name = (department.name or '').strip()
+
+        # 1. Pencarian Utama: Cari Karyawan dengan nama Job Position persis "Kepala [Nama Departemen Target]"
+        # Contoh: "Kepala Departemen Human Capital"
+        target_job_name = "Kepala %s" % dept_name
+        kadept_emp = self.env['hr.employee'].sudo().search([
+            ('job_id.name', '=ilike', target_job_name)
+        ], limit=1)
+        if kadept_emp and kadept_emp.user_id:
+            return kadept_emp.user_id.id
+
+        # 2. Alternatif: Jika nama departemen berawalan "Departemen ", coba pencarian tanpa kata "Departemen"
+        if dept_name.lower().startswith('departemen '):
+            short_dept_name = dept_name[11:].strip()
+            target_job_name_2 = "Kepala %s" % short_dept_name
+            kadept_emp = self.env['hr.employee'].sudo().search([
+                ('job_id.name', '=ilike', target_job_name_2)
+            ], limit=1)
+            if kadept_emp and kadept_emp.user_id:
+                return kadept_emp.user_id.id
+
+        # 3. Fallback 1: Cek field kadept_id / manager_id di master data Department Odoo
         kadep = department.kadept_id or getattr(department, 'kadep_id', False)
         if kadep and kadep.user_id:
             return kadep.user_id.id
         if department.manager_id and department.manager_id.user_id:
             return department.manager_id.user_id.id
 
-        # Cari karyawan di departemen target dengan jabatan Kadept
+        # 4. Fallback 2: Cari Karyawan di departemen target yang job-nya mengandung kata 'Kepala' / 'Kadept'
         kadept_emp = self.env['hr.employee'].sudo().search([
             ('department_id', '=', department.id),
             '|', '|',
@@ -597,13 +619,19 @@ class HelpdeskChangeRequest(models.Model):
         self._reindex_active_queue()
 
     def action_reject(self):
-        for cr in self:
-            if not cr.can_reject:
-                raise UserError(_("Anda tidak memiliki hak akses untuk menolak pengajuan ini pada tahapan saat ini."))
-            cr.state = 'rejected'
-            cr.queue_number = 0
-            cr._send_rejected_email()
-        self._reindex_active_queue()
+        self.ensure_one()
+        if not self.can_reject:
+            raise UserError(_("Anda tidak memiliki hak akses untuk menolak pengajuan ini pada tahapan saat ini."))
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Reject Change Request',
+            'res_model': 'helpdesk.cr.reject.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_cr_id': self.id,
+            }
+        }
 
     def action_draft(self):
         self.write({'state': 'draft', 'queue_number': 0})
