@@ -175,7 +175,7 @@
             <field name="view_mode">form</field>
             <field name="view_id" ref="view_helpdesk_ticket_create_form"/>
             <field name="target">current</field>
-            <field name="context">{'default_ticket_type': 'incident'}</field>
+            <field name="context">{'default_ticket_type': 'incident', 'default_state': 'draft'}</field>
         </record>
 
     </data>

@@ -132,7 +132,7 @@ class HelpdeskTicket(models.Model):
     engineer_name = fields.Char(string='PIC_IT')
     team_id = fields.Many2one('helpdesk.team')
     state = fields.Selection(
-        STATE_SELECTION, default='new', required=True, tracking=True)
+        STATE_SELECTION, default='draft', required=True, tracking=True)
     excel_status = fields.Char(string='Status')
     created_date = fields.Datetime(default=fields.Datetime.now)
     import_created_date = fields.Char(string='Tanggal_Input_Laporan')
