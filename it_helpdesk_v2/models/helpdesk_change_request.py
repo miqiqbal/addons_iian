@@ -266,6 +266,7 @@ class HelpdeskChangeRequest(models.Model):
     can_reject = fields.Boolean(compute='_compute_approval_rights')
     can_reopen = fields.Boolean(compute='_compute_can_reopen')
     is_admin = fields.Boolean(compute='_compute_is_admin')
+    is_engineer_or_officer = fields.Boolean(compute='_compute_is_engineer_or_officer')
     is_target_dept_it = fields.Boolean(compute='_compute_is_target_dept_it')
 
     def _is_target_dept_it(self):
@@ -295,19 +296,22 @@ class HelpdeskChangeRequest(models.Model):
             cr.can_review_it_mgr = is_superuser or is_admin or bool(cr.manager_it_id and cr.manager_it_id.id == uid) or user.has_group('it_helpdesk_v2.group_helpdesk_it_manager')
             cr.can_approve_it_kadept = is_superuser or is_admin or bool(cr.kadept_it_manager_id and cr.kadept_it_manager_id.id == uid) or user.has_group('it_helpdesk_v2.group_helpdesk_it_manager')
 
-            # Can reject per state
+            # Can reject per state: Approver at current state, Admin, or Requester (Employee)
+            is_requester = bool((cr.created_by and cr.created_by.id == uid) or (cr.create_uid and cr.create_uid.id == uid))
             if cr.state == 'dept_mgr_approval':
-                cr.can_reject = cr.can_approve_dept_mgr
+                cr.can_reject = cr.can_approve_dept_mgr or is_requester
             elif cr.state == 'kadept_approval':
-                cr.can_reject = cr.can_approve_kadept
+                cr.can_reject = cr.can_approve_kadept or is_requester
             elif cr.state == 'bpo_approval':
-                cr.can_reject = cr.can_approve_bpo
+                cr.can_reject = cr.can_approve_bpo or is_requester
             elif cr.state == 'it_mgr_review':
-                cr.can_reject = cr.can_review_it_mgr
+                cr.can_reject = cr.can_review_it_mgr or is_requester
             elif cr.state == 'it_kadept_approval':
-                cr.can_reject = cr.can_approve_it_kadept
+                cr.can_reject = cr.can_approve_it_kadept or is_requester
+            elif cr.state == 'in_progress':
+                cr.can_reject = is_superuser or is_admin or is_requester
             else:
-                cr.can_reject = is_superuser or is_admin
+                cr.can_reject = is_superuser or is_admin or is_requester
 
 
     @api.depends_context('uid')
@@ -315,6 +319,18 @@ class HelpdeskChangeRequest(models.Model):
         has_admin = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager') or self.env.is_superuser()
         for cr in self:
             cr.is_admin = has_admin
+
+    @api.depends_context('uid')
+    def _compute_is_engineer_or_officer(self):
+        user = self.env.user
+        has_access = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            self.env.is_superuser()
+        )
+        for cr in self:
+            cr.is_engineer_or_officer = has_access
 
     @api.depends('state', 'created_by')
     def _compute_can_reopen(self):
@@ -638,6 +654,26 @@ class HelpdeskChangeRequest(models.Model):
         self._reindex_active_queue()
 
     def write(self, vals):
+        user = self.env.user
+        is_agent_or_mgr = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            self.env.is_superuser()
+        )
+        if not is_agent_or_mgr and not self.env.context.get('bypass_draft_write_check'):
+            content_fields = {
+                'request_identification', 'cr_type_id', 'category_id', 'subcategory_id',
+                'target_department_id', 'impact_on', 'module', 'dept_manager_id',
+                'kadept_manager_id', 'bpo_kadept_manager_id', 'manager_it_id',
+                'kadept_it_manager_id', 'email', 'phone', 'enable_auto_close', 'note',
+                'attachment_ids', 'analysis_and_solution', 'propose_solution'
+            }
+            if any(k in content_fields for k in vals.keys()):
+                for cr in self:
+                    if cr.state != 'draft':
+                        raise UserError(_("Sebagai Employee, Anda hanya dapat mengedit data formulir Change Request pada status Draft."))
+
         res = super().write(vals)
         if 'resolved_date' in vals or 'closed_date' in vals:
             for cr in self:

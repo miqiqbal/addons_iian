@@ -121,27 +121,70 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
 
 ---
 
+### 9. Filter Departemen Target & Penentuan Kadept BPO Berdasarkan Jabatan
+* **Filter `target_department_id` (`models/helpdesk_change_request.py`)**:
+  * Menambahkan domain filter `[('name', '=ilike', 'Departemen %')]` pada pilihan *CR to Departement* agar hanya menampilkan departemen operasional.
+* **Smart Matching Kadept BPO (`_get_bpo_kadept_manager_user`)**:
+  * Memperbarui logika pencarian Kadept BPO agar mencocokkan karyawan dengan nama jabatan `Kepala [Nama Departemen Target]` (contoh: *Kepala Departemen Human Capital*) secara presisi.
+
+---
+
+### 10. Pop-Up Wizard Reject Change Request & Pengembalian ke Status Draft
+* **Wizard Reject CR (`wizard/helpdesk_cr_reject_wizard.py` & `views.xml`)**:
+  * Menambahkan pop-up dialog penolakan Change Request yang mewajibkan Approver mengisikan alasan penolakan / catatan revisi.
+  * Saat dikonfirmasi, status CR secara otomatis **dikembalikan ke status `Draft`** dan nomor antrian di-reset, sehingga pemohon dapat merevisi dan mengajukan kembali.
+* **Banner Peringatan Revisi (`views/helpdesk_change_request_views.xml`)**:
+  * Menambahkan banner peringatan berwarna kuning (Warning Alert) di bagian atas form view saat status `Draft` yang menampilkan catatan penolakan sebelumnya.
+
+---
+
+### 11. Pengiriman Email Langsung & Auto Sync Mail Template
+* **Perubahan Parameter `force_send=True` (`models/helpdesk_ticket.py`)**:
+  * Mengubah `force_send=False` menjadi `force_send=True` pada pengiriman email notifikasi tiket baru dan SLA breach agar email langsung dikirimkan detik itu juga via SMTP tanpa tertahan di antrian outbox Odoo.
+* **Auto-Update SQL pada Module Upgrade (`models/helpdesk_ticket.py`)**:
+  * Menambahkan eksekusi SQL pada method `init()` untuk otomatis mengubah `noupdate = False` pada `ir_model_data` dan memperbarui seluruh template email ke `system.itd@hkinfrastruktur.com`.
+
+---
+
+### 12. Pembatasan Akses Edit Form & Tombol Action Role Employee (Draft Only & Reject Past Draft)
+* **Akses Edit Form HANYA pada State `Draft`**:
+  * Pada form view Ticket (`helpdesk.ticket`) dan Change Request (`helpdesk.change_request`), seluruh field input diatur menjadi `readonly` apabila status record **bukan `Draft`**.
+  * Pengguna dengan role **Employee** (`group_helpdesk_user`) hanya dapat melakukan pengubahan data saat record berada pada status **Draft**.
+* **Proteksi Python `write()`**:
+  * Menambahkan validasi pada metode `write()` di model `helpdesk.ticket` dan `helpdesk.change_request` untuk mencegah penulisan langsung oleh role Employee pada status beranjak dari Draft (mencegah manipulasi data dari API/UI non-draft).
+* **Tombol Action pada Header Form**:
+  * Pada status **Draft**, hanya tombol **`Publish` / `Publish Ticket`** yang tersedia.
+  * Saat status **beranjak dari Draft** (`open`, `assigned`, `in_progress`, `dept_mgr_approval`, `kadept_approval`, `bpo_approval`, `it_mgr_review`, `it_kadept_approval`), pengguna role Employee/Requester dapat melakukan **`Reject`** (Reject CR / Reject Ticket) untuk mengembalikan pengajuan kembali ke status **Draft** beserta memasukkan catatan alasannya.
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |
 | :--- | :--- |
-| `it_helpdesk_v2/__manifest__.py` | **Modified** — Registrasi file view & model baru |
+| `it_helpdesk_v2/__manifest__.py` | **Modified** — Registrasi file view, wizard, & model baru |
 | `it_helpdesk_v2/hooks.py` | **Modified** — `post_init_hook` & auto-sync 744 user to employee |
 | `it_helpdesk_v2/models/__init__.py` | **Modified** — Import `helpdesk_cr_type` & `hr_employee` |
-| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Workflow 5-level approval & smart employee resolution |
+| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Domain target dept, BPO job matching, dialog reject, & write restriction |
+| `it_helpdesk_v2/models/helpdesk_ticket.py` | **Modified** — Direct email sending (`force_send=True`), init auto-sql update, & write restriction |
 | `it_helpdesk_v2/models/helpdesk_cr_type.py` | **New File** — Model master data CR Type |
 | `it_helpdesk_v2/models/helpdesk_keyword.py` | **Modified** — Dynamic category & subcategory onchange filters |
 | `it_helpdesk_v2/models/hr_employee.py` | **New File** — Fields `kadept_id` & `indirect_manager_id` & auto-link user |
 | `it_helpdesk_v2/models/res_users.py` | **Modified** — Real-time auto-sync `res.users` ke `hr.employee` |
 | `it_helpdesk_v2/security/helpdesk_security.xml` | **Modified** — Grouping role & Record Rules Change Request |
-| `it_helpdesk_v2/security/ir.model.access.csv` | **Modified** — ACL master data CR Type |
+| `it_helpdesk_v2/security/ir.model.access.csv` | **Modified** — ACL master data CR Type & CR Reject Wizard |
 | `it_helpdesk_v2/data/mail_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/data/helpdesk_email_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/data/helpdesk_change_request_email_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/tests/test_helpdesk_change_request_email.py` | **Modified** — Automated test suite 5-level approval |
-| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Form & action buttons alur 5-level approval |
+| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Form view readonly state attrs, rejection banner, & alur 5-level approval |
+| `it_helpdesk_v2/views/helpdesk_ticket_views.xml` | **Modified** — Form view readonly state attrs & rejection wizard integration |
+| `it_helpdesk_v2/views/helpdesk_create_ticket_views.xml` | **Modified** — Form view readonly state attrs for create ticket form |
 | `it_helpdesk_v2/views/helpdesk_cr_type_views.xml` | **New File** — Views master data CR Type |
 | `it_helpdesk_v2/views/helpdesk_keyword_views.xml` | **Modified** — Dynamic domains Kategori & Sub Kategori |
 | `it_helpdesk_v2/views/helpdesk_menus.xml` | **Modified** — Penyesuaian parent menu 882 & hak akses menu |
 | `it_helpdesk_v2/views/hr_employee_views.xml` | **New File** — Form view Employee (urutan Head of Placement ➔ Indirect ➔ Direct Manager) |
+| `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard.py` | **New File** — Transient model wizard penolakan Change Request |
+| `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard_views.xml` | **New File** — Form view pop-up dialog Reject CR |
+
 

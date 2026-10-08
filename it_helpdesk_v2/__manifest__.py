@@ -53,11 +53,10 @@
     ],
     'assets': {
         'web.assets_backend': [
-            # 'it_helpdesk_v2/static/src/js/jakarta_clock.js',
+            'it_helpdesk_v2/static/src/js/helpdesk_form_control.js',
             'it_helpdesk_v2/static/src/js/helpdesk_dashboard.js',
             'it_helpdesk_v2/static/src/js/helpdesk_dashboard_drilldown.js',
             'it_helpdesk_v2/static/src/scss/helpdesk_dashboard.scss',
-            # 'it_helpdesk_v2/static/src/scss/enterprise_theme.scss',
         ],
 
         'web.assets_qweb': [

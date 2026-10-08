@@ -88,7 +88,7 @@
                         <button name="action_done" string="Mark as Done" type="object" class="btn-success" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                         <button name="action_reopen_assigned" string="Kembalikan ke Assigned (Reopen)" type="object" class="btn-outline-danger font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
-                        <button name="action_open_reject_wizard" string="Reject Ticket" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                        <button name="action_open_reject_wizard" string="Reject Ticket" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'done', 'closed', 'reject'])]}"/>
                         <button name="action_close" string="Close Ticket" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                         <button name="action_assign" string="Assign" type="object" invisible="1"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,open,assigned,in_progress,done,closed"/>
@@ -96,10 +96,20 @@
                     <sheet>
                         <field name="can_reject" invisible="1"/>
                         <field name="is_admin" invisible="1"/>
-                        <div class="alert alert-danger" role="alert"
-                             attrs="{'invisible': [('state', '!=', 'reject')]}">
-                            <strong>Tiket Ditolak (Reject):</strong>
-                            <field name="rejection_reason" readonly="1" class="d-block mt-1"/>
+                        <field name="is_engineer_or_officer" invisible="1"/>
+                        <!-- Rejection Warning Banner (When returned to draft) -->
+                        <div class="alert alert-warning border-warning shadow-sm rounded p-3 mb-4" role="alert"
+                             attrs="{'invisible': ['|', ('state', '!=', 'draft'), ('rejection_reason', '=', False)]}">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-exclamation-triangle fa-2x mr-3 text-warning" title="Catatan Revisi / Penolakan"/>
+                                <div>
+                                    <h5 class="mb-1 font-weight-bold text-danger">⚠️ POP-UP REVISI / ALASAN PENOLAKAN SEBELUMNYA</h5>
+                                    <div class="mb-1">
+                                        <strong>Alasan Penolakan / Catatan Revisi:</strong> <field name="rejection_reason" readonly="1"/>
+                                    </div>
+                                    <small class="text-muted"><i>Formulir tiket ini dapat Anda edit kembali. Silakan perbarui data pengajuan sesuai catatan di atas, kemudian klik <b>Publish Ticket</b> untuk mengajukan ulang.</i></small>
+                                </div>
+                            </div>
                         </div>
                         <div class="alert alert-info" role="alert"
                              attrs="{'invisible': ['|', ('state', '!=', 'new'), ('engineer_id', '!=', False)]}">
@@ -112,7 +122,7 @@
                                 <field name="name" readonly="1" class="oe_inline"/>
                             </h2>
                             <h1 class="font-weight-bold text-dark mb-2">
-                                <field name="title" placeholder="Judul Tiket..."/>
+                                <field name="title" placeholder="Judul Tiket..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                             </h1>
                             <div>
                                 <field name="priority" widget="badge" readonly="1"
@@ -136,7 +146,7 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Requester</span>
-                                            <field name="requester_id" font-weight="bold"/>
+                                            <field name="requester_id" font-weight="bold" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Engineer</span>
@@ -144,7 +154,7 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Department / Location</span>
-                                            <field name="location_id"/>
+                                            <field name="location_id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Tanggal Create Ticket</span>
@@ -176,11 +186,11 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Phone</span>
-                                            <field name="phone"/>
+                                            <field name="phone" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Email</span>
-                                            <field name="email"/>
+                                            <field name="email" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                         </div>
                                     </div>
                                 </div>
@@ -188,7 +198,7 @@
                                 <field name="is_engineer_or_officer" invisible="1"/>
                                 <notebook>
                                      <page string="Description" name="description">
-                                         <field name="description" placeholder="Deskripsi lengkap masalah..."/>
+                                         <field name="description" placeholder="Deskripsi lengkap masalah..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                      </page>
                                      <page string="SLA Time" name="sla_time">
                                          <div class="card p-3 border-0 bg-white">
@@ -235,7 +245,7 @@
                                                  </div>
                                              </div>
                                              <div class="card p-3 mb-3 border rounded bg-white shadow-sm">
-                                                 <label for="resolution" string="Langkah-Langkah / Teks Panduan Penyelesaian Kendala (Tutorial)" class="font-weight-bold mb-2 text-primary"/>
+                                                 <label for="resolution" string="Langkah-Langkah / Screenshot Penyelesaian Kendala" class="font-weight-bold mb-2 text-primary"/>
                                                  <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
                                              </div>
                                              <div class="card p-3 border rounded bg-white shadow-sm mt-3">
@@ -244,94 +254,94 @@
                                              </div>
                                          </div>
                                      </page>
-                                    <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
-                                        <group>
-                                            <group>
-                                                <field name="expected_result"/>
-                                                <field name="excel_link" widget="url"/>
-                                                <field name="registration_no"/>
-                                            </group>
-                                            <group>
-                                                <field name="followup_date_it"/>
-                                                <field name="notes_it"/>
-                                            </group>
-                                        </group>
-                                    </page>
-                                    <page string="Work Log" name="work_log">
-                                        <group>
-                                            <field name="progress_percent" widget="progressbar"/>
-                                            <field name="team_id"/>
-                                        </group>
-                                    </page>
-                                    <page string="Communication" name="communication">
-                                        <div class="oe_chatter">
-                                            <field name="message_follower_ids"/>
-                                            <field name="activity_ids"/>
-                                            <field name="message_ids"/>
-                                        </div>
-                                    </page>
-                                    <page string="Attachment" name="attachment">
-                                        <field name="attachment_ids" widget="many2many_binary"/>
-                                    </page>
-                                    <page string="History" name="history">
-                                        <field name="is_admin" invisible="1"/>
-                                        <field name="message_ids" groups="it_helpdesk_v2.group_helpdesk_manager" nolabel="1">
-                                            <tree editable="bottom">
-                                                <field name="date"/>
-                                                <field name="author_id"/>
-                                                <field name="subject"/>
-                                                <field name="body" widget="html"/>
-                                            </tree>
-                                        </field>
-                                    </page>
-                                </notebook>
-                            </div>
+                                     <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
+                                         <group>
+                                             <group>
+                                                 <field name="expected_result"/>
+                                                 <field name="excel_link" widget="url"/>
+                                                 <field name="registration_no"/>
+                                             </group>
+                                             <group>
+                                                 <field name="followup_date_it"/>
+                                                 <field name="notes_it"/>
+                                             </group>
+                                         </group>
+                                     </page>
+                                     <page string="Work Log" name="work_log">
+                                         <group>
+                                             <field name="progress_percent" widget="progressbar"/>
+                                             <field name="team_id"/>
+                                         </group>
+                                     </page>
+                                     <page string="Communication" name="communication">
+                                         <div class="oe_chatter">
+                                             <field name="message_follower_ids"/>
+                                             <field name="activity_ids"/>
+                                             <field name="message_ids"/>
+                                         </div>
+                                     </page>
+                                     <page string="Attachment" name="attachment">
+                                         <field name="attachment_ids" widget="many2many_binary" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                     </page>
+                                     <page string="History" name="history" groups="it_helpdesk_v2.group_helpdesk_manager">
+                                         <field name="is_admin" invisible="1"/>
+                                         <field name="message_ids" groups="it_helpdesk_v2.group_helpdesk_manager" nolabel="1">
+                                             <tree editable="bottom">
+                                                 <field name="date"/>
+                                                 <field name="author_id"/>
+                                                 <field name="subject"/>
+                                                 <field name="body" widget="html"/>
+                                             </tree>
+                                         </field>
+                                     </page>
+                                 </notebook>
+                             </div>
 
-                            <!-- Right Side Information Card (4 Cols) -->
-                            <div class="col-md-4">
-                                <div class="card p-3 mb-3 bg-light border rounded">
-                                    <h5 class="font-weight-bold mb-3">Information</h5>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Priority</span>
-                                        <field name="priority_label" readonly="1" font-weight="bold"/>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Service</span>
-                                        <field name="service_id"/>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Category</span>
-                                        <field name="category_id" domain="[('service_id', '=?', service_id)]"/>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Sub Category</span>
-                                        <field name="subcategory_id" domain="[('category_id', '=?', category_id)]"/>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
-                                        <span class="text-muted">Impact</span>
-                                        <field name="impact_level" readonly="1"/>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
-                                        <span class="text-muted">Urgency</span>
-                                        <field name="urgency_level" readonly="1"/>
-                                    </div>
-                                </div>
+                             <!-- Right Side Information Card (4 Cols) -->
+                             <div class="col-md-4">
+                                 <div class="card p-3 mb-3 bg-light border rounded">
+                                     <h5 class="font-weight-bold mb-3">Information</h5>
+                                     <div class="d-flex justify-content-between mb-2">
+                                         <span class="text-muted">Priority</span>
+                                         <field name="priority_label" readonly="1" font-weight="bold"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2">
+                                         <span class="text-muted">Service</span>
+                                         <field name="service_id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2">
+                                         <span class="text-muted">Category</span>
+                                         <field name="category_id" domain="[('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2">
+                                         <span class="text-muted">Sub Category</span>
+                                         <field name="subcategory_id" domain="[('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
+                                         <span class="text-muted">Impact</span>
+                                         <field name="impact_level" readonly="1"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
+                                         <span class="text-muted">Urgency</span>
+                                         <field name="urgency_level" readonly="1"/>
+                                     </div>
+                                 </div>
 
-                                <div class="card p-3 bg-light border rounded">
-                                    <h5 class="font-weight-bold mb-3">Attachments</h5>
-                                    <field name="attachment_ids" widget="many2many_binary" string="Files"/>
-                                </div>
-                            </div>
-                        </div>
-                    </sheet>
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids"/>
-                        <field name="activity_ids"/>
-                        <field name="message_ids"/>
-                    </div>
-                </form>
-            </field>
-        </record>
+                                 <div class="card p-3 bg-light border rounded">
+                                     <h5 class="font-weight-bold mb-3">Attachments</h5>
+                                     <field name="attachment_ids" widget="many2many_binary" string="Files" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                 </div>
+                                 </div>
+                         </div>
+                     </sheet>
+                     <div class="oe_chatter">
+                         <field name="message_follower_ids"/>
+                         <field name="activity_ids"/>
+                         <field name="message_ids"/>
+                     </div>
+                 </form>
+             </field>
+         </record>
 
         <!-- Kanban -->
         <record id="view_helpdesk_ticket_kanban" model="ir.ui.view">

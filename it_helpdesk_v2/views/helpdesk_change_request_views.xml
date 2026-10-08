@@ -49,6 +49,7 @@
                         <field name="can_reopen" invisible="1"/>
                         <field name="can_reject" invisible="1"/>
                         <field name="is_target_dept_it" invisible="1"/>
+                        <field name="is_engineer_or_officer" invisible="1"/>
 
                         <button name="action_publish" string="Publish" type="object" class="btn-primary font-weight-bold" attrs="{'invisible': [('state', '!=', 'draft')]}"/>
                         
@@ -63,7 +64,7 @@
                         <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" attrs="{'invisible': ['|', ('state', 'not in', ['done', 'closed']), ('can_reopen', '=', False)]}"/>
                         <button name="action_close" string="Close CR" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
-                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'closed', 'rejected'])]}"/>
+                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'closed'])]}"/>
 
                         <field name="state" widget="statusbar" statusbar_visible="draft,dept_mgr_approval,kadept_approval,bpo_approval,it_mgr_review,it_kadept_approval,in_progress,done,closed"/>
                     </header>
@@ -75,11 +76,11 @@
                             <div class="d-flex align-items-center">
                                 <i class="fa fa-exclamation-triangle fa-2x mr-3 text-warning" title="Catatan Revisi / Penolakan"/>
                                 <div>
-                                    <h5 class="mb-1 font-weight-bold text-danger">⚠️ ALASAN PENOLAKAN / CATATAN REVISI SEBELUMNYA</h5>
-                                    <div>
-                                        <strong>Catatan:</strong> <field name="rejection_reason" readonly="1"/>
+                                    <h5 class="mb-1 font-weight-bold text-danger">⚠️ POP-UP REVISI / ALASAN PENOLAKAN SEBELUMNYA</h5>
+                                    <div class="mb-1">
+                                        <strong>Alasan Penolakan / Catatan Revisi:</strong> <field name="rejection_reason" readonly="1"/>
                                     </div>
-                                    <small class="text-muted"><i>Silakan perbarui data pengajuan sesuai catatan di atas, kemudian klik <b>Submit</b> untuk mengajukan ulang.</i></small>
+                                    <small class="text-muted"><i>Formulir ini dapat Anda edit kembali. Silakan perbarui data pengajuan sesuai catatan di atas, kemudian klik <b>Publish</b> untuk mengajukan ulang.</i></small>
                                 </div>
                             </div>
                         </div>
@@ -128,11 +129,11 @@
                                 </group>
                                 <group string="Hierarki Approval &amp; Eksekutor">
                                     <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True}" readonly="1"/>
-                                    <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True}"/>
-                                    <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True}"/>
-                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)]}"/>
-                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True}"/>
-                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True}"/>
+                                    <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)], 'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
                                     <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
                                 </group>
@@ -140,14 +141,14 @@
                             <div class="col-md-6">
                                 <group string="Kontak Pelapor &amp; Catatan">
                                     <field name="created_by" string="Dibuat Oleh" readonly="1"/>
-                                    <field name="email" string="E-Mail" placeholder="user@hki.co.id"/>
-                                    <field name="phone" string="Phone" placeholder="0812-XXXX-XXXX"/>
+                                    <field name="email" string="E-Mail" placeholder="user@hki.co.id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="phone" string="Phone" placeholder="0812-XXXX-XXXX" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="is_admin" invisible="1"/>
-                                    <field name="enable_auto_close" string="Aktifkan Auto Close"/>
+                                    <field name="enable_auto_close" string="Aktifkan Auto Close" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="resolved_date" string="Tanggal Done" attrs="{'readonly': [('is_admin', '=', False)], 'invisible': [('state', 'not in', ['done', 'closed'])]}"/>
                                     <field name="auto_close_deadline" string="Batas Auto Close (3 Hari Kerja)" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                                     <field name="closed_date" string="Tanggal Closed" attrs="{'readonly': [('is_admin', '=', False)], 'invisible': [('state', '!=', 'closed')]}"/>
-                                    <field name="note" string="Catatan"/>
+                                    <field name="note" string="Catatan" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="rejection_reason" string="Alasan Penolakan / Catatan Revisi" attrs="{'invisible': [('rejection_reason', '=', False)]}"/>
                                 </group>
                             </div>
@@ -157,17 +158,17 @@
                         <notebook class="mt-4">
                             <page string="ATTACHMENT" name="attachment">
                                 <div class="p-2">
-                                    <field name="attachment_ids" widget="many2many_binary"/>
+                                    <field name="attachment_ids" widget="many2many_binary" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </div>
                             </page>
                             <page string="ANALYSIS AND SOLUTION" name="analysis_solution">
                                 <div class="p-2">
-                                    <field name="analysis_and_solution" placeholder="Hasil analisa dan solusi teknis..."/>
+                                    <field name="analysis_and_solution" placeholder="Hasil analisa dan solusi teknis..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </div>
                             </page>
                             <page string="PROPOSE SOLUTION" name="propose_solution">
                                 <div class="p-2">
-                                    <field name="propose_solution" placeholder="Rekomendasi solusi yang diajukan..."/>
+                                    <field name="propose_solution" placeholder="Rekomendasi solusi yang diajukan..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </div>
                             </page>
                         </notebook>

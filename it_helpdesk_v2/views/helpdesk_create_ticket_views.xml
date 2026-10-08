@@ -41,7 +41,7 @@
                             <div class="form-group mb-0">
                                 <label for="title" string="Judul Kendala" class="oe_edit_only font-weight-bold text-muted d-block mb-1"/>
                                 <h2>
-                                    <field name="title" placeholder="Tuliskan Judul Kendala..." class="w-100"/>
+                                    <field name="title" placeholder="Tuliskan Judul Kendala..." class="w-100" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </h2>
                             </div>
                         </div>
@@ -53,19 +53,19 @@
                                 <!-- FORM KIRI -->
                                 <div class="col-md-6 border-right">
                                     <group>
-                                        <field name="ticket_type" string="Ticket Type"/>
-                                        <field name="service_id" string="Service" options="{'no_create': True}"/>
-                                        <field name="category_id" string="Category" domain="[('service_id', '=?', service_id)]" options="{'no_create': True}"/>
-                                        <field name="subcategory_id" string="Sub Category" domain="[('category_id', '=?', category_id)]" options="{'no_create': True}"/>
+                                        <field name="ticket_type" string="Ticket Type" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="service_id" string="Service" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="category_id" string="Category" domain="[('service_id', '=?', service_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="subcategory_id" string="Sub Category" domain="[('category_id', '=?', category_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     </group>
                                 </div>
                                 <!-- FORM KANAN -->
                                 <div class="col-md-6">
                                     <group>
-                                        <field name="location_id" string="Department &amp; Location" options="{'no_create': True}"/>
-                                        <field name="phone" string="Phone" placeholder="0812-1234-5678"/>
-                                        <field name="email" string="Email" placeholder="ahmad.fauzi@hki.co.id"/>
-                                        <field name="cc_partner_ids" string="CC" widget="many2many_tags" placeholder="Pilih user untuk CC"/>
+                                        <field name="location_id" string="Department &amp; Location" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="phone" string="Phone" placeholder="0812-1234-5678" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="email" string="Email" placeholder="ahmad.fauzi@hki.co.id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="cc_partner_ids" string="CC" widget="many2many_tags" placeholder="Pilih user untuk CC" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     </group>
                                 </div>
                             </div>
@@ -75,17 +75,17 @@
                         <notebook class="mt-4">
                             <page string="Question" name="question">
                                 <group string="Penentu Prioritas (5 Pertanyaan)" class="mt-2">
-                                    <field name="q1_answer_id" string="1. Siapa yang terdampak?" options="{'no_create': True}"/>
-                                    <field name="q2_answer_id" string="2. Apakah mengganggu operasional?" options="{'no_create': True}"/>
-                                    <field name="q3_answer_id" string="3. Layanan yang terdampak?" options="{'no_create': True}"/>
-                                    <field name="q4_answer_id" string="4. Apakah ada workaround?" options="{'no_create': True}"/>
-                                    <field name="q5_answer_id" string="5. Apakah terkait deadline proyek/pekerjaan?" options="{'no_create': True}"/>
+                                    <field name="q1_answer_id" string="1. Siapa yang terdampak?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="q2_answer_id" string="2. Apakah mengganggu operasional?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="q3_answer_id" string="3. Layanan yang terdampak?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="q4_answer_id" string="4. Apakah ada workaround?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="q5_answer_id" string="5. Apakah terkait deadline proyek/pekerjaan?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </group>
                             </page>
                             <page string="Description" name="description">
-                                <field name="description" placeholder="Jelaskan permasalahan secara detail..."/>
+                                <field name="description" placeholder="Jelaskan permasalahan secara detail..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 <group string="Attachment" class="mt-3">
-                                    <field name="attachment_ids" widget="many2many_binary" nolabel="1"/>
+                                    <field name="attachment_ids" widget="many2many_binary" nolabel="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </group>
                             </page>
                             <page string="SLA Time" name="sla_time">
@@ -121,15 +121,8 @@
                                     </group>
                                 </div>
                             </page>
-                            <page string="History" name="history">
-                                <field name="message_ids" readonly="1" nolabel="1" groups="!it_helpdesk_v2.group_helpdesk_manager">
-                                    <tree>
-                                        <field name="date"/>
-                                        <field name="author_id"/>
-                                        <field name="subject"/>
-                                    </tree>
-                                </field>
-                                <field name="message_ids" nolabel="1" groups="it_helpdesk_v2.group_helpdesk_manager">
+                            <page string="History" name="history" groups="it_helpdesk_v2.group_helpdesk_manager">
+                                <field name="message_ids" nolabel="1">
                                     <tree editable="bottom">
                                         <field name="date"/>
                                         <field name="author_id"/>
@@ -160,10 +153,6 @@
                                     <div class="card p-3 mb-3 border rounded bg-white shadow-sm">
                                         <label for="resolution" string="Langkah-Langkah / Teks Panduan Penyelesaian Kendala (Tutorial)" class="font-weight-bold mb-2 text-primary"/>
                                         <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
-                                    </div>
-                                    <div class="card p-3 border rounded bg-white shadow-sm mt-3">
-                                        <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary"/>
-                                        <field name="solution_attachment_ids" widget="many2many_binary"/>
                                     </div>
                                 </div>
                             </page>

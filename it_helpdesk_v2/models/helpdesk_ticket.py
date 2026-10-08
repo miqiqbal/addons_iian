@@ -862,24 +862,14 @@ class HelpdeskTicket(models.Model):
                 if ticket.is_published_to_kb:
                     ticket._sync_knowledge_base()
 
-                sol_type_dict = {
-                    'text': 'Teks Tutorial Saja',
-                    'images': 'Kumpulan Capture / Foto Saja',
-                    'hybrid': 'Teks & Capture (Kombinasi Inline)'
-                }
-                format_label = sol_type_dict.get(sol_type, 'Tutorial')
                 kb_status = "Ya (Terbit ke Knowledge Base)" if ticket.is_published_to_kb else "Tidak"
                 text_preview = ticket.resolution or "Panduan terlampir pada file/foto bukti."
-                attachment_count = len(ticket.solution_attachment_ids)
-
                 log_body = (
                     "<b>🛠️ AKSI PENYELESAIAN TIKET (RESOLVED LOG)</b><br/>"
-                    "• <b>Format Solusi</b>: %s<br/>"
-                    "• <b>Lampiran Foto/File Bukti</b>: %d file terlampir<br/>"
                     "• <b>Diterbitkan ke Knowledge Base</b>: %s<br/>"
                     "• <b>Detail Solusi / Tutorial</b>:<br/>%s<br/>"
                     "• <b>Diselesaikan Oleh</b>: %s"
-                ) % (format_label, attachment_count, kb_status, text_preview, self.env.user.name)
+                ) % (kb_status, text_preview, self.env.user.name)
 
             now_dt = fields.Datetime.now()
             vals_done = {
@@ -1085,6 +1075,28 @@ class HelpdeskTicket(models.Model):
             'domain': [('ticket_id', '=', self.id)],
             'context': {'default_ticket_id': self.id},
         }
+
+    def write(self, vals):
+        user = self.env.user
+        is_agent_or_mgr = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            self.env.is_superuser()
+        )
+        if not is_agent_or_mgr and not self.env.context.get('bypass_draft_write_check'):
+            content_fields = {
+                'title', 'description', 'ticket_type', 'service_id', 'category_id',
+                'subcategory_id', 'location_id', 'phone', 'email', 'requester_id',
+                'cc_partner_ids', 'attachment_ids', 'q1_answer_id', 'q2_answer_id',
+                'q3_answer_id', 'q4_answer_id', 'q5_answer_id', 'expected_result',
+                'excel_link', 'registration_no'
+            }
+            if any(k in content_fields for k in vals.keys()):
+                for ticket in self:
+                    if ticket.state != 'draft':
+                        raise UserError(_("Sebagai Employee, Anda hanya dapat mengedit formulir tiket pada status Draft."))
+        return super().write(vals)
 
     def action_submit_create(self):
         """Dipanggil dari tombol Submit di form Create Ticket (Stage 8);

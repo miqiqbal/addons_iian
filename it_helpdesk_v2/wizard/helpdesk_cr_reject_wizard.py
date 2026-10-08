@@ -14,8 +14,8 @@ class HelpdeskCrRejectWizard(models.TransientModel):
         if not self.cr_id:
             raise UserError(_('Change Request tidak ditemukan.'))
 
-        # Update state kembali ke draft dan simpan alasan penolakan
-        self.cr_id.write({
+        # Update state langsung kembali ke draft dan simpan alasan penolakan
+        self.cr_id.sudo().with_context(bypass_draft_write_check=True).write({
             'state': 'draft',
             'rejection_reason': self.reason,
             'queue_number': 0,
@@ -30,7 +30,7 @@ class HelpdeskCrRejectWizard(models.TransientModel):
             "<b>❌ Change Request Ditolak & Dikembalikan ke Draft</b><br/>"
             "• <b>Ditolak oleh:</b> %s<br/>"
             "• <b>Alasan Penolakan / Catatan Revisi:</b> %s<br/>"
-            "<i>Status Change Request dikembalikan ke Draft agar pemohon dapat merevisi dan mengajukan kembali.</i>"
+            "<i>Status Change Request telah dikembalikan ke <b>Draft</b> agar pemohon dapat langsung merevisi formulir dan mengajukan ulang.</i>"
         ) % (self.env.user.name, self.reason)
 
         self.cr_id.message_post(body=message_body, message_type='notification')
