@@ -267,7 +267,7 @@ class HelpdeskChangeRequest(models.Model):
     can_reopen = fields.Boolean(compute='_compute_can_reopen')
     is_admin = fields.Boolean(compute='_compute_is_admin')
     is_engineer_or_officer = fields.Boolean(compute='_compute_is_engineer_or_officer')
-    is_target_dept_it = fields.Boolean(compute='_compute_is_target_dept_it')
+    is_target_dept_it = fields.Boolean(compute='_compute_is_target_dept_it', store=True)
 
     def _is_target_dept_it(self):
         """Mengecek apakah CR to Departement mengarah ke IT/Sistem/Digitalisasi"""
@@ -275,7 +275,10 @@ class HelpdeskChangeRequest(models.Model):
         if not self.target_department_id:
             return False
         name = (self.target_department_id.name or '').lower()
-        return any(k in name for k in ['sistem, ti', 'sistem, it', 'sistem ti', 'sistem it', 'digitalisasi', 'it', 'ti'])
+        if any(k in name for k in ['sistem', 'digitalisasi', 'information technology']):
+            return True
+        import re
+        return bool(re.search(r'\b(it|ti)\b', name))
 
     @api.depends('target_department_id')
     def _compute_is_target_dept_it(self):
@@ -298,7 +301,9 @@ class HelpdeskChangeRequest(models.Model):
 
             # Can reject per state: Approver at current state, Admin, or Requester (Employee)
             is_requester = bool((cr.created_by and cr.created_by.id == uid) or (cr.create_uid and cr.create_uid.id == uid))
-            if cr.state == 'dept_mgr_approval':
+            if cr.state in ('draft', 'done', 'closed'):
+                cr.can_reject = False
+            elif cr.state == 'dept_mgr_approval':
                 cr.can_reject = cr.can_approve_dept_mgr or is_requester
             elif cr.state == 'kadept_approval':
                 cr.can_reject = cr.can_approve_kadept or is_requester
@@ -311,7 +316,7 @@ class HelpdeskChangeRequest(models.Model):
             elif cr.state == 'in_progress':
                 cr.can_reject = is_superuser or is_admin or is_requester
             else:
-                cr.can_reject = is_superuser or is_admin or is_requester
+                cr.can_reject = False
 
 
     @api.depends_context('uid')
@@ -390,7 +395,10 @@ class HelpdeskChangeRequest(models.Model):
     @api.onchange('target_department_id')
     def _onchange_target_department_id(self):
         if self.target_department_id:
-            self.bpo_kadept_manager_id = self._get_bpo_kadept_manager_user(self.target_department_id)
+            if self._is_target_dept_it():
+                self.bpo_kadept_manager_id = False
+            else:
+                self.bpo_kadept_manager_id = self._get_bpo_kadept_manager_user(self.target_department_id)
         else:
             self.bpo_kadept_manager_id = False
 
@@ -442,7 +450,7 @@ class HelpdeskChangeRequest(models.Model):
         for cr in self:
             if cr.dept_manager_id and cr.dept_manager_id.email:
                 try:
-                    template.send_mail(cr.id, force_send=True)
+                    template.send_mail(cr.id, force_send=False)
                 except Exception:
                     pass
 
@@ -453,7 +461,7 @@ class HelpdeskChangeRequest(models.Model):
         for cr in self:
             if cr.manager_it_id and cr.manager_it_id.email:
                 try:
-                    template.send_mail(cr.id, force_send=True)
+                    template.send_mail(cr.id, force_send=False)
                 except Exception:
                     pass
 
@@ -462,7 +470,8 @@ class HelpdeskChangeRequest(models.Model):
         if not template:
             return
         for cr in self:
-            if cr.email:
+            recipient_email = cr.email or (cr.created_by and cr.created_by.email)
+            if recipient_email:
                 try:
                     template.send_mail(cr.id, force_send=True)
                 except Exception:
@@ -473,7 +482,8 @@ class HelpdeskChangeRequest(models.Model):
         if not template:
             return
         for cr in self:
-            if cr.email:
+            recipient_email = cr.email or (cr.created_by and cr.created_by.email)
+            if recipient_email:
                 try:
                     template.send_mail(cr.id, force_send=True)
                 except Exception:
@@ -488,8 +498,12 @@ class HelpdeskChangeRequest(models.Model):
     def action_submit(self):
         """Submit CR from Draft -> Approval Manager Dept Terkait"""
         for cr in self:
+            if not cr.request_identification:
+                raise UserError(_("Silakan isi Request Identification terlebih dahulu sebelum mem-publish pengajuan!"))
+
             if not cr.code:
                 cr.code = cr.get_next_cr_code()
+            cr.rejection_reason = False
             cr.posted_date = fields.Datetime.now()
             cr.state = 'dept_mgr_approval'
             cr._send_dept_approval_email()
@@ -512,6 +526,7 @@ class HelpdeskChangeRequest(models.Model):
 
             if cr._is_target_dept_it():
                 cr.state = 'it_mgr_review'
+                cr._send_it_approval_email()
             else:
                 cr.state = 'bpo_approval'
 
@@ -521,6 +536,7 @@ class HelpdeskChangeRequest(models.Model):
             if not cr.can_approve_bpo:
                 raise UserError(_("Hanya Kadept BPO / Kadept Departemen Tujuan (%s) yang berhak menyetujui pengajuan ini!") % (cr.bpo_kadept_manager_id.name or 'Kadept BPO'))
             cr.state = 'it_mgr_review'
+            cr._send_it_approval_email()
 
     def action_review_it_mgr(self):
         """Review Manager IT: Assigns Engineer & Estimated Date -> goes to Approval Kadept IT"""
@@ -605,7 +621,7 @@ class HelpdeskChangeRequest(models.Model):
                 'state': 'in_progress',
                 'auto_close_deadline': False,
             }
-            if cr.state == 'closed':
+            if not cr.queue_number or cr.queue_number <= 0:
                 max_cr = self.search([('queue_number', '>', 0)], order='queue_number desc', limit=1)
                 vals['queue_number'] = (max_cr.queue_number + 1) if max_cr else 1
             cr.write(vals)

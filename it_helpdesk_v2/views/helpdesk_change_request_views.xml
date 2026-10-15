@@ -64,9 +64,12 @@
                         <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" attrs="{'invisible': ['|', ('state', 'not in', ['done', 'closed']), ('can_reopen', '=', False)]}"/>
                         <button name="action_close" string="Close CR" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
-                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'closed'])]}"/>
+                        <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'done', 'closed'])]}"/>
 
-                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_mgr_approval,kadept_approval,bpo_approval,it_mgr_review,it_kadept_approval,in_progress,done,closed"/>
+                        <!-- Statusbar jika tujuan IT (BPO Approval di-bypass & di-hide) -->
+                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_mgr_approval,kadept_approval,it_mgr_review,it_kadept_approval,in_progress,done,closed" attrs="{'invisible': [('is_target_dept_it', '=', False)]}"/>
+                        <!-- Statusbar jika tujuan BUKAN IT (memerlukan BPO Approval) -->
+                        <field name="state" widget="statusbar" statusbar_visible="draft,dept_mgr_approval,kadept_approval,bpo_approval,it_mgr_review,it_kadept_approval,in_progress,done,closed" attrs="{'invisible': [('is_target_dept_it', '=', True)]}"/>
                     </header>
 
                     <sheet>
@@ -179,6 +182,43 @@
                         <field name="message_ids"/>
                     </div>
                 </form>
+            </field>
+        </record>
+
+        <!-- Search View: Change Request -->
+        <record id="view_helpdesk_change_request_search" model="ir.ui.view">
+            <field name="name">helpdesk.change.request.search</field>
+            <field name="model">helpdesk.change.request</field>
+            <field name="arch" type="xml">
+                <search string="Search Change Request">
+                    <field name="code" string="No. CR"/>
+                    <field name="request_identification" string="Request Identification"/>
+                    <field name="created_by" string="Requester"/>
+                    <field name="engineer_id" string="Engineer"/>
+                    <field name="target_department_id" string="CR to Departement"/>
+                    <field name="department_id" string="Unit Kerja"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="cr_type_id" string="CR Type"/>
+
+                    <filter string="My Change Request" name="my_cr" domain="[('create_uid', '=', uid)]"/>
+                    <filter string="Assigned to Me" name="assigned_to_me" domain="[('engineer_id', '=', uid)]"/>
+                    <separator/>
+                    <filter string="Menunggu Approval" name="filter_need_approval" domain="[('state', 'in', ['dept_mgr_approval', 'kadept_approval', 'bpo_approval', 'it_mgr_review', 'it_kadept_approval'])]"/>
+                    <filter string="In Progress" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                    <filter string="Done" name="filter_done" domain="[('state', '=', 'done')]"/>
+                    <filter string="Closed" name="filter_closed" domain="[('state', '=', 'closed')]"/>
+                    <separator/>
+                    <filter string="Departemen Tujuan IT" name="filter_target_it" domain="[('is_target_dept_it', '=', True)]"/>
+
+                    <group expand="0" string="Group By">
+                        <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="CR to Departement" name="group_by_target_dept" context="{'group_by': 'target_department_id'}"/>
+                        <filter string="Engineer" name="group_by_engineer" context="{'group_by': 'engineer_id'}"/>
+                        <filter string="Category" name="group_by_category" context="{'group_by': 'category_id'}"/>
+                        <filter string="Requester" name="group_by_created_by" context="{'group_by': 'created_by'}"/>
+                        <filter string="Bulan Pembuatan" name="group_by_create_date" context="{'group_by': 'create_date:month'}"/>
+                    </group>
+                </search>
             </field>
         </record>
 

@@ -117,11 +117,14 @@ class HelpdeskTicket(models.Model):
             ticket.is_engineer_or_officer = is_agent_or_mgr
 
     @api.depends_context('uid')
+    @api.depends('state')
     def _compute_can_reject(self):
         is_mgr = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')
         is_agent = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent')
         for ticket in self:
-            if is_mgr:
+            if ticket.state in ('draft', 'done', 'closed', 'reject'):
+                ticket.can_reject = False
+            elif is_mgr:
                 ticket.can_reject = True
             elif is_agent:
                 ticket.can_reject = False
@@ -578,10 +581,7 @@ class HelpdeskTicket(models.Model):
                 srv = self.env['helpdesk.service'].browse(vals['service_id'])
                 if srv.engineer_id:
                     engineer_id = srv.engineer_id.id
-
-            if not engineer_id:
-                engineer_id = self.env.uid
-
+            # Jika tidak ada aturan yang cocok, engineer_id tetap False (unassigned)
             if engineer_id:
                 # Cek kuota harian engineer utama & lakukan auto-failover jika penuh
                 primary_eng = self.env['res.users'].browse(engineer_id)
@@ -664,8 +664,11 @@ class HelpdeskTicket(models.Model):
                 raise UserError('Mohon lengkapi kolom berikut sebelum mempublikasikan tiket:\n• ' + '\n• '.join(missing))
             vals = {
                 'state': 'open',
-                'publish_date': ticket.publish_date or fields.Datetime.now()
+                'publish_date': ticket.publish_date or fields.Datetime.now(),
+                'rejection_reason': False,
             }
+            if not ticket.engineer_id:
+                ticket._auto_route_engineer(vals)
             ticket.write(vals)
 
     def action_save_draft(self):
@@ -675,6 +678,8 @@ class HelpdeskTicket(models.Model):
     def action_assign_engineer(self):
         for ticket in self:
             vals = {'state': 'assigned'}
+            if not ticket.first_response_date:
+                vals['first_response_date'] = fields.Datetime.now()
             if not ticket.engineer_id:
                 ticket._auto_route_engineer(vals)
             if not ticket.engineer_id and not vals.get('engineer_id'):
@@ -688,10 +693,13 @@ class HelpdeskTicket(models.Model):
 
     def action_start_progress(self):
         for ticket in self:
-            ticket.write({
+            vals = {
                 'state': 'in_progress',
-                'start_progress_date': ticket.start_progress_date or fields.Datetime.now()
-            })
+                'start_progress_date': ticket.start_progress_date or fields.Datetime.now(),
+            }
+            if not ticket.first_response_date:
+                vals['first_response_date'] = fields.Datetime.now()
+            ticket.write(vals)
 
     def action_save_to_kb(self):
         for ticket in self:
@@ -1034,14 +1042,14 @@ class HelpdeskTicket(models.Model):
                 email_vals = {}
                 if cc_emails:
                     email_vals['email_cc'] = ','.join(cc_emails)
-                template_requester.send_mail(ticket.id, force_send=True, email_values=email_vals if email_vals else None)
+                template_requester.send_mail(ticket.id, force_send=False, email_values=email_vals if email_vals else None)
             if template_manager:
                 teams = self.env['helpdesk.team'].search(
                     [('service_ids', 'in', ticket.service_id.ids)])
                 partners = teams.manager_id.partner_id
                 if partners:
                     template_manager.send_mail(
-                        ticket.id, force_send=True,
+                        ticket.id, force_send=False,
                         email_values={'recipient_ids': [(6, 0, partners.ids)]})
 
     def cron_check_sla_breach(self):
@@ -1103,13 +1111,14 @@ class HelpdeskTicket(models.Model):
         record sudah tersimpan otomatis oleh Odoo sebelum method ini jalan,
         di sini tinggal arahkan user ke form detail tiket yang baru dibuat."""
         self.ensure_one()
+        view_id = self.env.ref('it_helpdesk_v2.view_helpdesk_ticket_form', raise_if_not_found=False) or self.env.ref('it_helpdesk.view_helpdesk_ticket_form', raise_if_not_found=False)
         return {
             'type': 'ir.actions.act_window',
             'name': self.name,
             'res_model': 'helpdesk.ticket',
             'res_id': self.id,
             'view_mode': 'form',
-            'views': [(self.env.ref('it_helpdesk.view_helpdesk_ticket_form').id, 'form')],
+            'views': [(view_id.id if view_id else False, 'form')],
             'target': 'current',
         }
 

@@ -112,7 +112,18 @@ class TestHelpdeskChangeRequestEmail(common.TransactionCase):
         self.assertEqual(cr.state, 'it_mgr_review')
 
     def test_reject_does_not_raise_without_requester_email(self):
-        cr = self._create_cr()
+        dept_other = self.env['hr.department'].create({'name': 'Departemen Keuangan'})
+        cr = self._create_cr(
+            dept_manager_id=self.dept_manager.id,
+            kadept_manager_id=self.kadept_user.id,
+            target_department_id=dept_other.id,
+        )
         cr.created_by = False
-        cr.action_reject()
-        self.assertEqual(cr.state, 'rejected')
+        cr.action_publish()
+        wizard = self.env['helpdesk.cr.reject.wizard'].create({
+            'cr_id': cr.id,
+            'reason': 'Alasan penolakan pengujian',
+        })
+        wizard.action_confirm_reject()
+        self.assertEqual(cr.state, 'draft')
+        self.assertEqual(cr.rejection_reason, 'Alasan penolakan pengujian')

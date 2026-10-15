@@ -36,12 +36,13 @@
                                 <div>Engineer: <field name="engineer_id"/></div>
                                 <div>
                                     <field name="state" widget="badge"
-                                           decoration-info="state == 'new'"
-                                           decoration-warning="state in ('assigned', 'pending')"
+                                           decoration-secondary="state == 'draft'"
+                                           decoration-info="state == 'open'"
+                                           decoration-warning="state == 'assigned'"
                                            decoration-primary="state == 'in_progress'"
-                                           decoration-success="state == 'resolved'"
-                                           decoration-muted="state == 'closed'"
-                                           decoration-danger="state == 'cancelled'"/>
+                                           decoration-success="state == 'done'"
+                                           decoration-danger="state == 'reject'"
+                                           decoration-muted="state == 'closed'"/>
                                 </div>
                                 <div class="o_kanban_record_bottom">
                                     <div class="oe_kanban_bottom_left">

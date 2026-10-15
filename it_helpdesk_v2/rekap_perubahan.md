@@ -1,15 +1,15 @@
 # Rekap Perubahan Modul `it_helpdesk_v2`
 
-**Tanggal Rekap Terbaru:** 06 Oktober 2026  
-**Referensi Commit Terakhir (GitHub):** `8c6101f Feat: Add dynamic category and subcategory filtering in Keyword Routing Rules`  
+**Tanggal Rekap Terbaru:** 15 Oktober 2026  
+**Referensi Commit Terakhir (GitHub):** `0c555f7 fix: set default state to draft to allow editable fields on create ticket`  
 **Repository GitHub:** `https://github.com/miqiqbal/addons_iian.git` (Branch: `main`)  
-**Status:** All Local Changes Committed & Pushed to Remote GitHub
+**Status:** All Local Changes Committed & Verified
 
 ---
 
 ## 📌 Ringkasan Utama Perubahan
 
-Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
+Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **15 area utama**:
 
 1. **Master Data Fitur Baru: CR Type (`helpdesk.cr.type`)**.
 2. **Perombakan Workflow Approval Change Request Multi-Tier (5-Level Flow)**.
@@ -19,6 +19,13 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
 6. **Penyesuaian Hak Akses & Peran Pengguna (Group & Security Access)**.
 7. **Automated Unit Testing Suite**.
 8. **Pembaruan Pengirim Email Notifikasi (`system.itd@hkinfrastruktur.com`)**.
+9. **Filter Departemen Target & Penentuan Kadept BPO Berdasarkan Jabatan**.
+10. **Pop-Up Wizard Reject Change Request & Pengembalian ke Status Draft**.
+11. **Pengiriman Email Langsung & Auto Sync Mail Template**.
+12. **Pembatasan Akses Edit Form & Tombol Action Role Employee (Draft Only & Reject Past Draft)**.
+13. **Audit Logika Tiket, Auto-Routing, & Perhitungan SLA Response**.
+14. **Matriks Lengkap Hak Akses Pengguna Login (Menu, Tombol, & Kontrol Edit)**.
+15. **Evolusi Struktur Role Pengguna & Keamanan Penugasan Tiket (Assigned Ticket to)**.
 
 ---
 
@@ -158,6 +165,84 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
 
 ---
 
+### 13. Audit Logika Tiket, Auto-Routing, & Perhitungan SLA Response
+* **Perbaikan Referensi Form View Tiket (`action_submit_create`)**:
+  * Mengoreksi xml id `it_helpdesk.view_helpdesk_ticket_form` menjadi `it_helpdesk_v2.view_helpdesk_ticket_form` pada pemanggilan aksi buka tiket setelah submit.
+* **Penyempurnaan `action_publish()`**:
+  * Otomatis mereset catatan revisi/penolakan (`rejection_reason = False`) saat tiket diajukan ulang dari status `draft`.
+  * Memicu fungsi `_auto_route_engineer(vals)` saat publikasi jika kolom engineer masih kosong.
+* **Perbaikan Auto-Routing Engineer (`_auto_route_engineer`)**:
+  * Menghapus fallback penugasan otomatis ke pembuat tiket (`engineer_id = self.env.uid`). Jika tidak ada aturan routing yang cocok, tiket tetap berstatus `unassigned` (`False`), mencegah tiket langsung tertutup/dikerjakan sendiri oleh pelapor.
+* **Presisi Perhitungan SLA First Response Date**:
+  * Pada method `action_assign_engineer` dan `action_start_progress`, sistem otomatis mencatat `first_response_date = fields.Datetime.now()` jika belum terisi, memastikan durasi SLA Response Time terhitung secara akurat.
+* **Logika Tombol Reject Tiket (`_compute_can_reject`)**:
+  * Menambahkan dependensi `@api.depends('state')` dan menonaktifkan hak reject pada status terminal (`draft`, `done`, `closed`, `reject`).
+* **Penyelarasan Tampilan & Status Badge**:
+  * Memperbaiki banner peringatan unassigned tiket dari kondisi `state != 'new'` menjadi `state != 'open'` pada form view.
+  * Menyelaraskan pewarnaan badge status (`assigned`, `in_progress`, dll.) di Form View dan Kanban My Ticket.
+
+---
+
+### 14. Matriks Lengkap Hak Akses Pengguna Login (Menu, Tombol, & Kontrol Edit)
+Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
+
+#### A. Akses Menu Navigasi (Muncul vs Di-Hide)
+| Menu Navigasi | 1. Employee (Requester) | 2. Manager Dept. | 3. IT Manager | 4. IT Admin |
+| :--- | :---: | :---: | :---: | :---: |
+| **IT Helpdesk (Root)** | **MUNCUL** | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| ├── **Dashboard (KPI & Analitik)** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| ├── **Ticket** | | | | |
+| │   ├── **All Ticket** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| │   ├── **My Ticket** | **MUNCUL** | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| │   ├── **Assigned Tickets to Me** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| │   ├── **Assigned CR to Me** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| │   └── **Create Ticket** | **MUNCUL** | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| ├── **Knowledge Base (Kamus Solusi)** | **MUNCUL** | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| ├── **Change Request (CR)** | | | | |
+| │   ├── **My Change Request** | **MUNCUL** | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| │   ├── **Need My Approval** | HIDE | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| │   ├── **Active Queue & Progress** | HIDE | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| │   ├── **All Change Requests** | **MUNCUL** *(Data terfilter)* | **MUNCUL** | **MUNCUL** | **MUNCUL** |
+| │   └── **CR History & Archives** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| ├── **Reports (Laporan & Pivot)** | HIDE | HIDE | **MUNCUL** | **MUNCUL** |
+| └── **Configuration (Master Data & Setup)** | HIDE | HIDE | HIDE | **MUNCUL** |
+
+#### B. Kontrol Tombol Aksi & Field Keamanan
+* **Tombol Edit Utama Header Form (`static/src/js/helpdesk_form_control.js`)**:
+  * Untuk **Employee biasa**: Tombol Edit **OTOMATIS DI-HIDE** begitu tiket / CR melewati status `Draft`.
+  * Untuk **Manager Dept, IT Manager, IT Admin**: Tombol Edit **TETAP MUNCUL**.
+* **Penugasan & Reassign Tiket**:
+  * Tombol *Assign / Eskalasi ke Engineer* dan wizard *Eskalasi / Reassign Engineer* dilindungi grup `group_helpdesk_manager` (**Hanya IT Admin**).
+* **Pengerjaan Tiket**:
+  * Tombol *Start Progress* dan *Mark as Done* hanya muncul untuk tim pengelola (Manager Dept, IT Manager, IT Admin).
+* **Field `engineer_id`**:
+  * Readonly bagi Employee; dapat dipilih dan diedit oleh Manager Dept, IT Manager, dan IT Admin.
+* **Koreksi SLA Time (Resolved & Closed Date)**:
+  * Field tanggal penyelesaian dan penutupan tiket dapat diedit manual (*backdate/koreksi*) oleh **IT Admin** (`is_admin = True`).
+* **Privasi Data Record Rules**:
+  * Pada Change Request, pengguna Employee hanya dapat melihat record miliknya sendiri atau jika ditunjuk sebagai approver/engineer.
+
+---
+
+### 15. Evolusi Struktur Role Pengguna & Keamanan Penugasan Tiket (Assigned Ticket to)
+* **Evolusi Penamaan & Fungsi Role**:
+  * **Versi Awal**: Terdiri dari 3 role standar helpdesk Odoo:
+    1. `group_helpdesk_user` (**Employee / Requester**)
+    2. `group_helpdesk_agent` (**Engineer**)
+    3. `group_helpdesk_manager` (**Helpdesk Officer**)
+  * **Versi Saat Ini**: Ditingkatkan menjadi 4 role korporat untuk mengakomodasi alur persetujuan berjenjang:
+    1. `group_helpdesk_user` (**Employee**) — Diwarisi semua pengguna internal Odoo.
+    2. `group_helpdesk_agent` (**Manager Dept.**) — Difokuskan untuk persetujuan (approval) Change Request level unit/departemen pemohon.
+    3. `group_helpdesk_it_manager` (**IT Manager**) — Persetujuan Change Request level IT dan akses pelaporan analitik.
+    4. `group_helpdesk_manager` (**IT Admin**) — Administrator penuh sistem helpdesk dan master konfigurasi.
+* **Validasi Keamanan Fungsi "Assigned Ticket to"**:
+  * **Pemilihan Fleksibel**: Kolom penugasan `engineer_id` berelasi langsung ke `res.users` dengan domain `[('share', '=', False)]`, sehingga seluruh personil internal tim IT dapat ditugaskan sebagai penanggung jawab tiket tanpa terikat batasan nama role.
+  * **Wewenang Penugasan**: Hak menetapkan teknisi (*Assign Engineer* & *Reassign Wizard*) dipegang penuh secara aman oleh peran **IT Admin**.
+  * **Menu "Assigned to Me"**: Filter membaca record dengan kriteria `[('engineer_id', '=', uid)]`, sehingga tiket yang ditugaskan otomatis tampil di dashboard teknisi terkait.
+  * **Notifikasi Email**: Pemicu otomatis `_send_engineer_assignment_email()` tetap mengirim email notifikasi tugas baru dan mencatat aktivitas di Chatter.
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |
@@ -165,7 +250,7 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
 | `it_helpdesk_v2/__manifest__.py` | **Modified** — Registrasi file view, wizard, & model baru |
 | `it_helpdesk_v2/hooks.py` | **Modified** — `post_init_hook` & auto-sync 744 user to employee |
 | `it_helpdesk_v2/models/__init__.py` | **Modified** — Import `helpdesk_cr_type` & `hr_employee` |
-| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Domain target dept, BPO job matching, dialog reject, & write restriction |
+| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Notifikasi email Manager IT, reset rejection_reason saat submit, perlindungan reject di status done/closed, queue number aman saat reopen, dan penanganan departemen IT |
 | `it_helpdesk_v2/models/helpdesk_ticket.py` | **Modified** — Direct email sending (`force_send=True`), init auto-sql update, & write restriction |
 | `it_helpdesk_v2/models/helpdesk_cr_type.py` | **New File** — Model master data CR Type |
 | `it_helpdesk_v2/models/helpdesk_keyword.py` | **Modified** — Dynamic category & subcategory onchange filters |
@@ -175,9 +260,9 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **8 area utama**:
 | `it_helpdesk_v2/security/ir.model.access.csv` | **Modified** — ACL master data CR Type & CR Reject Wizard |
 | `it_helpdesk_v2/data/mail_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/data/helpdesk_email_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
-| `it_helpdesk_v2/data/helpdesk_change_request_email_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
-| `it_helpdesk_v2/tests/test_helpdesk_change_request_email.py` | **Modified** — Automated test suite 5-level approval |
-| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Form view readonly state attrs, rejection banner, & alur 5-level approval |
+| `it_helpdesk_v2/data/helpdesk_change_request_email_template_data.xml` | **Modified** — Perbaikan ekspresi `${object.category_id.name}` & update email sender |
+| `it_helpdesk_v2/tests/test_helpdesk_change_request_email.py` | **Modified** — Automated test suite 5-level approval & wizard rejection verification |
+| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Form view readonly state attrs, rejection banner, alur 5-level approval, statusbar dinamis (hide Approval Kadept BPO saat target IT), tombol reject disembunyikan di status done, & penambahan search view lengkap |
 | `it_helpdesk_v2/views/helpdesk_ticket_views.xml` | **Modified** — Form view readonly state attrs & rejection wizard integration |
 | `it_helpdesk_v2/views/helpdesk_create_ticket_views.xml` | **Modified** — Form view readonly state attrs for create ticket form |
 | `it_helpdesk_v2/views/helpdesk_cr_type_views.xml` | **New File** — Views master data CR Type |

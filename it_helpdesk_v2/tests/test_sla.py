@@ -9,10 +9,10 @@ class TestSLA(common.TransactionCase):
     def setUp(self):
         super().setUp()
         self.start = datetime(2026, 7, 20, 9, 0, 0)  # Senin 09:00
-        self.sla_p1 = self.env.ref('it_helpdesk.helpdesk_sla_p1')
-        self.sla_p2 = self.env.ref('it_helpdesk.helpdesk_sla_p2')
-        self.sla_p3 = self.env.ref('it_helpdesk.helpdesk_sla_p3')
-        self.sla_p4 = self.env.ref('it_helpdesk.helpdesk_sla_p4')
+        self.sla_p1 = self.env.ref('it_helpdesk_v2.helpdesk_sla_p1', raise_if_not_found=False) or self.env.ref('it_helpdesk.helpdesk_sla_p1')
+        self.sla_p2 = self.env.ref('it_helpdesk_v2.helpdesk_sla_p2', raise_if_not_found=False) or self.env.ref('it_helpdesk.helpdesk_sla_p2')
+        self.sla_p3 = self.env.ref('it_helpdesk_v2.helpdesk_sla_p3', raise_if_not_found=False) or self.env.ref('it_helpdesk.helpdesk_sla_p3')
+        self.sla_p4 = self.env.ref('it_helpdesk_v2.helpdesk_sla_p4', raise_if_not_found=False) or self.env.ref('it_helpdesk.helpdesk_sla_p4')
 
     def test_response_deadline_minute_unit(self):
         # P1: response 15 menit

@@ -6,14 +6,20 @@ from odoo.tests import common
 
 class TestTicket(common.TransactionCase):
 
+    def _get_answer(self, xml_id):
+        return self.env.ref(f'it_helpdesk_v2.{xml_id}', raise_if_not_found=False) or self.env.ref(f'it_helpdesk.{xml_id}')
+
     def setUp(self):
         super().setUp()
         self.service = self.env['helpdesk.service'].create({'name': 'Test Service'})
-        self.q1 = self.env.ref('it_helpdesk.helpdesk_priority_answer_q1_1')  # score 5
-        self.q2 = self.env.ref('it_helpdesk.helpdesk_priority_answer_q2_1')  # score 5
-        self.q3 = self.env.ref('it_helpdesk.helpdesk_priority_answer_q3_1')  # score 5
-        self.q4 = self.env.ref('it_helpdesk.helpdesk_priority_answer_q4_1')  # score 5
-        self.q5 = self.env.ref('it_helpdesk.helpdesk_priority_answer_q5_1')  # score 5
+        self.q1 = self._get_answer('helpdesk_priority_answer_q1_1')  # score 5
+        self.q2 = self._get_answer('helpdesk_priority_answer_q2_1')  # score 5
+        self.q3 = self._get_answer('helpdesk_priority_answer_q3_1')  # score 5
+        self.q4 = self._get_answer('helpdesk_priority_answer_q4_1')  # score 5
+        self.q5 = self._get_answer('helpdesk_priority_answer_q5_1')  # score 5
+        mgr_group = self.env.ref('it_helpdesk_v2.group_helpdesk_manager', raise_if_not_found=False)
+        if mgr_group:
+            self.env.user.groups_id = [(4, mgr_group.id)]
 
     def _create_ticket(self, ticket_type='incident', **overrides):
         vals = {
@@ -51,11 +57,11 @@ class TestTicket(common.TransactionCase):
 
     def test_low_score_priority(self):
         ticket = self._create_ticket(
-            q1_answer_id=self.env.ref('it_helpdesk.helpdesk_priority_answer_q1_5').id,
-            q2_answer_id=self.env.ref('it_helpdesk.helpdesk_priority_answer_q2_5').id,
-            q3_answer_id=self.env.ref('it_helpdesk.helpdesk_priority_answer_q3_8').id,
-            q4_answer_id=self.env.ref('it_helpdesk.helpdesk_priority_answer_q4_5').id,
-            q5_answer_id=self.env.ref('it_helpdesk.helpdesk_priority_answer_q5_5').id,
+            q1_answer_id=self._get_answer('helpdesk_priority_answer_q1_5').id,
+            q2_answer_id=self._get_answer('helpdesk_priority_answer_q2_5').id,
+            q3_answer_id=self._get_answer('helpdesk_priority_answer_q3_8').id,
+            q4_answer_id=self._get_answer('helpdesk_priority_answer_q4_5').id,
+            q5_answer_id=self._get_answer('helpdesk_priority_answer_q5_5').id,
         )
         # impact_score=3 -> rendah, urgency_score=2 -> rendah -> matrix RENDAH+RENDAH -> P4
         self.assertEqual(ticket.impact_level, 'rendah')
@@ -99,12 +105,12 @@ class TestTicket(common.TransactionCase):
         ticket.action_assign()
         ticket.action_start_progress()
         self.assertEqual(ticket.state, 'in_progress')
-        self.assertEqual(ticket.progress_percent, 50.0)
-        ticket.action_set_pending()
-        self.assertEqual(ticket.state, 'pending')
-        ticket.action_resolve()
-        self.assertEqual(ticket.state, 'resolved')
+        self.assertEqual(ticket.progress_percent, 60.0)
+        ticket.resolution = '<p>Kendala berhasil diselesaikan dan diuji normal.</p>'
+        ticket.action_done()
+        self.assertEqual(ticket.state, 'done')
         self.assertTrue(ticket.resolved_date)
+        self.assertEqual(ticket.progress_percent, 90.0)
         ticket.action_close()
         self.assertEqual(ticket.state, 'closed')
         self.assertTrue(ticket.closed_date)
@@ -113,7 +119,7 @@ class TestTicket(common.TransactionCase):
     def test_action_cancel(self):
         ticket = self._create_ticket()
         ticket.action_cancel()
-        self.assertEqual(ticket.state, 'cancelled')
+        self.assertEqual(ticket.state, 'reject')
 
     def test_category_subcategory_relation(self):
         category = self.env['helpdesk.category'].create(

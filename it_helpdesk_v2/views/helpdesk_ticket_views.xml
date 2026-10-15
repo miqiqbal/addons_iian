@@ -112,7 +112,7 @@
                             </div>
                         </div>
                         <div class="alert alert-info" role="alert"
-                             attrs="{'invisible': ['|', ('state', '!=', 'new'), ('engineer_id', '!=', False)]}">
+                             attrs="{'invisible': ['|', ('state', '!=', 'open'), ('engineer_id', '!=', False)]}">
                             Ticket ini belum di-assign ke Engineer
                         </div>
                         <!-- Title & Ticket Number Header Area -->
@@ -131,10 +131,12 @@
                                        decoration-info="priority == '3'"
                                        decoration-success="priority == '4'"/>
                                 <field name="state" widget="badge" class="ml-2" readonly="1"
-                                       decoration-info="state == 'new'"
-                                       decoration-warning="state in ('assigned', 'pending')"
+                                       decoration-secondary="state == 'draft'"
+                                       decoration-info="state == 'open'"
+                                       decoration-warning="state == 'assigned'"
                                        decoration-primary="state == 'in_progress'"
-                                       decoration-success="state == 'resolved'"
+                                       decoration-success="state == 'done'"
+                                       decoration-danger="state == 'reject'"
                                        decoration-muted="state == 'closed'"/>
                             </div>
                         </div>
@@ -396,10 +398,10 @@
             <field name="arch" type="xml">
                 <xpath expr="//header/field[@name='state']" position="replace">
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,open,in_progress,done,closed"
+                           statusbar_visible="draft,open,assigned,in_progress,done,closed"
                            groups="it_helpdesk_v2.group_helpdesk_agent"/>
                     <field name="state" widget="statusbar" readonly="1"
-                           statusbar_visible="draft,open,in_progress,done,closed"
+                           statusbar_visible="draft,open,assigned,in_progress,done,closed"
                            groups="!it_helpdesk_v2.group_helpdesk_agent"/>
                 </xpath>
                 <xpath expr="//field[@name='engineer_id']" position="replace">
