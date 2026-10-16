@@ -63,7 +63,7 @@ class HelpdeskTicket(models.Model):
         default=lambda self: self.env.user.email or self.env.user.partner_id.email)
     cc_partner_ids = fields.Many2many('res.partner', string='CC')
     excel_link = fields.Char(string='Link')
-    expected_result = fields.Text(string='Nilai_seharusnya')
+    expected_result = fields.Text(string='Expected Result')
     registration_no = fields.Char(string='Keterangan')
     followup_date_it = fields.Char(string='Tanggal_TL_Laporan_(IT)')
     notes_it = fields.Text(string='Catatan')
@@ -109,6 +109,11 @@ class HelpdeskTicket(models.Model):
             self.knowledge_id = self.selected_knowledge_id.id
             if self.selected_knowledge_id.content:
                 self.resolution = self.selected_knowledge_id.content
+
+    @api.onchange('location_id')
+    def _onchange_location_id(self):
+        if self.location_id:
+            self.location_name = self.location_id.name
 
     @api.depends_context('uid')
     def _compute_is_engineer_or_officer(self):
@@ -563,22 +568,22 @@ class HelpdeskTicket(models.Model):
                         engineer_id = avail_rule_engs[0][0]
                     else:
                         engineer_id = rule_engineers[0].id
-            elif vals.get('subcategory_id'):
-                subcat = self.env['helpdesk.subcategory'].browse(vals['subcategory_id'])
+            elif subcat_id:
+                subcat = self.env['helpdesk.subcategory'].browse(subcat_id)
                 if subcat.engineer_id:
                     engineer_id = subcat.engineer_id.id
                 elif subcat.category_id and subcat.category_id.engineer_id:
                     engineer_id = subcat.category_id.engineer_id.id
                 elif subcat.category_id and subcat.category_id.service_id and subcat.category_id.service_id.engineer_id:
                     engineer_id = subcat.category_id.service_id.engineer_id.id
-            elif vals.get('category_id'):
-                cat = self.env['helpdesk.category'].browse(vals['category_id'])
+            elif cat_id:
+                cat = self.env['helpdesk.category'].browse(cat_id)
                 if cat.engineer_id:
                     engineer_id = cat.engineer_id.id
                 elif cat.service_id and cat.service_id.engineer_id:
                     engineer_id = cat.service_id.engineer_id.id
-            elif vals.get('service_id'):
-                srv = self.env['helpdesk.service'].browse(vals['service_id'])
+            elif srv_id:
+                srv = self.env['helpdesk.service'].browse(srv_id)
                 if srv.engineer_id:
                     engineer_id = srv.engineer_id.id
             # Jika tidak ada aturan yang cocok, engineer_id tetap False (unassigned)
@@ -606,10 +611,29 @@ class HelpdeskTicket(models.Model):
                 clean_desc = desc.replace('<p>', '').replace('</p>', '').strip()
                 vals['title'] = clean_desc[:60] if clean_desc else 'Kendala Helpdesk'
 
+            # Sync names for import and report consistency
+            if vals.get('location_id') and not vals.get('location_name'):
+                loc = self.env['helpdesk.location'].browse(vals['location_id'])
+                if loc.exists():
+                    vals['location_name'] = loc.name
+            elif vals.get('location_name') and not vals.get('location_id'):
+                loc = self.env['helpdesk.location'].search([('name', '=ilike', vals['location_name'])], limit=1)
+                if loc:
+                    vals['location_id'] = loc.id
+
+            if vals.get('requester_id') and not vals.get('requester_name'):
+                user = self.env['res.users'].browse(vals['requester_id'])
+                if user.exists():
+                    vals['requester_name'] = user.name
+
+            if vals.get('engineer_id') and not vals.get('engineer_name'):
+                eng = self.env['res.users'].browse(vals['engineer_id'])
+                if eng.exists():
+                    vals['engineer_name'] = eng.name
+
             # Save default state as draft, or open if publish_ticket context
             if vals.get('state') == 'open' or self.env.context.get('publish_ticket'):
                 vals['state'] = 'open'
-                self._auto_route_engineer(vals)
             else:
                 vals['state'] = 'draft'
 
@@ -667,8 +691,6 @@ class HelpdeskTicket(models.Model):
                 'publish_date': ticket.publish_date or fields.Datetime.now(),
                 'rejection_reason': False,
             }
-            if not ticket.engineer_id:
-                ticket._auto_route_engineer(vals)
             ticket.write(vals)
 
     def action_save_draft(self):

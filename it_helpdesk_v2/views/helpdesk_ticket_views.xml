@@ -3,28 +3,31 @@
     <data>
 
         <!-- Tree View (Matching Mockup 2: List Ticket) -->
+        <!-- Tree View (Matching Mockup 2: List Ticket) -->
         <record id="view_helpdesk_ticket_list" model="ir.ui.view">
             <field name="name">helpdesk.ticket.list</field>
             <field name="model">helpdesk.ticket</field>
             <field name="arch" type="xml">
                 <tree decoration-danger="sla_resolution_breached" default_order="created_date desc">
                     <field name="name" string="Ticket No." class="text-primary font-weight-bold"/>
-                    <field name="title" string="Title"/>
-                    <field name="service_id" string="Service"/>
-                    <field name="requester_id" string="Requester"/>
-                    <field name="priority" string="Priority" widget="badge"
-                           decoration-danger="priority == '1'"
-                           decoration-warning="priority == '2'"
-                           decoration-info="priority == '3'"
-                           decoration-success="priority == '4'"/>
+                    <field name="location_id" string="Proyek" optional="show"/>
+                    <field name="title" string="Judul"/>
+                    <field name="expected_result" string="Nilai seharusnya" optional="show"/>
+                    <field name="excel_link" string="Link" widget="url" optional="show"/>
+                    <field name="created_date" string="Tanggal Input Laporan" optional="show"/>
+                    <field name="followup_date_it" string="Tanggal TL Laporan (IT)" optional="show"/>
+                    <field name="engineer_id" string="Engineer" widget="many2one_avatar_user"/>
                     <field name="state" string="Status" widget="badge"
                            decoration-muted="state == 'draft'"
                            decoration-info="state == 'open'"
                            decoration-warning="state in ('assigned', 'in_progress')"
                            decoration-success="state in ('done', 'closed')"
                            decoration-danger="state == 'reject'"/>
-                    <field name="engineer_id" string="Engineer" widget="many2one_avatar_user"/>
-                    <field name="created_date" string="Created Date"/>
+                    <field name="priority" string="Priority" widget="badge"
+                           decoration-danger="priority == '1'"
+                           decoration-warning="priority == '2'"
+                           decoration-info="priority == '3'"
+                           decoration-success="priority == '4'"/>
                     <field name="sla_status_color" invisible="1"/>
                     <field name="sla_status_name" string="SLA Status" widget="badge"
                            decoration-success="sla_status_color == 'success'"
@@ -32,6 +35,8 @@
                            decoration-warning="sla_status_color == 'warning'"
                            decoration-danger="sla_status_color == 'danger'"/>
                     <field name="sla_resolution_breached" invisible="1"/>
+                    <field name="service_id" string="Service" optional="hide"/>
+                    <field name="requester_id" string="Requester" optional="hide"/>
                 </tree>
             </field>
         </record>
@@ -44,6 +49,8 @@
                 <search>
                     <field name="name" string="Ticket No"/>
                     <field name="title"/>
+                    <field name="location_id" string="Proyek"/>
+                    <field name="expected_result" string="Nilai Seharusnya"/>
                     <field name="requester_id"/>
                     <field name="engineer_id"/>
                     <field name="service_id"/>
@@ -199,8 +206,16 @@
 
                                 <field name="is_engineer_or_officer" invisible="1"/>
                                 <notebook>
-                                     <page string="Description" name="description">
-                                         <field name="description" placeholder="Deskripsi lengkap masalah..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                     <page string="Expected Result &amp; Link" name="expected_result_link">
+                                         <div class="card p-3 border-0 bg-white">
+                                             <group>
+                                                 <field name="expected_result" string="Expected Result" placeholder="Tuliskan nilai / kondisi yang seharusnya diharapkan..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                                 <field name="excel_link" string="Link" widget="url" placeholder="https://... (tautan dokumen / modul kendala)" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                             </group>
+                                             <group string="Attachment" class="mt-3">
+                                                 <field name="attachment_ids" widget="many2many_binary" nolabel="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                             </group>
+                                         </div>
                                      </page>
                                      <page string="SLA Time" name="sla_time">
                                          <div class="card p-3 border-0 bg-white">
@@ -259,8 +274,6 @@
                                      <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
                                          <group>
                                              <group>
-                                                 <field name="expected_result"/>
-                                                 <field name="excel_link" widget="url"/>
                                                  <field name="registration_no"/>
                                              </group>
                                              <group>
@@ -281,9 +294,6 @@
                                              <field name="activity_ids"/>
                                              <field name="message_ids"/>
                                          </div>
-                                     </page>
-                                     <page string="Attachment" name="attachment">
-                                         <field name="attachment_ids" widget="many2many_binary" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                      </page>
                                      <page string="History" name="history" groups="it_helpdesk_v2.group_helpdesk_manager">
                                          <field name="is_admin" invisible="1"/>

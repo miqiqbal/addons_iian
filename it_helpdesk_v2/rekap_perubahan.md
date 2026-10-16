@@ -1,15 +1,15 @@
 # Rekap Perubahan Modul `it_helpdesk_v2`
 
-**Tanggal Rekap Terbaru:** 15 Oktober 2026  
+**Tanggal Rekap Terbaru:** 16 Oktober 2026  
 **Referensi Commit Terakhir (GitHub):** `0c555f7 fix: set default state to draft to allow editable fields on create ticket`  
 **Repository GitHub:** `https://github.com/miqiqbal/addons_iian.git` (Branch: `main`)  
-**Status:** All Local Changes Committed & Verified
+**Status:** All Local Changes Verified & Tested (Pending user confirmation for GitHub push)
 
 ---
 
 ## 📌 Ringkasan Utama Perubahan
 
-Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **15 area utama**:
+Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **18 area utama**:
 
 1. **Master Data Fitur Baru: CR Type (`helpdesk.cr.type`)**.
 2. **Perombakan Workflow Approval Change Request Multi-Tier (5-Level Flow)**.
@@ -26,6 +26,9 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **15 area utama**:
 13. **Audit Logika Tiket, Auto-Routing, & Perhitungan SLA Response**.
 14. **Matriks Lengkap Hak Akses Pengguna Login (Menu, Tombol, & Kontrol Edit)**.
 15. **Evolusi Struktur Role Pengguna & Keamanan Penugasan Tiket (Assigned Ticket to)**.
+16. **Pemisahan (Decoupling) Auto-Routing dari Tombol Publish Tiket (Manual / Dedicated Escalation Flow)**.
+17. **Restrukturisasi Tab Container: Penggantian Tab Description Menjadi Tab "Expected Result & Link"**.
+18. **Restrukturisasi Tree/List View Tiket (11 Kolom Laporan Kendala & Base UX Optimization)**.
 
 ---
 
@@ -170,8 +173,9 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **15 area utama**:
   * Mengoreksi xml id `it_helpdesk.view_helpdesk_ticket_form` menjadi `it_helpdesk_v2.view_helpdesk_ticket_form` pada pemanggilan aksi buka tiket setelah submit.
 * **Penyempurnaan `action_publish()`**:
   * Otomatis mereset catatan revisi/penolakan (`rejection_reason = False`) saat tiket diajukan ulang dari status `draft`.
-  * Memicu fungsi `_auto_route_engineer(vals)` saat publikasi jika kolom engineer masih kosong.
+  * Status tiket berpindah murni ke `Open`, dan kolom `engineer_id` dipastikan tetap kosong (*unassigned*). Penugasan Engineer kini sepenuhnya hanya berjalan saat tombol **"Assign / Eskalasi ke Engineer"** diklik oleh IT Admin.
 * **Perbaikan Auto-Routing Engineer (`_auto_route_engineer`)**:
+  * Menggunakan `subcat_id`, `cat_id`, dan `srv_id` (fallback ke record `self`) sehingga pencocokan aturan routing berjalan presisi saat penugasan manual via tombol *Assign*.
   * Menghapus fallback penugasan otomatis ke pembuat tiket (`engineer_id = self.env.uid`). Jika tidak ada aturan routing yang cocok, tiket tetap berstatus `unassigned` (`False`), mencegah tiket langsung tertutup/dikerjakan sendiri oleh pelapor.
 * **Presisi Perhitungan SLA First Response Date**:
   * Pada method `action_assign_engineer` dan `action_start_progress`, sistem otomatis mencatat `first_response_date = fields.Datetime.now()` jika belum terisi, memastikan durasi SLA Response Time terhitung secara akurat.
@@ -240,6 +244,56 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
   * **Wewenang Penugasan**: Hak menetapkan teknisi (*Assign Engineer* & *Reassign Wizard*) dipegang penuh secara aman oleh peran **IT Admin**.
   * **Menu "Assigned to Me"**: Filter membaca record dengan kriteria `[('engineer_id', '=', uid)]`, sehingga tiket yang ditugaskan otomatis tampil di dashboard teknisi terkait.
   * **Notifikasi Email**: Pemicu otomatis `_send_engineer_assignment_email()` tetap mengirim email notifikasi tugas baru dan mencatat aktivitas di Chatter.
+
+---
+
+### 16. Pemisahan (Decoupling) Auto-Routing dari Tombol Publish Tiket
+* **Alur Baru Pemisahan Status `open` dan `assigned` (`models/helpdesk_ticket.py`)**:
+  * Sebelumnya, saat tombol **"Publish Ticket"** (`action_publish`) ditekan atau tiket dibuat dengan `publish_ticket=True`, sistem langsung menjalankan `_auto_route_engineer()` sehingga tiket langsung berpindah ke `open` dan otomatis ter-assign ke Engineer.
+  * **Perubahan**: Logika `_auto_route_engineer()` dicabut dari `action_publish()` dan method `create()`.
+  * **Hasil**:
+    1. Klik **"Publish Ticket"** hanya mengubah status tiket dari `draft` ke `open`, dan kolom `engineer_id` dipastikan tetap **kosong / Unassigned** (`engineer_id = False`).
+    2. Tiket baru akan di-assign ke engineer yang sesuai jika dan hanya jika IT Admin mengklik tombol **"Assign / Eskalasi ke Engineer"** (`action_assign_engineer`), yang kemudian mengubah status tiket ke `assigned` dan menempatkan Engineer sesuai matriks kata kunci / kategori.
+  * **Perbaikan Routing Existing Ticket**: Method `_auto_route_engineer()` disempurnakan untuk memeriksa nilai `self.subcategory_id`, `self.category_id`, dan `self.service_id` pada record saat penugasan dipicu pasca-publish.
+  * **Unit Test Verifikasi (`tests/test_ticket.py`)**: Menambahkan pengujian `test_publish_keeps_unassigned_until_action_assign` yang membuktikan secara otomatis bahwa tiket setelah di-publish tetap unassigned hingga `action_assign_engineer()` dipanggil.
+
+---
+
+### 17. Restrukturisasi Tab Container: Penggantian Tab Description Menjadi Tab "Expected Result & Link"
+* **Penyatuan Komponen Informasi Kendala (`views/helpdesk_ticket_views.xml` & `views/helpdesk_create_ticket_views.xml`)**:
+  * Menggantikan tab lama **`Description`** dengan tab baru berlabel gabungan: **`Expected Result & Link`** (mengadopsi struktur penamaan pada report kendala Excel "Nilai Seharusnya dan Link").
+  * **Struktur Isi Tab `Expected Result & Link`**:
+    1. **Expected Result (`expected_result`)**: Area teks untuk mengisi nilai / kondisi yang seharusnya diharapkan (placeholder: *"Tuliskan nilai / kondisi yang seharusnya diharapkan..."*).
+    2. **Link (`excel_link`)**: Input URL berspesifikasi `widget="url"` untuk menyertakan tautan dokumen atau modul kendala terkait (placeholder: *"https://... (tautan dokumen / modul kendala)"*).
+    3. **Attachment (`attachment_ids`)**: Kontainer berkas upload pendukung berspesifikasi `widget="many2many_binary"`.
+  * **Eliminasi Redundansi**:
+    * Menghapus duplikasi field `expected_result` dan `excel_link` dari tab *Detail Kendala Proyek (Import)*.
+    * Menghapus tab *Attachment* yang berdiri sendiri, sehingga lampiran terpusat langsung di dalam tab *Expected Result & Link*.
+    * Desain diterapkan seragam pada form *Create Ticket* dan *Detail Ticket*.
+
+---
+
+### 18. Restrukturisasi Tree/List View Tiket (11 Kolom Laporan Kendala & Base UX Optimization)
+* **Penyelarasan Kolom Header Tree View (`views/helpdesk_ticket_views.xml`)**:
+  * Mengadaptasi susunan tabel laporan kendala proyek (format Excel) ke dalam list view utama Odoo (`view_helpdesk_ticket_list`), terdiri dari 11 kolom terurut rapi:
+    1. **Ticket No.** (`name`): Teks tebal berwarna biru sebagai tautan langsung ke detail tiket.
+    2. **Proyek** (`location_id`, `optional="show"`): Menampilkan nama Proyek / Lokasi pelapor.
+    3. **Judul** (`title`): Menampilkan judul kendala yang dihadapi.
+    4. **Nilai seharusnya** (`expected_result`, `optional="show"`): Nilai/kondisi yang diharapkan pelapor.
+    5. **Link** (`excel_link`, `widget="url"`, `optional="show"`): Tautan langsung ke dokumen/sistem kendala.
+    6. **Tanggal Input Laporan** (`created_date`, `optional="show"`): Tanggal dan waktu pelaporan tiket.
+    7. **Tanggal TL Laporan (IT)** (`followup_date_it`, `optional="show"`): Tanggal tindak lanjut IT.
+    8. **Engineer** (`engineer_id`, `widget="many2one_avatar_user"`): Foto avatar dan nama teknisi IT penanggung jawab.
+    9. **Status** (`state`, `widget="badge"`): Badge indikator alur status kerja tiket (*Draft*, *Open*, *Progress*, *Done*, dll.).
+    10. **Priority** (`priority`, `widget="badge"`): Badge indikator prioritas (*P1 - Critical* s/d *P4 - Low*).
+    11. **SLA Status** (`sla_status_name`, `widget="badge"`): Badge indikator batas waktu SLA (*On Track*, *SLA Overdue*, dll.).
+* **Penyediaan Kolom Cadangan (`optional="hide"`)**:
+  * Kolom `service_id` (*Service*) dan `requester_id` (*Requester*) dipertahankan dengan atribut `optional="hide"`, sehingga pengguna dapat memunculkannya sewaktu-waktu melalui tombol titik tiga (`⋮`) di pojok kanan atas tabel tanpa memadati layar.
+* **Auto-Sync Metadata Lokasi & PIC (`models/helpdesk_ticket.py`)**:
+  * Menambahkan sinkronisasi otomatis antara `location_id` dan `location_name` pada method `create()` dan `@api.onchange('location_id')`.
+  * Menambahkan sinkronisasi otomatis `requester_name` dari `requester_id` dan `engineer_name` dari `engineer_id` untuk menjamin konsistensi data riwayat impor Excel dan tiket baru.
+* **Peningkatan Search View (`view_helpdesk_ticket_search`)**:
+  * Menambahkan field pencarian cepat `location_id` (*Proyek*) dan `expected_result` (*Nilai Seharusnya*) ke dalam panel pencarian tiket.
 
 ---
 

@@ -129,3 +129,27 @@ class TestTicket(common.TransactionCase):
         ticket = self._create_ticket(category_id=category.id, subcategory_id=subcategory.id)
         self.assertEqual(ticket.category_id, category)
         self.assertEqual(ticket.subcategory_id, subcategory)
+
+    def test_publish_keeps_unassigned_until_action_assign(self):
+        admin = self.env.ref('base.user_admin')
+        self.service.engineer_id = admin.id
+        location = self.env['helpdesk.location'].create({'name': 'Kantor Pusat'})
+        category = self.env['helpdesk.category'].create({'name': 'Hardware', 'service_id': self.service.id})
+        ticket = self._create_ticket(
+            location_id=location.id,
+            category_id=category.id,
+            phone='0812345678',
+        )
+        self.assertEqual(ticket.state, 'draft')
+        self.assertFalse(ticket.engineer_id)
+
+        # Klik Publish: status menjadi open, engineer_id TETAP kosong
+        ticket.action_publish()
+        self.assertEqual(ticket.state, 'open')
+        self.assertFalse(ticket.engineer_id)
+
+        # Klik Assign ke Engineer: status menjadi assigned, engineer_id ter-assign
+        ticket.action_assign_engineer()
+        self.assertEqual(ticket.state, 'assigned')
+        self.assertEqual(ticket.engineer_id, admin)
+
