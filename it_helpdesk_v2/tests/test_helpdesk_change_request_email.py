@@ -37,11 +37,22 @@ class TestHelpdeskChangeRequestEmail(common.TransactionCase):
             'login': 'engineer.test@example.com',
             'email': 'engineer.test@example.com',
         })
+        cls.cr_type = cls.env['helpdesk.cr.type'].create({'name': 'Enhancement'})
+        cls.service = cls.env['helpdesk.service'].create({'name': 'ERP'})
+        cls.category = cls.env['helpdesk.category'].create({'name': 'Finance', 'service_id': cls.service.id})
+        cls.subcategory = cls.env['helpdesk.subcategory'].create({'name': 'Invoice', 'category_id': cls.category.id})
+        cls.target_dept = cls.env['hr.department'].create({'name': 'Departemen Keuangan'})
+        cls.attachment = cls.env['ir.attachment'].create({'name': 'doc.pdf', 'datas': 'dGVzdA=='})
 
     def _create_cr(self, **extra_vals):
         vals = {
             'request_identification': 'Perlu tambahan field di form X',
+            'cr_type_id': self.cr_type.id,
+            'category_id': self.category.id,
+            'subcategory_id': self.subcategory.id,
+            'target_department_id': self.target_dept.id,
             'impact_on': 'development',
+            'attachment_ids': [(6, 0, [self.attachment.id])],
         }
         vals.update(extra_vals)
         return self.env['helpdesk.change.request'].create(vals)

@@ -32,6 +32,8 @@ class TestTicket(common.TransactionCase):
             'q3_answer_id': self.q3.id,
             'q4_answer_id': self.q4.id,
             'q5_answer_id': self.q5.id,
+            'expected_result': 'Nilai yang diharapkan',
+            'excel_link': 'https://example.com/test',
         }
         vals.update(overrides)
         return self.env['helpdesk.ticket'].create(vals)

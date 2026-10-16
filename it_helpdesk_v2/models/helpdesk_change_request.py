@@ -498,8 +498,23 @@ class HelpdeskChangeRequest(models.Model):
     def action_submit(self):
         """Submit CR from Draft -> Approval Manager Dept Terkait"""
         for cr in self:
-            if not cr.request_identification:
-                raise UserError(_("Silakan isi Request Identification terlebih dahulu sebelum mem-publish pengajuan!"))
+            missing = []
+            if not cr.request_identification or cr.request_identification.strip() == '':
+                missing.append('Request Identification')
+            if not cr.cr_type_id:
+                missing.append('CR Type')
+            if not cr.category_id:
+                missing.append('Category')
+            if not cr.subcategory_id:
+                missing.append('Sub Category')
+            if not cr.target_department_id:
+                missing.append('CR to Departement')
+            if not cr.impact_on:
+                missing.append('Impact On')
+            if not cr.attachment_ids:
+                missing.append('Attachment File (Dokumen/File Pendukung Change Request)')
+            if missing:
+                raise UserError(_("Mohon lengkapi kolom wajib berikut sebelum mempublikasikan Change Request:\n• ") + '\n• '.join(missing))
 
             if not cr.code:
                 cr.code = cr.get_next_cr_code()

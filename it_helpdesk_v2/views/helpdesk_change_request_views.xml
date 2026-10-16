@@ -116,19 +116,18 @@
                         <!-- Request Identification Field Box -->
                         <div class="card p-3 mb-4 border rounded bg-white shadow-sm">
                             <label for="request_identification" string="Request Identification" class="font-weight-bold mb-2"/>
-                            <field name="request_identification" placeholder="Jelaskan kebutuhan pengajuan perubahan dokumen / sistem secara rinci..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                            <field name="request_identification" placeholder="Jelaskan kebutuhan pengajuan perubahan dokumen / sistem secara rinci..." attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                         </div>
 
                         <!-- 2-Column Split Input Area -->
                         <div class="row">
                             <div class="col-md-6">
                                 <group string="Detail Pengajuan">
-                                    <field name="cr_type_id" string="CR Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="category_id" string="Category" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="target_department_id" string="CR to Departement" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="impact_on" string="Impact On" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="module" string="Module" placeholder="Misal: Purchasing, Invoice, BAP..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="cr_type_id" string="CR Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="category_id" string="Category" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="target_department_id" string="CR to Departement" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="impact_on" string="Impact On" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                 </group>
                                 <group string="Hierarki Approval &amp; Eksekutor">
                                     <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True}" readonly="1"/>
@@ -157,21 +156,20 @@
                             </div>
                         </div>
 
-                        <!-- Tabs: Attachment, Analysis & Solution, Propose Solution -->
+                        <!-- Tabs: Attachment & Analysis Solution -->
                         <notebook class="mt-4">
                             <page string="ATTACHMENT" name="attachment">
-                                <div class="p-2">
+                                <div class="p-3">
+                                    <div class="alert alert-info border-0 mb-3" role="alert">
+                                        <i class="fa fa-info-circle mr-2"/>
+                                        <span class="font-weight-bold">Upload dokumen/file pendukung Change Request</span>
+                                    </div>
                                     <field name="attachment_ids" widget="many2many_binary" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                 </div>
                             </page>
                             <page string="ANALYSIS AND SOLUTION" name="analysis_solution">
                                 <div class="p-2">
-                                    <field name="analysis_and_solution" placeholder="Hasil analisa dan solusi teknis..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                </div>
-                            </page>
-                            <page string="PROPOSE SOLUTION" name="propose_solution">
-                                <div class="p-2">
-                                    <field name="propose_solution" placeholder="Rekomendasi solusi yang diajukan..." attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="analysis_and_solution" placeholder="Hasil analisa dan solusi teknis oleh tim IT / Engineer..." attrs="{'readonly': ['|', ('is_engineer_or_officer', '=', False), ('state', 'in', ['done', 'closed', 'rejected'])]}"/>
                                 </div>
                             </page>
                         </notebook>

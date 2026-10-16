@@ -679,13 +679,21 @@ class HelpdeskTicket(models.Model):
     def action_publish(self):
         for ticket in self:
             missing = []
+            if not ticket.title or ticket.title.strip() == '': missing.append('Judul Kendala')
             if not ticket.ticket_type: missing.append('Ticket Type')
             if not ticket.service_id: missing.append('Service')
             if not ticket.category_id: missing.append('Category')
             if not ticket.location_id: missing.append('Department / Location')
             if not ticket.phone: missing.append('Phone')
+            if not ticket.q1_answer_id: missing.append('Pertanyaan Prioritas 1 (Siapa yang terdampak?)')
+            if not ticket.q2_answer_id: missing.append('Pertanyaan Prioritas 2 (Apakah mengganggu operasional?)')
+            if not ticket.q3_answer_id: missing.append('Pertanyaan Prioritas 3 (Layanan yang terdampak?)')
+            if not ticket.q4_answer_id: missing.append('Pertanyaan Prioritas 4 (Apakah ada workaround?)')
+            if not ticket.q5_answer_id: missing.append('Pertanyaan Prioritas 5 (Apakah terkait deadline proyek/pekerjaan?)')
+            if not ticket.expected_result or ticket.expected_result.strip() == '': missing.append('Nilai Seharusnya (Expected Result)')
+            if not ticket.excel_link or ticket.excel_link.strip() == '': missing.append('Link')
             if missing:
-                raise UserError('Mohon lengkapi kolom berikut sebelum mempublikasikan tiket:\n• ' + '\n• '.join(missing))
+                raise UserError('Mohon lengkapi kolom wajib berikut sebelum mempublikasikan tiket:\n• ' + '\n• '.join(missing))
             vals = {
                 'state': 'open',
                 'publish_date': ticket.publish_date or fields.Datetime.now(),

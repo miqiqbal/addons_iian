@@ -1,9 +1,9 @@
 # Rekap Perubahan Modul `it_helpdesk_v2`
 
 **Tanggal Rekap Terbaru:** 16 Oktober 2026  
-**Referensi Commit Terakhir (GitHub):** `0c555f7 fix: set default state to draft to allow editable fields on create ticket`  
+**Referensi Commit Terakhir (GitHub):** `43f2b2e feat: decouple ticket publish and auto-routing, update tab container and 11-column list view`  
 **Repository GitHub:** `https://github.com/miqiqbal/addons_iian.git` (Branch: `main`)  
-**Status:** All Local Changes Verified & Tested (Pending user confirmation for GitHub push)
+**Status:** All Changes Committed & Pushed to GitHub (`colab/main`)
 
 ---
 
@@ -294,6 +294,43 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
   * Menambahkan sinkronisasi otomatis `requester_name` dari `requester_id` dan `engineer_name` dari `engineer_id` untuk menjamin konsistensi data riwayat impor Excel dan tiket baru.
 * **Peningkatan Search View (`view_helpdesk_ticket_search`)**:
   * Menambahkan field pencarian cepat `location_id` (*Proyek*) dan `expected_result` (*Nilai Seharusnya*) ke dalam panel pencarian tiket.
+
+---
+
+### 19. Penegakan Input Mandatory (Wajib Diisi) Tiket & Change Request
+* **IT Helpdesk Ticket**:
+  * Menegakkan validasi ketat via Python `UserError` pada method `action_publish()` (`models/helpdesk_ticket.py`) serta atribut visual `attrs="{'required': [('state', '=', 'draft')]}"` pada form view (`helpdesk_create_ticket_views.xml` & `helpdesk_ticket_views.xml`):
+    1. **Judul Kendala** (`title`)
+    2. **Jenis Tiket** (`ticket_type`)
+    3. **Layanan / Service** (`service_id`)
+    4. **Kategori Kendala** (`category_id`)
+    5. **Departemen / Lokasi Proyek** (`location_id`)
+    6. **No. Handphone / WhatsApp** (`phone`)
+    7. **5 Pertanyaan Prioritas (Dampak & Urgensi)** (`q1_answer_id` s/d `q5_answer_id`)
+    8. **Nilai Seharusnya** (`expected_result`)
+    9. **Link Dokumen / Modul Kendala** (`excel_link`)
+  * **Fleksibilitas Lampiran**: Berkas lampiran / Attachment (`attachment_ids`) bersifat opsional (tidak wajib diisi).
+* **Change Request (CR)**:
+  * Menegakkan validasi `action_submit()` (`models/helpdesk_change_request.py`) serta atribut visual `required` di XML:
+    1. **Request Identification / Judul CR** (`request_identification`)
+    2. **CR Type** (`cr_type_id`)
+    3. **Category** (`category_id`) & **Sub Category** (`subcategory_id`)
+    4. **CR to Departement** (`target_department_id`)
+    5. **Impact On** (`impact_on`)
+    6. **Attachment File** (`attachment_ids`) — Pelapor wajib melampirkan berkas dokumen/file pendukung sebelum submit.
+  * **Klarifikasi Input Engineer / IT Admin**:
+    * Field **Analysis & Solution** (`analysis_and_solution`) dikhususkan sebagai isian dari sisi teknisi IT / Engineer. Field ini diatur readonly bagi pelapor biasa, dan dapat diedit oleh Engineer / Officer IT selama status aktif.
+
+---
+
+### 20. Revisi Form Change Request (Penyederhanaan & UX Upload)
+* **Penghapusan Input "Module"**:
+  * Menghapus input field `module` dari tampilan form Change Request (`views/helpdesk_change_request_views.xml`).
+* **Penghapusan Tab "Propose Solution"**:
+  * Menghapus tab/page `propose_solution` dari notebook form Change Request.
+* **Deskripsi Petunjuk Upload Attachment**:
+  * Pada tab `ATTACHMENT`, tepat di atas kontainer upload file, ditambahkan banner informasi:
+    * `"Upload dokumen/file pendukung Change Request"` lengkap dengan styling info banner dan ikon `fa-info-circle`.
 
 ---
 
