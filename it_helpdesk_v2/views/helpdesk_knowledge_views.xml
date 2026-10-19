@@ -2,6 +2,31 @@
 <odoo>
     <data>
 
+        <!-- Knowledge Base Search View -->
+        <record id="view_helpdesk_knowledge_search" model="ir.ui.view">
+            <field name="name">helpdesk.knowledge.search</field>
+            <field name="model">helpdesk.knowledge</field>
+            <field name="arch" type="xml">
+                <search string="Cari Knowledge Base">
+                    <field name="name" string="Judul / Masalah" filter_domain="['|', '|', ('name', 'ilike', self), ('problem', 'ilike', self), ('summary', 'ilike', self)]"/>
+                    <field name="service_id"/>
+                    <field name="category_id"/>
+                    <field name="subcategory_id"/>
+                    <field name="author_id"/>
+                    <filter string="Quick Solution" name="filter_quick_solution" domain="[('is_quick_solution', '=', True)]"/>
+                    <filter string="Artikel Saya" name="filter_my_articles" domain="[('author_id', '=', uid)]"/>
+                    <separator/>
+                    <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Service / Layanan" name="group_service" context="{'group_by': 'service_id'}"/>
+                        <filter string="Kategori" name="group_category" context="{'group_by': 'category_id'}"/>
+                        <filter string="Sub Kategori" name="group_subcategory" context="{'group_by': 'subcategory_id'}"/>
+                        <filter string="Penulis" name="group_author" context="{'group_by': 'author_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
         <!-- Knowledge Base Tree View (Default: create="false" for Employee) -->
         <record id="view_helpdesk_knowledge_tree" model="ir.ui.view">
             <field name="name">helpdesk.knowledge.tree</field>
@@ -9,10 +34,10 @@
             <field name="arch" type="xml">
                 <tree string="Knowledge Base" create="false">
                     <field name="sequence" widget="handle"/>
-                    <field name="name" string="Problem" class="font-weight-bold text-primary"/>
-                    <field name="subcategory_id" string="Sub Category"/>
-                    <field name="category_id" string="Category"/>
+                    <field name="name" string="Judul Solusi / Artikel" class="font-weight-bold text-primary"/>
                     <field name="service_id" string="Service"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="subcategory_id" string="Sub Category"/>
                     <field name="is_quick_solution" string="Quick Solution?" widget="boolean"/>
                     <field name="author_id" string="Penulis"/>
                 </tree>
@@ -26,6 +51,7 @@
             <field name="arch" type="xml">
                 <kanban class="o_kanban_dashboard" create="false">
                     <field name="name"/>
+                    <field name="service_id"/>
                     <field name="category_id"/>
                     <field name="subcategory_id"/>
                     <field name="summary"/>
@@ -39,8 +65,13 @@
                                     </div>
                                     <span t-if="record.is_quick_solution.raw_value" class="badge badge-success">Quick Solution</span>
                                 </div>
-                                <div class="text-muted small mb-2">
-                                    <strong>Sub Category:</strong> <t t-esc="record.subcategory_id.value or record.category_id.value or 'GENERAL ISSUE'"/>
+                                <div class="text-muted small mb-1" t-if="record.service_id.value or record.category_id.value">
+                                    <span t-if="record.service_id.value"><t t-esc="record.service_id.value"/></span>
+                                    <span t-if="record.service_id.value and record.category_id.value"> / </span>
+                                    <span t-if="record.category_id.value"><t t-esc="record.category_id.value"/></span>
+                                </div>
+                                <div class="text-dark font-weight-bold small mb-2">
+                                    <strong>Sub Category:</strong> <t t-esc="record.subcategory_id.value or 'GENERAL ISSUE'"/>
                                 </div>
                                 <div class="text-secondary small">
                                     <t t-esc="record.summary.value or 'Klik untuk melihat petunjuk dan panduan penyelesaian...'"/>
@@ -57,52 +88,57 @@
             <field name="name">helpdesk.knowledge.form</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="arch" type="xml">
-                <form string="Detail Case/Issue" create="false">
+                <form string="Knowledge Base (Pusat Solusi Mandiri)" create="false">
                     <sheet>
-                        <!-- Top Metadata Group matching Reference Layout -->
-                        <div class="card p-3 mb-4 bg-white border-0">
-                            <div class="row mb-2">
-                                <div class="col-md-3 font-weight-bold text-secondary">
-                                    Sub Category
-                                </div>
-                                <div class="col-md-9 text-primary font-weight-bold">
-                                    <field name="subcategory_id" options="{'no_create': True}" placeholder="GENERAL ISSUE"/>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-3 font-weight-bold text-secondary">
-                                    Problem
-                                </div>
-                                <div class="col-md-9 font-weight-bold text-dark">
-                                    <field name="name" placeholder="Cara Ganti Password"/>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-3 font-weight-bold text-secondary">
-                                    Description
-                                </div>
-                                <div class="col-md-9 text-muted">
-                                    <field name="summary" placeholder="Bagaimana cara ganti password login??"/>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-3 font-weight-bold text-secondary">
-                                    Quick Solution?
-                                </div>
-                                <div class="col-md-9">
+                        <div class="oe_title mb-3">
+                            <label for="name" string="Judul Solusi / Artikel Panduan" class="font-weight-bold text-dark"/>
+                            <h1>
+                                <field name="name" placeholder="Misal: Cara Ganti Password Akun / Email" class="font-weight-bold text-primary"/>
+                            </h1>
+                        </div>
+
+                        <!-- Top Metadata Group with High-Contrast Visible Labels -->
+                        <div class="card p-3 mb-4 bg-white border rounded shadow-sm" style="border-radius:12px;">
+                            <group>
+                                <group string="Klasifikasi Layanan &amp; Kategori">
+                                    <field name="service_id" options="{'no_create': True}" placeholder="Pilih Layanan..."/>
+                                    <field name="category_id" options="{'no_create': True}" placeholder="Pilih Kategori..."/>
+                                    <field name="subcategory_id" options="{'no_create': True}" placeholder="Pilih Sub Kategori..."/>
+                                </group>
+                                <group string="Informasi Artikel">
                                     <field name="is_quick_solution" widget="boolean_toggle"/>
-                                </div>
+                                    <field name="author_id" options="{'no_create': True}" readonly="1"/>
+                                    <field name="problem" invisible="1"/>
+                                </group>
+                            </group>
+                            <div class="mt-2 pt-2 border-top">
+                                <label for="summary" string="Deskripsi / Gejala Masalah" class="font-weight-bold text-dark"/>
+                                <field name="summary" placeholder="Jelaskan ringkasan gejala atau permasalahan kendala yang dialami pengguna..."/>
                             </div>
                         </div>
 
                         <!-- Main Content Container with Rich Text & Embedded Images -->
-                        <div class="card p-4 border rounded shadow-sm bg-white" style="border-radius:12px;">
+                        <div class="card p-3 mb-4 border rounded shadow-sm bg-white" style="border-radius:12px;">
+                            <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
+                                <i class="fa fa-book text-primary mr-2" style="font-size:18px;"/>
+                                <span class="font-weight-bold text-dark" style="font-size:15px;">Langkah-Langkah &amp; Panduan Solusi (Tutorial)</span>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                Tuliskan panduan langkah demi langkah penyelesaian masalah di bawah ini. Anda juga dapat menempelkan (paste) gambar screenshot langsung di dalam kotak teks editor:
+                            </p>
                             <field name="content" placeholder="Tuliskan petunjuk dan panduan langkah demi langkah beserta gambar/screenshot penyelesaian masalah di sini..."/>
                         </div>
 
                         <!-- Attachment Section -->
-                        <div class="card p-3 border rounded bg-light mt-4">
-                            <span class="font-weight-bold text-secondary mb-2 d-block"><i class="fa fa-paperclip mr-1"/> Attachment / File Tambahan</span>
+                        <div class="card p-3 border rounded shadow-sm bg-white" style="border-radius:12px;">
+                            <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
+                                <i class="fa fa-paperclip text-primary mr-2" style="font-size:18px;"/>
+                                <span class="font-weight-bold text-dark" style="font-size:15px;">Attachment / Berkas Panduan Tambahan</span>
+                                <span class="badge badge-light text-muted ml-2">Opsional</span>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                Unggah berkas dokumen panduan (PDF/DOCX) atau file pendukung lainnya jika diperlukan:
+                            </p>
                             <field name="attachment_ids" widget="many2many_binary"/>
                         </div>
                     </sheet>
@@ -152,9 +188,13 @@
             <field name="name">Knowledge Base (Pusat Solusi Mandiri)</field>
             <field name="res_model">helpdesk.knowledge</field>
             <field name="view_mode">kanban,tree,form</field>
+            <field name="search_view_id" ref="view_helpdesk_knowledge_search"/>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
                     Belum Ada Artikel Solusi Mandiri di Knowledge Base
+                </p>
+                <p>
+                    Klik tombol Buat untuk menambahkan panduan baru bagi pengguna dan teknisi IT.
                 </p>
             </field>
         </record>

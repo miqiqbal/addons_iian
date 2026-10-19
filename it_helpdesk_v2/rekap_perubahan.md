@@ -334,6 +334,27 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 
 ---
 
+### 21. Optimalisasi Form & Data Knowledge Base (Pusat Solusi Mandiri)
+* **Perbaikan Visibilitas Label Form (`views/helpdesk_knowledge_views.xml`)**:
+  * Mengganti struktur custom HTML div yang memudarkan teks (`text-secondary` tak kasat mata) dengan standar semantic group dan `<label for="...">` dengan warna kontras tinggi (`text-dark` / `#30354A`).
+  * Label **Judul Solusi / Artikel Panduan**, **Klasifikasi Layanan & Kategori**, **Quick Solution?**, **Deskripsi / Gejala Masalah**, dan **Attachment** kini terbaca jelas dan tajam.
+* **Kelengkapan Hierarki Kategori & Auto-Sync (`models/helpdesk_knowledge.py`)**:
+  * Menambahkan input **Service / Layanan** (`service_id`) dan **Kategori** (`category_id`) berdampingan dengan **Sub Kategori** (`subcategory_id`).
+  * Menambahkan event `@api.onchange` berjenjang:
+    * Memilih Service otomatis memfilter Kategori.
+    * Memilih Kategori otomatis mengisi Service dan memfilter Sub Kategori.
+    * Memilih Sub Kategori otomatis mengisi Kategori dan Service induknya.
+  * Menambahkan perlindungan di method `create()` dan `write()` untuk memastikan artikel yang disimpan langsung dari form maupun tiket selalu tersinkronisasi `service_id` dan `category_id`-nya.
+* **Penyempurnaan Area Editor Panduan & Lampiran**:
+  * Menambahkan header section visual: *"Langkah-Langkah & Panduan Solusi (Tutorial)"* dengan ikon buku dan instruksi menempelkan gambar screenshot.
+  * Menambahkan badge status *"Opsional"* dan instruksi upload file pada kontainer Attachment.
+* **Penambahan Search View Lengkap**:
+  * Menambahkan `view_helpdesk_knowledge_search` untuk memfasilitasi pencarian artikel berdasarkan kata kunci judul/isi masalah, filter *Quick Solution*, *Artikel Saya*, *Archived*, serta *Group By* per Layanan, Kategori, Sub Kategori, dan Penulis.
+* **Automated Unit Testing (`tests/test_knowledge.py`)**:
+  * Menambahkan unit test case untuk memverifikasi auto-sync hierarki dan hak akses penghapusan artikel KB (hanya Manager yang berhak).
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |
@@ -362,5 +383,8 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 | `it_helpdesk_v2/views/hr_employee_views.xml` | **New File** — Form view Employee (urutan Head of Placement ➔ Indirect ➔ Direct Manager) |
 | `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard.py` | **New File** — Transient model wizard penolakan Change Request |
 | `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard_views.xml` | **New File** — Form view pop-up dialog Reject CR |
+| `it_helpdesk_v2/models/helpdesk_knowledge.py` | **Modified** — Auto-sync hierarki Service/Category/Subcategory, onchanges, & problem sync |
+| `it_helpdesk_v2/views/helpdesk_knowledge_views.xml` | **Modified** — Redesign layout form, high-contrast labels, service/category inputs, & search view |
+| `it_helpdesk_v2/tests/test_knowledge.py` | **New File** — Automated unit tests hierarki, onchange, & hak akses unlink KB |
 
 
