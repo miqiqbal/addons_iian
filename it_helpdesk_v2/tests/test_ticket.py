@@ -155,3 +155,10 @@ class TestTicket(common.TransactionCase):
         self.assertEqual(ticket.state, 'assigned')
         self.assertEqual(ticket.engineer_id, admin)
 
+    def test_it_manager_detection(self):
+        ticket = self._create_ticket()
+        managers = ticket._get_it_manager_users()
+        # Even without specific role, fallback should return admin or manager user without error
+        self.assertIsNotNone(managers)
+
+

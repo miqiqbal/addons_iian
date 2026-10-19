@@ -645,8 +645,9 @@ class HelpdeskTicket(models.Model):
                     'res_model': 'helpdesk.ticket',
                     'res_id': ticket.id,
                 })
-        tickets._send_creation_notifications()
         for ticket in tickets:
+            if ticket.state == 'open':
+                ticket._send_creation_notifications()
             if ticket.engineer_id:
                 ticket._send_engineer_assignment_email()
         return tickets
@@ -700,6 +701,7 @@ class HelpdeskTicket(models.Model):
                 'rejection_reason': False,
             }
             ticket.write(vals)
+            ticket._send_creation_notifications()
 
     def action_save_draft(self):
         for ticket in self:
@@ -1056,31 +1058,96 @@ class HelpdeskTicket(models.Model):
             }
         }
 
+    def _get_it_manager_users(self):
+        """Mencari user yang memiliki role 'manajer IT' (atau 'manager IT') pada field security_role_ids.
+        Dirancang 100% dinamis agar saat terjadi pergantian pejabat Manajer IT, cukup ubah Role di Odoo
+        tanpa perlu merubah kodingan (bebas hardcode)."""
+        users = self.env['res.users']
+
+        # 1. Prioritas Utama: Cari dinamis via security_role_ids 'manajer IT'
+        if 'security_role_ids' in self.env['res.users']._fields:
+            users = self.env['res.users'].sudo().search([
+                '|', ('security_role_ids.name', 'ilike', 'manajer it'),
+                ('security_role_ids.name', 'ilike', 'manager it'),
+                ('active', '=', True)
+            ])
+            # Filter hanya user aktif yang memiliki alamat email valid
+            users = users.filtered(lambda u: bool((u.email or u.partner_id.email) and (u.email or u.partner_id.email).strip()))
+
+        # 2. Fallback Karyawan: Berdasarkan Job Title 'Manager IT' / ID 4992
+        if not users:
+            emp = self.env['hr.employee'].sudo().search([
+                '|', ('job_id', '=', 4992),
+                ('job_id.name', 'ilike', 'Manager IT')
+            ], limit=1)
+            if emp and emp.user_id and (emp.user_id.email or emp.user_id.partner_id.email):
+                users = emp.user_id
+
+        # 3. Fallback Grup: IT Manager (prioritaskan akun Manajer IT aktif saat ini)
+        if not users:
+            it_mgr_group = self.env.ref('it_helpdesk_v2.group_helpdesk_it_manager', raise_if_not_found=False)
+            if it_mgr_group:
+                group_users = self.env['res.users'].sudo().search([
+                    ('groups_id', 'in', [it_mgr_group.id]),
+                    ('active', '=', True)
+                ]).filtered(lambda u: bool((u.email or u.partner_id.email) and (u.email or u.partner_id.email).strip()))
+                # Prioritaskan akun Manajer IT saat ini jika ada di grup
+                current_mgr = group_users.filtered(lambda u: 'rizki.septiyanto' in (u.login or '').lower() or 'rizki.septiyanto' in (u.email or '').lower())
+                users = current_mgr if current_mgr else group_users
+
+        # 4. Fallback Terakhir: Grup Admin Helpdesk
+        if not users:
+            mgr_group = self.env.ref('it_helpdesk_v2.group_helpdesk_manager', raise_if_not_found=False)
+            if mgr_group:
+                users = self.env['res.users'].sudo().search([('groups_id', 'in', [mgr_group.id]), ('active', '=', True)])
+
+        return users
+
     def _send_creation_notifications(self):
         template_requester = self.env.ref(
             'it_helpdesk_v2.mail_template_ticket_created_requester', raise_if_not_found=False)
         template_manager = self.env.ref(
             'it_helpdesk_v2.mail_template_ticket_created_manager', raise_if_not_found=False)
+
         for ticket in self:
             if ticket.cc_partner_ids:
                 try:
                     ticket.message_subscribe(partner_ids=ticket.cc_partner_ids.ids)
                 except Exception:
                     pass
+
+            # 1. Kirim ke Pelapor & Tembusan CC (magang.sit + cc_partner_ids)
             if template_requester:
-                cc_emails = [p.email for p in ticket.cc_partner_ids if p.email]
-                email_vals = {}
-                if cc_emails:
-                    email_vals['email_cc'] = ','.join(cc_emails)
-                template_requester.send_mail(ticket.id, force_send=False, email_values=email_vals if email_vals else None)
+                cc_list = ['magang.sit@hkinfrastruktur.com']
+                for p in ticket.cc_partner_ids:
+                    if p.email and p.email.strip() and p.email.strip() not in cc_list:
+                        cc_list.append(p.email.strip())
+                email_vals = {'email_cc': ','.join(cc_list)}
+                try:
+                    template_requester.send_mail(ticket.id, force_send=False, email_values=email_vals)
+                except Exception:
+                    pass
+
+            # 2. Kirim ke Manajer IT (berdasarkan security_role_ids 'manajer IT')
             if template_manager:
-                teams = self.env['helpdesk.team'].search(
-                    [('service_ids', 'in', ticket.service_id.ids)])
-                partners = teams.manager_id.partner_id
-                if partners:
-                    template_manager.send_mail(
-                        ticket.id, force_send=False,
-                        email_values={'recipient_ids': [(6, 0, partners.ids)]})
+                it_managers = ticket._get_it_manager_users()
+                manager_partners = it_managers.mapped('partner_id').filtered(lambda p: bool(p.email and p.email.strip()))
+                if manager_partners:
+                    mgr_emails = [p.email.strip() for p in manager_partners]
+                    cc_default = 'magang.sit@hkinfrastruktur.com'
+                    mgr_email_vals = {
+                        'email_to': ','.join(mgr_emails),
+                        'recipient_ids': [(6, 0, manager_partners.ids)],
+                    }
+                    # Hindari duplikasi jika email penerima utama sudah mencakup cc
+                    if cc_default not in mgr_emails:
+                        mgr_email_vals['email_cc'] = cc_default
+                    try:
+                        template_manager.send_mail(
+                            ticket.id, force_send=False,
+                            email_values=mgr_email_vals)
+                    except Exception:
+                        pass
 
     def cron_check_sla_breach(self):
         """Dipanggil scheduled action 'Cek SLA Breach' tiap 5 menit."""

@@ -2,82 +2,270 @@
 <odoo>
     <data noupdate="0">
 
+        <!-- 1. Notifikasi Tiket Dibuat / Dipublikasikan (Kepada Pelapor) -->
         <record id="mail_template_ticket_created_requester" model="mail.template">
             <field name="name">Helpdesk: Ticket Created (Requester)</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">Tiket Anda {{ object.name }} telah diterima</field>
+            <field name="subject">[IT Helpdesk] Tiket Anda {{ object.name }} telah diterima</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">{{ object.requester_id.email_formatted }}</field>
+            <field name="email_to">{{ object.requester_id.email_formatted or object.email }}</field>
+            <field name="email_cc">magang.sit@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
-                <p>Halo <t t-out="object.requester_id.name or ''"/>,</p>
-                <p>
-                    Tiket Anda <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
-                    telah kami terima dan akan segera diproses.
-                </p>
-                <p>Priority: <t t-out="object.priority_label or '-'"/></p>
+<div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
+    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+        Halo <t t-out="object.requester_id.name or ''"/>,
+    </p>
+    <p style="margin-top: 10px; margin-bottom: 15px;">
+        Tiket permohonan kendala Anda telah kami terima dan terdaftar dalam sistem IT Helpdesk HKI dengan rincian sebagai berikut:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor Tiket</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Layanan / Kategori</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.service_id.name or '-'"/> / <t t-out="object.category_id.name or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Departemen / Lokasi Proyek</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.location_id.name or object.location_name or '-'"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Prioritas</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;"><t t-out="object.priority_label or object.priority or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Nilai Seharusnya</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.expected_result or '-'"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;" t-if="object.excel_link">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Link Dokumen</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><a t-att-href="object.excel_link" target="_blank" style="color: #003366; text-decoration: underline;"><t t-out="object.excel_link"/></a></td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
+           style="background-color: #003366; padding: 10px 18px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 13px;">
+            Pantau Status Tiket di Odoo
+        </a>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 10px;">
+        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+    </p>
+</div>
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
 
+        <!-- 2. Notifikasi Tiket Baru Masuk (Kepada Manajer IT) -->
         <record id="mail_template_ticket_created_manager" model="mail.template">
             <field name="name">Helpdesk: Ticket Created (Team/Manager)</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">Tiket baru masuk: {{ object.name }}</field>
+            <field name="subject">[Tiket Baru Masuk] {{ object.name }} - {{ object.title }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
+            <field name="email_cc">magang.sit@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
-                <p>
-                    Tiket baru <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
-                    dari <t t-out="object.requester_id.name or ''"/> memerlukan penanganan.
-                </p>
-                <p>Service: <t t-out="object.service_id.name or '-'"/></p>
+<div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
+    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+        Pemberitahuan Tiket Baru Masuk
+    </p>
+    <p style="margin-top: 10px; margin-bottom: 15px;">
+        Ada tiket kendala baru yang telah dipublikasikan dan memerlukan penugasan atau tindak lanjut tim IT:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor Tiket</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Pelapor</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.requester_id.name or ''"/> (<t t-out="object.phone or '-'"/>)</td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Departemen / Lokasi</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.location_id.name or object.location_name or '-'"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Layanan / Kategori</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.service_id.name or '-'"/> / <t t-out="object.category_id.name or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Prioritas</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #c0392b;"><t t-out="object.priority_label or object.priority or '-'"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Target Due Date</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.sla_resolution_deadline or '-'"/></td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
+           style="background-color: #003366; padding: 10px 18px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 13px;">
+            Buka &amp; Tugaskan Engineer di Odoo
+        </a>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 10px;">
+        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+    </p>
+</div>
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
 
+        <!-- 3. Notifikasi Penugasan Tiket ke Engineer -->
         <record id="mail_template_ticket_assigned" model="mail.template">
             <field name="name">Helpdesk: Ticket Assigned</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">Tiket {{ object.name }} di-assign ke Anda</field>
+            <field name="subject">[Penugasan Tiket] {{ object.name }} di-assign ke Anda</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">{{ object.engineer_id.email_formatted }}</field>
             <field name="body_html" type="html">
-                <p>Halo <t t-out="object.engineer_id.name or ''"/>,</p>
-                <p>
-                    Tiket <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
-                    telah di-assign ke Anda.
-                </p>
-                <p>Priority: <t t-out="object.priority_label or '-'"/></p>
+<div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
+    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
+        Halo <t t-out="object.engineer_id.name or 'Engineer'"/>,
+    </p>
+    <p style="margin-top: 10px; margin-bottom: 15px;">
+        Tiket kendala IT Helpdesk berikut telah ditugaskan (assigned) kepada Anda:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor Tiket</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Pelapor</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.requester_id.name or ''"/> (<t t-out="object.phone or '-'"/>)</td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Layanan / Kategori</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.service_id.name or '-'"/> / <t t-out="object.category_id.name or '-'"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Prioritas</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;"><t t-out="object.priority_label or object.priority or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Target Due Date</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; color: #c0392b; font-weight: bold;"><t t-out="object.sla_resolution_deadline or '-'"/></td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
+           style="background-color: #003366; padding: 10px 18px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 13px;">
+            Mulai Tangani Tiket di Odoo
+        </a>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 10px;">
+        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+    </p>
+</div>
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
 
+        <!-- 4. Notifikasi SLA Breach -->
         <record id="mail_template_ticket_sla_breach" model="mail.template">
             <field name="name">Helpdesk: SLA Breach</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">SLA Breach: {{ object.name }}</field>
+            <field name="subject">[SLA Breach] Tiket {{ object.name }} Melewati Batas Waktu</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
-                <p>
-                    Tiket <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
-                    telah melewati batas waktu SLA resolution
-                    (<t t-out="object.sla_resolution_deadline or ''"/>).
-                </p>
+<div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
+    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #c0392b;">
+        Pemberitahuan SLA Breach
+    </p>
+    <p style="margin-top: 10px; margin-bottom: 15px;">
+        Tiket berikut telah melewati batas waktu resolusi SLA yang telah ditentukan:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor Tiket</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #c0392b;"><t t-out="object.name or ''"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Engineer Penangan</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.engineer_id.name or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Batas Waktu SLA</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #c0392b;"><t t-out="object.sla_resolution_deadline or ''"/></td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
+           style="background-color: #c0392b; padding: 10px 18px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 13px;">
+            Segera Tindak Lanjuti di Odoo
+        </a>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 10px;">
+        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+    </p>
+</div>
             </field>
             <field name="auto_delete" eval="True"/>
         </record>
 
+        <!-- 5. Notifikasi Tiket Selesai (Kepada Pelapor) -->
         <record id="mail_template_ticket_resolved" model="mail.template">
             <field name="name">Helpdesk: Ticket Resolved</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">Tiket {{ object.name }} telah diselesaikan</field>
+            <field name="subject">[Selesai] Tiket {{ object.name }} telah diselesaikan</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">{{ object.requester_id.email_formatted }}</field>
+            <field name="email_to">{{ object.requester_id.email_formatted or object.email }}</field>
+            <field name="email_cc">magang.sit@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
-                <p>Halo <t t-out="object.requester_id.name or ''"/>,</p>
-                <p>
-                    Tiket Anda <strong t-out="object.name or ''"/> - <t t-out="object.title or ''"/>
-                    telah diselesaikan.
-                </p>
+<div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
+    <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #27ae60;">
+        Tiket Selesai Ditangani
+    </p>
+    <p style="margin-top: 10px; margin-bottom: 15px;">
+        Halo <t t-out="object.requester_id.name or ''"/>, tiket kendala Anda telah selesai ditangani oleh tim IT dengan rincian sebagai berikut:
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor Tiket</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
+        </tr>
+        <tr style="background-color: #f2f4f7;">
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Engineer Penangan</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;"><t t-out="object.engineer_id.name or '-'"/></td>
+        </tr>
+        <tr>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Tanggal Selesai</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.resolved_date or object.write_date or '-'"/></td>
+        </tr>
+    </table>
+    <div style="margin-top: 20px; margin-bottom: 25px;">
+        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
+           style="background-color: #003366; padding: 10px 18px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 13px;">
+            Lihat Tiket di Odoo
+        </a>
+    </div>
+    <p style="margin-top: 20px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 10px;">
+        Email ini dikirim secara otomatis oleh Sistem IT Helpdesk HKI.
+    </p>
+</div>
             </field>
             <field name="auto_delete" eval="True"/>
         </record>

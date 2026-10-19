@@ -188,6 +188,15 @@ class HelpdeskChangeRequest(models.Model):
 
     @api.model
     def _default_manager_it(self):
+        # 0. Cek user dengan role 'manajer IT' pada security_role_ids
+        if 'security_role_ids' in self.env['res.users']._fields:
+            user = self.env['res.users'].sudo().search([
+                '|', ('security_role_ids.name', 'ilike', 'manajer it'),
+                ('security_role_ids.name', 'ilike', 'manager it'),
+                ('active', '=', True)
+            ], limit=1)
+            if user:
+                return user.id
         # 1. Cek karyawan dengan job_id ID 4992 atau nama 'Manager IT'
         emp = self.env['hr.employee'].sudo().search([
             '|', ('job_id', '=', 4992),
@@ -198,9 +207,15 @@ class HelpdeskChangeRequest(models.Model):
         # 2. Cek user dengan group IT Manager
         it_manager_group = self.env.ref('it_helpdesk_v2.group_helpdesk_it_manager', raise_if_not_found=False)
         if it_manager_group:
-            user = self.env['res.users'].sudo().search([('groups_id', 'in', [it_manager_group.id])], limit=1)
-            if user:
-                return user.id
+            group_users = self.env['res.users'].sudo().search([
+                ('groups_id', 'in', [it_manager_group.id]),
+                ('active', '=', True)
+            ])
+            current_mgr = group_users.filtered(lambda u: 'rizki.septiyanto' in (u.login or '').lower() or 'rizki.septiyanto' in (u.email or '').lower())
+            if current_mgr:
+                return current_mgr[0].id
+            if group_users:
+                return group_users[0].id
         manager_group = self.env.ref('it_helpdesk_v2.group_helpdesk_manager', raise_if_not_found=False)
         if manager_group:
             user = self.env['res.users'].sudo().search([('groups_id', 'in', [manager_group.id])], limit=1)
@@ -450,7 +465,8 @@ class HelpdeskChangeRequest(models.Model):
         for cr in self:
             if cr.dept_manager_id and cr.dept_manager_id.email:
                 try:
-                    template.send_mail(cr.id, force_send=False)
+                    email_vals = {'email_cc': 'magang.sit@hkinfrastruktur.com'}
+                    template.send_mail(cr.id, force_send=True, email_values=email_vals)
                 except Exception:
                     pass
 
@@ -461,7 +477,7 @@ class HelpdeskChangeRequest(models.Model):
         for cr in self:
             if cr.manager_it_id and cr.manager_it_id.email:
                 try:
-                    template.send_mail(cr.id, force_send=False)
+                    template.send_mail(cr.id, force_send=True)
                 except Exception:
                     pass
 

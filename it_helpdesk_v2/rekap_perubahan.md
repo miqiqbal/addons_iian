@@ -355,6 +355,21 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 
 ---
 
+### 22. Otomatisasi Notifikasi Email Publish, Deteksi Manajer IT (`security_role_ids`), & Clean Email Templates
+* **Penentuan User Manajer IT Otomatis Tanpa Menu Tambahan**:
+  * Membatalkan penambahan menu `Teams` di dropdown *Configuration* agar menu Odoo tetap bersih.
+  * Sistem pada `models/helpdesk_ticket.py` (`_get_it_manager_users`) dan `models/helpdesk_change_request.py` (`_default_manager_it`) secara dinamis mencari user aktif dengan Roles `'manajer IT'` via field `security_role_ids` (`security.role`).
+  * Dilengkapi fallback bertingkat yang aman ke Job Title *Manager IT* dan grup *IT Manager* jika role belum terpasang.
+* **Tembusan Otomatis ke `magang.sit@hkinfrastruktur.com` Saat Publish**:
+  * **Ticket (`action_publish`)**: Mengirimkan notifikasi ke Pelapor (`requester_id.email`), Manajer IT hasil deteksi role, serta tembusan otomatis (`email_cc`) ke `magang.sit@hkinfrastruktur.com`. Notifikasi dikirimkan saat tiket dipublikasikan dari draft (`action_publish`) atau saat tiket dibuat langsung dengan status `open`.
+  * **Change Request (`action_submit`)**: Mengirimkan notifikasi ke Manager Departemen pemohon serta menyertakan tembusan otomatis (`email_cc`) ke `magang.sit@hkinfrastruktur.com`.
+* **Standardisasi Template Email (Clean Enterprise HTML)**:
+  * Menghapus seluruh tag icon font (`<i class="fa ...">`) dan simbol emoji dari template email agar tidak rusak/pecah atau menampilkan kode aneh di Outlook dan email client korporat.
+  * Menggunakan murni tabel HTML (`<table>`, `<tr>`, `<td>`) dengan styling inline elegan, warna resmi HKI `#003366`, font universal `Arial`, serta tombol navigasi *"Buka di Odoo"*.
+  * Template yang disempurnakan: *Ticket Created (Requester)*, *Ticket Created (Team/Manager)*, *Ticket Assigned*, *SLA Breach*, *Ticket Resolved*, dan *CR Menunggu Approval Dept*.
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |

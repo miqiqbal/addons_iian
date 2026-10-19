@@ -9,34 +9,47 @@
             <field name="subject">[CR Menunggu Approval Anda] ${object.code or object.name}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
             <field name="email_to">${object.dept_manager_id.email}</field>
+            <field name="email_cc">magang.sit@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
-                <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
+                <div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
                         Halo ${object.dept_manager_id.name or 'Manager'},
                     </p>
-                    <p style="margin-top: 10px;">
+                    <p style="margin-top: 10px; margin-bottom: 15px;">
                         Ada pengajuan Change Request baru yang menunggu approval Anda selaku Manager Departemen:
                     </p>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
                         <tr style="background-color: #f2f4f7;">
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor CR</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;">${object.code or object.name}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Kategori</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.category_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">CR Type</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.cr_type_id.name or '-'}</td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Departemen</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Kategori / Sub</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.category_id.name or '-'} / ${object.subcategory_id.name or '-'}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Diajukan Oleh</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.created_by.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Departemen Pemohon</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">CR to Departement</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.target_department_id.name or '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Diajukan Oleh</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.created_by.name or '-'}</td>
+                        </tr>
+                        <tr style="background-color: #f2f4f7;">
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Impact On</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.impact_on or '-'}</td>
                         </tr>
                     </table>
                     <div style="margin-top: 25px;">
