@@ -370,6 +370,20 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 
 ---
 
+### 23. Isolasi Modul HR & User (Penyelesaian Isu Overriding) serta Penyederhanaan Top 5 Engineer
+* **Isolasi Penuh Form User (`res.users`) & Karyawan (`hr.employee`)**:
+  * Menghapus pemanggilan dan fungsi `sync_all_users_to_employees` di `hooks.py`, mencegah auto-generate data karyawan secara massal saat upgrade modul.
+  * Menghapus pemanggilan `_sync_hr_employee()` dan pemaksaan `login = email` pada `models/res_users.py`, sehingga pembuatan user Odoo kembali normal tanpa ikut campur membuat karyawan di modul HR.
+  * Merestorasi form User Odoo (`views/helpdesk_user_views.xml`) agar 100% standar Odoo tanpa me-replace `oe_title` dan tanpa menyembunyikan kolom `login`. Field teknisi (*Initial* & *Kuota Harian*) dipindahkan ke Tab Tambahan tersendiri (`<page string="IT Helpdesk">`).
+  * Mencabut pendaftaran `views/hr_employee_views.xml` dari `__manifest__.py`, mengembalikan form Karyawan dan Departemen ke 100% tampilan standar HR Odoo (label *"Manager"* tidak lagi tertimpa).
+  * Menghapus override method `create()` pada `models/hr_employee.py` agar tim HR memiliki kontrol penuh atas master data karyawannya.
+* **Penyederhanaan Logika Card 'Top 5 Engineer' Dashboard**:
+  * Mengubah perhitungan peringkat dari yang sebelumnya hanya menghitung tiket selesai (`done`/`closed`) menjadi **murni menghitung total tiket yang di-assign/ditugaskan ke masing-masing teknisi (`engineer_id`)**.
+  * Setiap penugasan tiket (Assign/Eskalasi) maupun pengalihan teknisi (Re-Assign) langsung mencerminkan beban kerja (*workload assignment*) teknisi secara real-time.
+  * Menghapus data contoh/dummy kaku dan menyelaraskan label kartu di `static/src/xml/helpdesk_dashboard.xml` menjadi `X Tiket`.
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |

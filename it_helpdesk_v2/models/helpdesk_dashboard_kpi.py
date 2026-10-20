@@ -511,16 +511,15 @@ class HelpdeskDashboardKPI(models.TransientModel):
                 'deadline': t.sla_resolution_deadline.strftime('%d/%m/%Y %H:%M') if t.sla_resolution_deadline else '-',
             })
 
-        # 3. Top 5 Engineers (Ranking by resolved count)
+        # 3. Top 5 Engineers (Ranking by assigned ticket count)
         eng_counts = {}
-        for t in all_t.filtered(lambda t: t.state in ('done', 'closed')):
+        for t in all_t:
             if t.engineer_id:
-                eng_counts[t.engineer_id.name] = eng_counts.get(t.engineer_id.name, 0) + 1
+                eng_name = t.engineer_id.name
+                eng_counts[eng_name] = eng_counts.get(eng_name, 0) + 1
         top_engineers = []
         for name, count in sorted(eng_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
-            top_engineers.append({'name': name, 'resolved_count': count})
-        if not top_engineers:
-            top_engineers = [{'name': 'Dimas S (Engineer)', 'resolved_count': 18}, {'name': 'Ahmad Fauzi', 'resolved_count': 14}, {'name': 'Budi Santoso', 'resolved_count': 11}]
+            top_engineers.append({'name': name, 'resolved_count': count, 'ticket_count': count})
 
         # 4. Tiket Critical (P1) - Open
         critical_open_data = []

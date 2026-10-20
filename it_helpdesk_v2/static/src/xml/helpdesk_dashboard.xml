@@ -381,8 +381,11 @@
                             <t t-foreach="widget.data.top_engineers" t-as="eng">
                                 <li class="list-group-item px-0 py-1 d-flex justify-content-between align-items-center border-0">
                                     <span><i class="fa fa-user-circle-o text-muted mr-1"/><t t-esc="eng.name"/></span>
-                                    <span class="badge badge-success font-weight-bold"><t t-esc="eng.resolved_count"/> Selesai</span>
+                                    <span class="badge badge-success font-weight-bold"><t t-esc="eng.resolved_count"/> Tiket</span>
                                 </li>
+                            </t>
+                            <t t-if="!widget.data.top_engineers || !widget.data.top_engineers.length">
+                                <li class="list-group-item px-0 py-1 border-0 text-muted">Belum ada penugasan tiket</li>
                             </t>
                         </ul>
                     </div>

@@ -17,24 +17,6 @@ class HrEmployee(models.Model):
         help='Manager Tidak Langsung untuk approval Change Request'
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        employees = super().create(vals_list)
-        for emp in employees:
-            if not emp.user_id:
-                email = emp.work_email or emp.private_email
-                if email:
-                    user = self.env['res.users'].sudo().search([
-                        '|', ('email', '=ilike', email), ('login', '=ilike', email)
-                    ], limit=1)
-                    if user:
-                        emp.user_id = user.id
-                if not emp.user_id and emp.name:
-                    user = self.env['res.users'].sudo().search([('name', '=ilike', emp.name)], limit=1)
-                    if user:
-                        emp.user_id = user.id
-        return employees
-
 
 class HrDepartment(models.Model):
     _inherit = 'hr.department'
