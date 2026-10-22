@@ -1,6 +1,6 @@
 # Rekap Perubahan Modul `it_helpdesk_v2`
 
-**Tanggal Rekap Terbaru:** 16 Oktober 2026  
+**Tanggal Rekap Terbaru:** 22 Oktober 2026  
 **Referensi Commit Terakhir (GitHub):** `43f2b2e feat: decouple ticket publish and auto-routing, update tab container and 11-column list view`  
 **Repository GitHub:** `https://github.com/miqiqbal/addons_iian.git` (Branch: `main`)  
 **Status:** All Changes Committed & Pushed to GitHub (`colab/main`)
@@ -9,7 +9,7 @@
 
 ## 📌 Ringkasan Utama Perubahan
 
-Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **18 area utama**:
+Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **25 area utama**:
 
 1. **Master Data Fitur Baru: CR Type (`helpdesk.cr.type`)**.
 2. **Perombakan Workflow Approval Change Request Multi-Tier (5-Level Flow)**.
@@ -29,6 +29,13 @@ Pembaruan pada modul **`it_helpdesk_v2`** berfokus pada **18 area utama**:
 16. **Pemisahan (Decoupling) Auto-Routing dari Tombol Publish Tiket (Manual / Dedicated Escalation Flow)**.
 17. **Restrukturisasi Tab Container: Penggantian Tab Description Menjadi Tab "Expected Result & Link"**.
 18. **Restrukturisasi Tree/List View Tiket (11 Kolom Laporan Kendala & Base UX Optimization)**.
+19. **Penegakan Input Mandatory (Wajib Diisi) Tiket & Change Request**.
+20. **Pencegahan Penghapusan Master Data Berelasi (Foreign Key Integrity Protection)**.
+21. **Standardisasi Tombol "Kembali / Cancel" pada Wizard Penolakan**.
+22. **Penyempurnaan Modul Knowledge Base (Hierarki Master Data & Redesign Layout Form)**.
+23. **Penyelarasan Kartu Statistik Dashboard Helpdesk**.
+24. **Penonaktifan Fitur Website Tiket Publik (`/helpdesk/submit`)**.
+25. **Pencabutan Hak Akses Tombol Operasional IT ("Start Progress" & "Mark as Done") & Pembersihan Menu IT Helpdesk dari Akun Manager Dept.**
 
 ---
 
@@ -217,8 +224,8 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
   * Untuk **Manager Dept, IT Manager, IT Admin**: Tombol Edit **TETAP MUNCUL**.
 * **Penugasan & Reassign Tiket**:
   * Tombol *Assign / Eskalasi ke Engineer* dan wizard *Eskalasi / Reassign Engineer* dilindungi grup `group_helpdesk_manager` (**Hanya IT Admin**).
-* **Pengerjaan Tiket**:
-  * Tombol *Start Progress* dan *Mark as Done* hanya muncul untuk tim pengelola (Manager Dept, IT Manager, IT Admin).
+* **Pengerjaan Tiket & Change Request**:
+  * Tombol *Start Progress* dan *Mark as Done* hanya muncul dan dapat diklik secara eksklusif oleh **IT Manager** dan **IT Admin** (dicabut sepenuhnya dari Manager Dept & Employee).
 * **Field `engineer_id`**:
   * Readonly bagi Employee; dapat dipilih dan diedit oleh Manager Dept, IT Manager, dan IT Admin.
 * **Koreksi SLA Time (Resolved & Closed Date)**:
@@ -384,15 +391,66 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 
 ---
 
+### 24. Penyelarasan Form Tiket Website (`/helpdesk/submit`) dengan Form Backend & Validasi Tanda Strip (-)
+* **Penambahan Input Wajib di Form Website (`views/website_helpdesk_ticket_templates.xml`)**:
+  * Menambahkan field form **Nilai yang Diharapkan (Expected Result)** berbentuk input text (`input type="text"`) di Langkah 1.
+  * Menambahkan field form **Tautan Dokumen / Modul Kendala (Link)** berbentuk input text (`input type="text"`) di Langkah 1.
+* **Pemberian Pesan Saran / Helper Hint Intuitif & Placeholder Bersih**:
+  * Placeholder fokus menyajikan contoh pengisian saja agar tampilan form bersih dan tidak redundan:
+    * *Placeholder Expected Result*: `"Contoh: Saldo laporan harus Rp 10.000.000 / Status PO Approved"`
+    * *Placeholder Link*: `"Contoh: https://docs.google.com/..."`
+  * Aturan wajib isi dan alternatif tanda strip (`-`) dicantumkan dengan jelas pada catatan informatif di bawah masing-masing kolom:
+    * *Catatan*: *"Kolom ini tidak bisa dikosongi. Jika tidak ada nilai yang diharapkan secara spesifik / tidak memiliki tautan dokumen modul terkait, silakan isi dengan tanda strip (-)."*
+    * Tanda strip (`-`) telah teruji aman dan lolos validasi method `action_publish()` pada backend Odoo.
+* **Sinkronisasi Controller (`controllers/helpdesk_ticket_public.py`)**:
+  * Menambahkan validasi wajib untuk `expected_result` dan `excel_link` di `_validate_post()`, memberikan pesan kesalahan informatif jika pengguna mengosongkan kolom.
+* **Sinkronisasi Controller (`controllers/helpdesk_ticket_public.py`)**:
+  * Menambahkan validasi wajib untuk `expected_result` dan `excel_link` di `_validate_post()`, memberikan pesan kesalahan informatif jika pengguna mengosongkan kolom.
+  * Menambahkan pemetaan field `expected_result` dan `excel_link` ke dictionary pembuatan record tiket (`Ticket.create(vals)`) sehingga saat otomatis dipublish via `ticket.action_publish()`, tidak timbul error UserError kolom hilang.
+* **Penonaktifan Fitur Sesuai Arahan**:
+  * Sesuai keputusan pembatalan implementasi fitur form submit via website, seluruh route controller dan template website di-comment out secara rapi. Record template di database dibersihkan saat upgrade.
+
+---
+
+### 25. Pembatasan Hak Akses Tombol Operasional IT & Pembersihan Menu IT Helpdesk dari Akun Manager Dept.
+* **Pencabutan Hak Akses Tombol Aksi Operasional IT dari Manager Dept (`group_helpdesk_agent`)**:
+  * **Tombol "Start Progress" (`action_start_progress`)**:
+    * Pada form tiket kendala (`views/helpdesk_ticket_views.xml`) dan form create ticket (`views/helpdesk_create_ticket_views.xml`), atribut tombol diubah menjadi `groups="it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager"`.
+    * Dilengkapi proteksi lapis kedua pada level model Python (`models/helpdesk_ticket.py` dan `models/helpdesk_change_request.py`) yang melempar exception `UserError` jika dipanggil oleh pengguna non-IT.
+  * **Tombol "Mark as Done" (`action_done`)**:
+    * Pada form tiket kendala maupun form Change Request (`views/helpdesk_change_request_views.xml`), atribut grup tombol diubah menjadi `groups="it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager"`.
+    * Validasi pada Python model `models/helpdesk_ticket.py` (`action_done`) dan `models/helpdesk_change_request.py` (`action_done`) diperbarui secara ketat agar hanya mengizinkan superuser, IT Manager, atau IT Admin.
+* **Pembersihan & Reset Akses Menu IT Helpdesk (`views/helpdesk_menus.xml`)**:
+  * Karena parser Odoo XML untuk `<menuitem groups="...">` hanya menambahkan relasi Many2many (`(4, id)`), relasi lama `group_helpdesk_agent` di database (`ir_ui_menu_group_rel`) dibersihkan secara mutlak menggunakan blok deklaratif `<record model="ir.ui.menu"><field name="groups_id" eval="[(6, 0, [...])]"/></record>`.
+  * **Daftar Menu yang 100% HIDE dari Akun Manager Dept**:
+    1. **Dashboard** (`menu_it_helpdesk_dashboard`) ➔ IT Manager & IT Admin
+    2. **All Ticket** (`menu_it_helpdesk_all_tickets`) ➔ IT Manager & IT Admin
+    3. **Assigned Tickets to Me** (`menu_it_helpdesk_assigned_to_me`) ➔ IT Manager & IT Admin
+    4. **Assigned CR to Me** (`menu_it_helpdesk_assigned_cr_to_me`) ➔ IT Manager & IT Admin
+    5. **CR History & Archives** (`menu_it_helpdesk_cr_archive`) ➔ IT Manager & IT Admin
+    6. **Reports (Root & Pivot)** (`menu_it_helpdesk_report_root`, `menu_it_helpdesk_report_pivot`) ➔ IT Manager & IT Admin
+    7. **Configuration ➔ SLA Policy & SLA Status** (`menu_it_helpdesk_config_sla`, `menu_it_helpdesk_config_sla_status`) ➔ IT Admin
+  * **Menu yang Tetap Dipertahankan untuk Manager Dept**:
+    * **Change Request**: *Need My Approval* & *Active Queue & Progress* (untuk persetujuan CR unit/dept terkait dan monitoring progres).
+    * **My Ticket & Create Ticket**: Untuk pengajuan komplain mandiri.
+    * **Knowledge Base**: Untuk membaca panduan solusi mandiri.
+* **Penambahan Unit Test Keamanan**:
+  * `test_dept_manager_cannot_start_progress_or_done` pada `tests/test_ticket.py`: Menguji penolakan `UserError` saat akun Manager Dept. mencoba memicu *Start Progress* atau *Mark as Done*.
+  * `test_it_manager_can_start_progress_and_done` pada `tests/test_ticket.py`: Menguji eksekusi sukses *Start Progress* dan *Mark as Done* oleh akun IT Manager.
+  * `test_dept_manager_cannot_done_or_start_progress_cr` pada `tests/test_helpdesk_change_request_email.py`: Menguji penolakan `UserError` saat akun Manager Dept. mencoba menyelesaikan atau memulai CR.
+  * Seluruh **34 unit tests** pada test suite `it_helpdesk_v2` berhasil lulus 100% tanpa error (*0 failures, 0 errors*).
+
+---
+
 ## 📂 Daftar File Modul `it_helpdesk_v2`
 
 | Path File | Keterangan Status |
 | :--- | :--- |
-| `it_helpdesk_v2/__manifest__.py` | **Modified** — Registrasi file view, wizard, & model baru |
+| `it_helpdesk_v2/__manifest__.py` | **Modified** — Comment out template website & registrasi komponen |
 | `it_helpdesk_v2/hooks.py` | **Modified** — `post_init_hook` & auto-sync 744 user to employee |
 | `it_helpdesk_v2/models/__init__.py` | **Modified** — Import `helpdesk_cr_type` & `hr_employee` |
-| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Notifikasi email Manager IT, reset rejection_reason saat submit, perlindungan reject di status done/closed, queue number aman saat reopen, dan penanganan departemen IT |
-| `it_helpdesk_v2/models/helpdesk_ticket.py` | **Modified** — Direct email sending (`force_send=True`), init auto-sql update, & write restriction |
+| `it_helpdesk_v2/models/helpdesk_change_request.py` | **Modified** — Proteksi `action_done` & `action_start_progress` (IT Manager & Admin only), notifikasi email, alur approval, & queue fix |
+| `it_helpdesk_v2/models/helpdesk_ticket.py` | **Modified** — Proteksi `action_start_progress` & `action_done` (IT Manager & Admin only), direct email, & write restriction |
 | `it_helpdesk_v2/models/helpdesk_cr_type.py` | **New File** — Model master data CR Type |
 | `it_helpdesk_v2/models/helpdesk_keyword.py` | **Modified** — Dynamic category & subcategory onchange filters |
 | `it_helpdesk_v2/models/hr_employee.py` | **New File** — Fields `kadept_id` & `indirect_manager_id` & auto-link user |
@@ -402,18 +460,24 @@ Rekapitulasi hak akses peranan (Role Matrix) saat pengguna login:
 | `it_helpdesk_v2/data/mail_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/data/helpdesk_email_template_data.xml` | **Modified** — Update `email_from` sender ke `system.itd@hkinfrastruktur.com` |
 | `it_helpdesk_v2/data/helpdesk_change_request_email_template_data.xml` | **Modified** — Perbaikan ekspresi `${object.category_id.name}` & update email sender |
-| `it_helpdesk_v2/tests/test_helpdesk_change_request_email.py` | **Modified** — Automated test suite 5-level approval & wizard rejection verification |
-| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Form view readonly state attrs, rejection banner, alur 5-level approval, statusbar dinamis (hide Approval Kadept BPO saat target IT), tombol reject disembunyikan di status done, & penambahan search view lengkap |
-| `it_helpdesk_v2/views/helpdesk_ticket_views.xml` | **Modified** — Form view readonly state attrs & rejection wizard integration |
-| `it_helpdesk_v2/views/helpdesk_create_ticket_views.xml` | **Modified** — Form view readonly state attrs for create ticket form |
+| `it_helpdesk_v2/tests/test_ticket.py` | **Modified** — Unit test flow tiket, publish-assign decoupling, & proteksi role Manager Dept vs IT Manager |
+| `it_helpdesk_v2/tests/test_helpdesk_change_request_email.py` | **Modified** — Automated test suite 5-level approval, wizard rejection, & proteksi action_done CR |
+| `it_helpdesk_v2/tests/test_helpdesk_ticket_external_submit.py` | **Modified** — Unit test pembuatan tiket external |
+| `it_helpdesk_v2/controllers/__init__.py` | **Modified** — Comment out import controller website |
+| `it_helpdesk_v2/controllers/helpdesk_ticket_public.py` | **Modified** — Nonaktifkan routing public form website |
+| `it_helpdesk_v2/views/website_helpdesk_ticket_templates.xml` | **Modified** — XML templates form submit website (di-comment out) |
+| `it_helpdesk_v2/views/helpdesk_change_request_views.xml` | **Modified** — Tombol action_done hanya untuk IT Manager & IT Admin, form view readonly attrs, & search view |
+| `it_helpdesk_v2/views/helpdesk_ticket_views.xml` | **Modified** — Tombol action_start_progress & action_done hanya untuk IT Manager & IT Admin, 11 kolom tree view |
+| `it_helpdesk_v2/views/helpdesk_create_ticket_views.xml` | **Modified** — Tombol action_start_progress & action_done hanya untuk IT Manager & IT Admin |
 | `it_helpdesk_v2/views/helpdesk_cr_type_views.xml` | **New File** — Views master data CR Type |
 | `it_helpdesk_v2/views/helpdesk_keyword_views.xml` | **Modified** — Dynamic domains Kategori & Sub Kategori |
-| `it_helpdesk_v2/views/helpdesk_menus.xml` | **Modified** — Penyesuaian parent menu 882 & hak akses menu |
+| `it_helpdesk_v2/views/helpdesk_menus.xml` | **Modified** — Blok replace (6, 0, [...]) pembersihan menu IT dari Manager Dept |
 | `it_helpdesk_v2/views/hr_employee_views.xml` | **New File** — Form view Employee (urutan Head of Placement ➔ Indirect ➔ Direct Manager) |
 | `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard.py` | **New File** — Transient model wizard penolakan Change Request |
 | `it_helpdesk_v2/wizard/helpdesk_cr_reject_wizard_views.xml` | **New File** — Form view pop-up dialog Reject CR |
 | `it_helpdesk_v2/models/helpdesk_knowledge.py` | **Modified** — Auto-sync hierarki Service/Category/Subcategory, onchanges, & problem sync |
 | `it_helpdesk_v2/views/helpdesk_knowledge_views.xml` | **Modified** — Redesign layout form, high-contrast labels, service/category inputs, & search view |
 | `it_helpdesk_v2/tests/test_knowledge.py` | **New File** — Automated unit tests hierarki, onchange, & hak akses unlink KB |
+
 
 

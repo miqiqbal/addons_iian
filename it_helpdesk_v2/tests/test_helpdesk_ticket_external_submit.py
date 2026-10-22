@@ -63,3 +63,25 @@ class TestHelpdeskTicketExternalSubmit(common.TransactionCase):
         })
         ticket.action_publish()
         self.assertEqual(ticket.state, 'open')
+
+    def test_create_and_publish_with_dash_for_expected_result_and_link(self):
+        ticket = self.env['helpdesk.ticket'].sudo().create({
+            'requester_id': self.outsider.id,
+            'email': self.outsider.email,
+            'phone': '0812345678',
+            'title': 'Test strip kendala',
+            'service_id': self.service.id,
+            'category_id': self.category.id,
+            'location_id': self.location.id,
+            'q1_answer_id': self.q1.id,
+            'q2_answer_id': self.q2.id,
+            'q3_answer_id': self.q3.id,
+            'q4_answer_id': self.q4.id,
+            'q5_answer_id': self.q5.id,
+            'expected_result': '-',
+            'excel_link': '-',
+        })
+        ticket.action_publish()
+        self.assertEqual(ticket.state, 'open')
+        self.assertEqual(ticket.expected_result, '-')
+        self.assertEqual(ticket.excel_link, '-')

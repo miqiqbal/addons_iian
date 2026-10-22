@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from odoo import fields
+from odoo.exceptions import UserError
 from odoo.tests import common
 
 
@@ -78,16 +79,16 @@ class TestTicket(common.TransactionCase):
         self.assertGreater(ticket.sla_response_deadline, ticket.created_date)
 
     def test_sla_response_breach_when_overdue(self):
-        past = fields.Datetime.now() - timedelta(hours=2)
+        past = fields.Datetime.now() - timedelta(days=7)
         ticket = self._create_ticket(created_date=past)
-        # P1: SLA response 15 menit, dibuat 2 jam lalu, belum direspon -> harus breached
+        # P1: SLA response 15 menit, dibuat 7 hari lalu, belum direspon -> harus breached
         self.assertEqual(ticket.priority, '1')
         self.assertTrue(ticket.sla_response_breached)
 
     def test_sla_response_not_breached_when_responded_in_time(self):
-        past = fields.Datetime.now() - timedelta(hours=2)
-        ticket = self._create_ticket(created_date=past)
-        ticket.first_response_date = past + timedelta(minutes=5)
+        now = fields.Datetime.now()
+        ticket = self._create_ticket(created_date=now)
+        ticket.first_response_date = now + timedelta(minutes=5)
         self.assertFalse(ticket.sla_response_breached)
 
     def test_action_assign_requires_engineer(self):
@@ -160,5 +161,42 @@ class TestTicket(common.TransactionCase):
         managers = ticket._get_it_manager_users()
         # Even without specific role, fallback should return admin or manager user without error
         self.assertIsNotNone(managers)
+
+    def test_dept_manager_cannot_start_progress_or_done(self):
+        dept_manager = self.env['res.users'].create({
+            'name': 'Dept Mgr User',
+            'login': 'dept_mgr_user@example.com',
+            'email': 'dept_mgr_user@example.com',
+            'groups_id': [(6, 0, [self.env.ref('base.group_user').id, self.env.ref('it_helpdesk_v2.group_helpdesk_agent').id])],
+        })
+        ticket = self._create_ticket(engineer_id=self.env.ref('base.user_admin').id)
+        ticket.action_assign()
+        with self.assertRaises(UserError):
+            ticket.with_user(dept_manager).action_start_progress()
+
+        ticket.action_start_progress()
+        ticket.resolution = '<p>Solusi selesai</p>'
+        with self.assertRaises(UserError):
+            ticket.with_user(dept_manager).action_done()
+
+        # Manager Dept juga ditolak saat mengedit formulir tiket pada status non-draft
+        with self.assertRaises(UserError):
+            ticket.with_user(dept_manager).write({'title': 'Judul diedit Manager Dept'})
+
+    def test_it_manager_can_start_progress_and_done(self):
+        it_manager = self.env['res.users'].create({
+            'name': 'IT Mgr User',
+            'login': 'it_mgr_user@example.com',
+            'email': 'it_mgr_user@example.com',
+            'groups_id': [(6, 0, [self.env.ref('base.group_user').id, self.env.ref('it_helpdesk_v2.group_helpdesk_it_manager').id])],
+        })
+        ticket = self._create_ticket(engineer_id=self.env.ref('base.user_admin').id)
+        ticket.action_assign()
+        ticket.with_user(it_manager).action_start_progress()
+        self.assertEqual(ticket.state, 'in_progress')
+        ticket.resolution = '<p>Solusi selesai oleh IT Manager</p>'
+        ticket.with_user(it_manager).action_done()
+        self.assertEqual(ticket.state, 'done')
+
 
 

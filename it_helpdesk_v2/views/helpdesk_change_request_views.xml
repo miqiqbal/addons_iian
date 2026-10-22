@@ -61,7 +61,7 @@
                         <button name="action_approve_it_kadept" string="Approve (Kadept IT)" type="object" class="btn-primary" attrs="{'invisible': ['|', ('state', '!=', 'it_kadept_approval'), ('can_approve_it_kadept', '=', False)]}"/>
 
                         <!-- Progress & Resolution Buttons -->
-                        <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
+                        <button name="action_done" string="Mark as Done" type="object" class="btn-success font-weight-bold" groups="it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('state', '!=', 'in_progress')]}"/>
                         <button name="action_reopen_progress" string="Kembalikan ke Progress" type="object" class="btn-warning font-weight-bold" attrs="{'invisible': ['|', ('state', 'not in', ['done', 'closed']), ('can_reopen', '=', False)]}"/>
                         <button name="action_close" string="Close CR" type="object" class="btn-secondary" attrs="{'invisible': [('state', '!=', 'done')]}"/>
                         <button name="action_reject" string="Reject CR" type="object" class="btn-danger" attrs="{'invisible': ['|', ('can_reject', '=', False), ('state', 'in', ['draft', 'done', 'closed'])]}"/>

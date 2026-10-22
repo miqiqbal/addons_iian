@@ -1,4 +1,5 @@
 from datetime import date
+from odoo.exceptions import UserError
 from odoo.tests import common
 
 
@@ -138,3 +139,16 @@ class TestHelpdeskChangeRequestEmail(common.TransactionCase):
         wizard.action_confirm_reject()
         self.assertEqual(cr.state, 'draft')
         self.assertEqual(cr.rejection_reason, 'Alasan penolakan pengujian')
+
+    def test_dept_manager_cannot_done_or_start_progress_cr(self):
+        dept_it = self.env['hr.department'].create({'name': 'Departemen Sistem, TI & Digitalisasi'})
+        cr = self._create_cr(
+            dept_manager_id=self.dept_manager.id,
+            target_department_id=dept_it.id,
+        )
+        cr.action_publish()
+        cr.state = 'in_progress'
+        with self.assertRaises(UserError):
+            cr.with_user(self.dept_manager).action_done()
+        with self.assertRaises(UserError):
+            cr.with_user(self.dept_manager).action_start_progress()

@@ -724,6 +724,8 @@ class HelpdeskTicket(models.Model):
         self.action_assign_engineer()
 
     def action_start_progress(self):
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError(_('Hanya IT Manager atau IT Admin yang berhak memulai pengerjaan tiket!'))
         for ticket in self:
             vals = {
                 'state': 'in_progress',
@@ -864,8 +866,8 @@ class HelpdeskTicket(models.Model):
                 ticket.sudo().write({'knowledge_id': kb.id})
 
     def action_done(self):
-        if not (self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
-            raise UserError('Hanya Engineer atau Helpdesk Officer yang berhak menyelesaikan tiket!')
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError(_('Hanya IT Manager atau IT Admin yang berhak menyelesaikan tiket!'))
 
         for ticket in self:
             log_body = ""
@@ -1183,13 +1185,12 @@ class HelpdeskTicket(models.Model):
 
     def write(self, vals):
         user = self.env.user
-        is_agent_or_mgr = (
-            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+        is_it_mgr_or_admin = (
             user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
             user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
             self.env.is_superuser()
         )
-        if not is_agent_or_mgr and not self.env.context.get('bypass_draft_write_check'):
+        if not is_it_mgr_or_admin and not self.env.context.get('bypass_draft_write_check'):
             content_fields = {
                 'title', 'description', 'ticket_type', 'service_id', 'category_id',
                 'subcategory_id', 'location_id', 'phone', 'email', 'requester_id',
@@ -1200,7 +1201,7 @@ class HelpdeskTicket(models.Model):
             if any(k in content_fields for k in vals.keys()):
                 for ticket in self:
                     if ticket.state != 'draft':
-                        raise UserError(_("Sebagai Employee, Anda hanya dapat mengedit formulir tiket pada status Draft."))
+                        raise UserError(_("Pengeditan formulir tiket pada status selain Draft hanya dapat dilakukan oleh tim IT."))
         return super().write(vals)
 
     def action_submit_create(self):

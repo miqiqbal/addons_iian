@@ -6,13 +6,13 @@
         <record id="email_template_helpdesk_engineer_assigned" model="mail.template">
             <field name="name">IT Helpdesk: Notifikasi Penugasan Tiket Engineer</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">[(IT Helpdesk) Tiket Baru Di-assign] ${object.name} - ${object.title}</field>
+            <field name="subject">[(IT Helpdesk) Tiket Baru Di-assign] {{ object.name }} - {{ object.title }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.engineer_id.email}</field>
+            <field name="email_to">{{ object.engineer_id.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
-                        Halo ${object.engineer_id.name or 'Engineer'},
+                        Halo <t t-out="object.engineer_id.name or 'Engineer'"/>,
                     </p>
                     <p style="margin-top: 10px;">
                         Anda telah ditugaskan untuk menangani tiket IT Helpdesk baru dengan rincian sebagai berikut:
@@ -20,27 +20,27 @@
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. Tiket</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.name}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.title}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.title"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Pelapor (Requester)</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.requester_id.name} (${object.department_id.name or '-'})</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.requester_id.name"/> (<t t-out="object.department_id.name or '-'"/>)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Layanan / Kategori</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.service_id.name or '-'} / ${object.category_id.name or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.service_id.name or '-'"/> / <t t-out="object.category_id.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Prioritas</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.priority_label or object.priority or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.priority_label or object.priority or '-'"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Batas Waktu (Due Date)</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;">${object.sla_resolution_deadline or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;"><t t-out="object.sla_resolution_deadline or '-'"/></td>
                         </tr>
                     </table>
                     <p style="margin-top: 15px;">
@@ -57,44 +57,44 @@
         <record id="email_template_helpdesk_sla_warning" model="mail.template">
             <field name="name">IT Helpdesk: Peringatan SLA 80% Mendekati Due Date</field>
             <field name="model_id" ref="model_helpdesk_ticket"/>
-            <field name="subject">[PERINGATAN SLA 80%] Tiket ${object.name} Mendekati Due Date!</field>
+            <field name="subject">[PERINGATAN SLA 80%] Tiket {{ object.name }} Mendekati Due Date!</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.engineer_id.email}</field>
+            <field name="email_to">{{ object.engineer_id.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #d9534f;">
                         ⚠️ PERINGATAN SLA 80% - TIKET MENDEKATI DUE DATE
                     </p>
                     <p style="margin-top: 10px;">
-                        Halo <b>${object.engineer_id.name or 'Engineer'}</b>, tiket berikut telah mengonsumsi <b>≥80% dari batas waktu SLA</b> yang ditentukan:
+                        Halo <b><t t-out="object.engineer_id.name or 'Engineer'"/></b>, tiket berikut telah mengonsumsi <b>≥80% dari batas waktu SLA</b> yang ditentukan:
                     </p>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
                         <tr style="background-color: #fff3cd;">
                             <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold; width: 30%;">No. Tiket</td>
-                            <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold; color: #856404;">${object.name}</td>
+                            <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold; color: #856404;"><t t-out="object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.title}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.title"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Pelapor (Requester)</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.requester_id.name} (${object.department_id.name or '-'})</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.requester_id.name"/> (<t t-out="object.department_id.name or '-'"/>)</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Status Pengerjaan</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; color: #0275d8;">${object.state}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; color: #0275d8;"><t t-out="object.state"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Batas Waktu (Due Date)</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;">${object.sla_resolution_deadline or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; color: #d9534f; font-weight: bold;"><t t-out="object.sla_resolution_deadline or '-'"/></td>
                         </tr>
                     </table>
                     <p style="margin-top: 15px; color: #856404; font-weight: bold;">
                         Mohon diprioritaskan dan segera diselesaikan sebelum batas waktu SLA terlampaui (SLA Overdue).
                     </p>
                     <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.ticket&amp;view_type=form"
+                        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.ticket&amp;view_type=form"
                            style="background-color: #d9534f; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                             Segera Memproses Tiket di Odoo
                         </a>

@@ -592,6 +592,8 @@ class HelpdeskChangeRequest(models.Model):
         self._reindex_active_queue()
 
     def action_start_progress(self):
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError(_('Hanya IT Manager atau IT Admin yang berhak memulai pengerjaan Change Request!'))
         for cr in self:
             if not cr.queue_number:
                 max_cr = self.search([('queue_number', '>', 0)], order='queue_number desc', limit=1)
@@ -611,6 +613,8 @@ class HelpdeskChangeRequest(models.Model):
         return datetime.combine(cur_date, now.time())
 
     def action_done(self):
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError(_('Hanya IT Manager atau IT Admin yang berhak menyelesaikan Change Request!'))
         now_dt = fields.Datetime.now()
         for cr in self:
             res_dt = cr.resolved_date or now_dt

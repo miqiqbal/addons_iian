@@ -6,14 +6,14 @@
         <record id="email_template_cr_dept_approval" model="mail.template">
             <field name="name">IT Helpdesk: CR Menunggu Approval Manager Dept</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
-            <field name="subject">[CR Menunggu Approval Anda] ${object.code or object.name}</field>
+            <field name="subject">[CR Menunggu Approval Anda] {{ object.code or object.name }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.dept_manager_id.email}</field>
+            <field name="email_to">{{ object.dept_manager_id.email }}</field>
             <field name="email_cc">magang.sit@hkinfrastruktur.com</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333; line-height: 1.5;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
-                        Halo ${object.dept_manager_id.name or 'Manager'},
+                        Halo <t t-out="object.dept_manager_id.name or 'Manager'"/>,
                     </p>
                     <p style="margin-top: 10px; margin-bottom: 15px;">
                         Ada pengajuan Change Request baru yang menunggu approval Anda selaku Manager Departemen:
@@ -21,39 +21,39 @@
                     <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px;">
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">Nomor CR</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;">${object.code or object.name}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.code or object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">CR Type</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.cr_type_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.cr_type_id.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Kategori / Sub</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.category_id.name or '-'} / ${object.subcategory_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.category_id.name or '-'"/> / <t t-out="object.subcategory_id.name or '-'"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Departemen Pemohon</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.department_id.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">CR to Departement</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.target_department_id.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.target_department_id.name or '-'"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Diajukan Oleh</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.created_by.name or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.created_by.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.request_identification or '-'"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Impact On</td>
-                            <td style="padding: 9px 12px; border: 1px solid #dddddd;">${object.impact_on or '-'}</td>
+                            <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.impact_on or '-'"/></td>
                         </tr>
                     </table>
                     <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.change.request&amp;view_type=form"
                            style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                             Review &amp; Approve di Odoo
                         </a>
@@ -69,13 +69,13 @@
         <record id="email_template_cr_it_approval" model="mail.template">
             <field name="name">IT Helpdesk: CR Menunggu Approval Manager IT</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
-            <field name="subject">[CR Menunggu Approval IT] ${object.code or object.name}</field>
+            <field name="subject">[CR Menunggu Approval IT] {{ object.code or object.name }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.manager_it_id.email}</field>
+            <field name="email_to">{{ object.manager_it_id.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #003366;">
-                        Halo ${object.manager_it_id.name or 'Manager IT'},
+                        Halo <t t-out="object.manager_it_id.name or 'Manager IT'"/>,
                     </p>
                     <p style="margin-top: 10px;">
                         Change Request berikut sudah disetujui oleh Manager Departemen dan kini menunggu approval Anda selaku Manager IT:
@@ -83,27 +83,27 @@
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.code or object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Kategori</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.category_id.name or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.category_id.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Departemen</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.department_id.name or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.department_id.name or '-'"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Disetujui Manager Dept</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.dept_manager_id.name or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.dept_manager_id.name or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.request_identification or '-'"/></td>
                         </tr>
                     </table>
                     <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.change.request&amp;view_type=form"
                            style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                             Review &amp; Approve di Odoo
                         </a>
@@ -119,33 +119,33 @@
         <record id="email_template_cr_rejected" model="mail.template">
             <field name="name">IT Helpdesk: CR Ditolak</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
-            <field name="subject">[CR Ditolak] ${object.code or object.name}</field>
+            <field name="subject">[CR Ditolak] {{ object.code or object.name }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.created_by.email or object.email}</field>
+            <field name="email_to">{{ object.created_by.email or object.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #d9534f;">
                         Change Request Anda Ditolak
                     </p>
                     <p style="margin-top: 10px;">
-                        Halo ${object.created_by.name or ''}, Change Request berikut telah ditolak:
+                        Halo <t t-out="object.created_by.name or ''"/>, Change Request berikut telah ditolak:
                     </p>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.code or object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.request_identification or '-'"/></td>
                         </tr>
                         <tr style="background-color: #fff3cd;">
                             <td style="padding: 10px; border: 1px solid #ffeeba; font-weight: bold;">Alasan Penolakan</td>
-                            <td style="padding: 10px; border: 1px solid #ffeeba; color: #856404; font-weight: bold;">${object.rejection_reason or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #ffeeba; color: #856404; font-weight: bold;"><t t-out="object.rejection_reason or '-'"/></td>
                         </tr>
                     </table>
                     <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.change.request&amp;view_type=form"
                            style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                             Lihat Detail di Odoo
                         </a>
@@ -161,33 +161,33 @@
         <record id="email_template_cr_done" model="mail.template">
             <field name="name">IT Helpdesk: CR Selesai</field>
             <field name="model_id" ref="model_helpdesk_change_request"/>
-            <field name="subject">[CR Selesai] ${object.code or object.name}</field>
+            <field name="subject">[CR Selesai] {{ object.code or object.name }}</field>
             <field name="email_from">system.itd@hkinfrastruktur.com</field>
-            <field name="email_to">${object.created_by.email or object.email}</field>
+            <field name="email_to">{{ object.created_by.email or object.email }}</field>
             <field name="body_html" type="html">
                 <div style="margin: 0px; padding: 0px; font-family: Arial, sans-serif; font-size: 14px; color: #333333;">
                     <p style="margin: 0px; padding: 0px; font-size: 16px; font-weight: bold; color: #28a745;">
                         Change Request Anda Telah Selesai
                     </p>
                     <p style="margin-top: 10px;">
-                        Halo ${object.created_by.name or ''}, Change Request berikut telah selesai diproses:
+                        Halo <t t-out="object.created_by.name or ''"/>, Change Request berikut telah selesai diproses:
                     </p>
                     <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 20px;">
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 30%;">No. CR</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.code or object.name}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.code or object.name"/></td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Request Identification</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.request_identification or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.request_identification or '-'"/></td>
                         </tr>
                         <tr style="background-color: #f2f4f7;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">Engineer / PIC IT</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">${object.engineer_id.name or '-'}</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;"><t t-out="object.engineer_id.name or '-'"/></td>
                         </tr>
                     </table>
                     <div style="margin-top: 25px;">
-                        <a href="/web#id=${object.id}&amp;model=helpdesk.change.request&amp;view_type=form"
+                        <a t-attf-href="/web#id={{ object.id }}&amp;model=helpdesk.change.request&amp;view_type=form"
                            style="background-color: #003366; padding: 12px 20px; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">
                             Lihat Detail di Odoo
                         </a>

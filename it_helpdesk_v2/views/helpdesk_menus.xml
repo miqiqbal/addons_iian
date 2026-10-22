@@ -146,6 +146,39 @@
                   action="base.action_res_users" sequence="100"
                   groups="group_helpdesk_manager"/>
 
+        <!-- ============================================================ -->
+        <!-- OVERWRITE GROUPS FOR MENUS TO PURGE LEGACY MANAGER DEPT      -->
+        <!-- Menggunakan (6, 0, [...]) agar relasi lama di database       -->
+        <!-- (ir_ui_menu_group_rel) dibersihkan secara mutlak            -->
+        <!-- ============================================================ -->
+        <record id="menu_it_helpdesk_dashboard" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_all_tickets" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_assigned_to_me" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_assigned_cr_to_me" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_cr_archive" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_report_root" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_report_pivot" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_it_manager'), ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_config_sla" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_manager')])]"/>
+        </record>
+        <record id="menu_it_helpdesk_config_sla_status" model="ir.ui.menu">
+            <field name="groups_id" eval="[(6, 0, [ref('group_helpdesk_manager')])]"/>
+        </record>
+
     </data>
 </odoo>
 
