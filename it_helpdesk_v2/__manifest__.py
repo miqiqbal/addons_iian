@@ -27,6 +27,7 @@
         'data/ir_cron_data.xml',
         'views/helpdesk_dashboard_views.xml',
         'data/helpdesk_dashboard_data.xml',
+        'views/helpdesk_ticket_type_views.xml',
         'views/helpdesk_service_views.xml',
         'views/helpdesk_priority_views.xml',
         'views/helpdesk_sla_views.xml',

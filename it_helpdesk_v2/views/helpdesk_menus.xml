@@ -101,6 +101,10 @@
         <menuitem id="menu_it_helpdesk_configuration_root"
                   name="Configuration" parent="menu_it_helpdesk_root" sequence="80"
                   groups="group_helpdesk_manager"/>
+        <menuitem id="menu_it_helpdesk_config_ticket_type"
+                  name="Ticket Type" parent="menu_it_helpdesk_configuration_root"
+                  action="action_helpdesk_ticket_type" sequence="5"
+                  groups="group_helpdesk_manager"/>
         <menuitem id="menu_it_helpdesk_config_service"
                   name="Service Catalog" parent="menu_it_helpdesk_configuration_root"
                   action="action_helpdesk_service" sequence="10"

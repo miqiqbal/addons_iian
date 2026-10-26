@@ -1,4 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_helpdesk_ticket_type_employee,helpdesk.ticket.type.employee,model_helpdesk_ticket_type,group_helpdesk_user,1,0,0,0
+access_helpdesk_ticket_type_manager,helpdesk.ticket.type.manager,model_helpdesk_ticket_type,group_helpdesk_manager,1,1,1,1
 access_helpdesk_service_employee,helpdesk.service.employee,model_helpdesk_service,group_helpdesk_user,1,0,0,0
 access_helpdesk_service_manager,helpdesk.service.manager,model_helpdesk_service,group_helpdesk_manager,1,1,1,1
 access_helpdesk_category_employee,helpdesk.category.employee,model_helpdesk_category,group_helpdesk_user,1,0,0,0

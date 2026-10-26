@@ -8,8 +8,14 @@
             <field name="model">helpdesk.service</field>
             <field name="arch" type="xml">
                 <tree>
-                    <field name="name"/>
-                    <field name="code"/>
+                    <field name="code" string="Catalog Code"/>
+                    <field name="name" string="Service Catalog Name"/>
+                    <field name="type_id" string="Ticket Type"/>
+                    <field name="type_code" string="Type Code" optional="show"/>
+                    <field name="ticket_type" string="Type Name" widget="badge" optional="hide"
+                           decoration-info="ticket_type == 'service_request'"
+                           decoration-warning="ticket_type == 'incident'"
+                           decoration-danger="ticket_type == 'security_incident'"/>
                     <field name="engineer_id" string="Default PIC IT"/>
                     <field name="ticket_count" string="Jumlah Case Tiket"/>
                     <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
@@ -29,10 +35,17 @@
                             </button>
                         </div>
                         <group>
-                            <field name="name"/>
-                            <field name="code"/>
-                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                            <field name="active"/>
+                            <group>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="type_id" options="{'no_create': True}"/>
+                                <field name="type_code"/>
+                                <field name="ticket_type"/>
+                            </group>
+                            <group>
+                                <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                                <field name="active"/>
+                            </group>
                         </group>
                         <group>
                             <field name="description"/>
@@ -42,10 +55,29 @@
             </field>
         </record>
 
+        <record id="view_helpdesk_service_search" model="ir.ui.view">
+            <field name="name">helpdesk.service.search</field>
+            <field name="model">helpdesk.service</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Service Catalog"/>
+                    <field name="code" string="Catalog Code"/>
+                    <field name="type_code" string="Type Code"/>
+                    <filter string="Service Request" name="filter_sr" domain="[('ticket_type', '=', 'service_request')]"/>
+                    <filter string="Incident Operasional TI" name="filter_inc" domain="[('ticket_type', '=', 'incident')]"/>
+                    <filter string="Incident Keamanan Informasi" name="filter_sec" domain="[('ticket_type', '=', 'security_incident')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Ticket Type" name="group_ticket_type" domain="[]" context="{'group_by': 'ticket_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
         <record id="action_helpdesk_service" model="ir.actions.act_window">
             <field name="name">Service</field>
             <field name="res_model">helpdesk.service</field>
             <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_helpdesk_service_search"/>
         </record>
 
         <!-- helpdesk.category -->
@@ -54,8 +86,10 @@
             <field name="model">helpdesk.category</field>
             <field name="arch" type="xml">
                 <tree>
-                    <field name="name"/>
-                    <field name="service_id"/>
+                    <field name="code" string="Category Code"/>
+                    <field name="name" string="Category Name"/>
+                    <field name="service_id" string="Service Catalog"/>
+                    <field name="type_id" string="Ticket Type" optional="show"/>
                     <field name="engineer_id" string="Default PIC IT"/>
                     <field name="ticket_count" string="Jumlah Case Tiket"/>
                     <button name="action_view_tickets" type="object" string="Lihat Case Tiket" class="btn-primary btn-sm" icon="fa-arrow-right"/>
@@ -75,13 +109,34 @@
                             </button>
                         </div>
                         <group>
-                            <field name="name"/>
-                            <field name="service_id"/>
-                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                            <field name="active"/>
+                            <group>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="service_id"/>
+                                <field name="type_id" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                                <field name="active"/>
+                            </group>
                         </group>
                     </sheet>
                 </form>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_category_search" model="ir.ui.view">
+            <field name="name">helpdesk.category.search</field>
+            <field name="model">helpdesk.category</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Category"/>
+                    <field name="code" string="Category Code"/>
+                    <field name="service_id" string="Service Catalog"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Service Catalog" name="group_service_id" domain="[]" context="{'group_by': 'service_id'}"/>
+                    </group>
+                </search>
             </field>
         </record>
 
@@ -89,6 +144,7 @@
             <field name="name">Category</field>
             <field name="res_model">helpdesk.category</field>
             <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_helpdesk_category_search"/>
         </record>
 
         <!-- helpdesk.subcategory -->
@@ -97,8 +153,11 @@
             <field name="model">helpdesk.subcategory</field>
             <field name="arch" type="xml">
                 <tree>
-                    <field name="name"/>
-                    <field name="category_id"/>
+                    <field name="code" string="Sub Category Code"/>
+                    <field name="name" string="Sub Category Name"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="service_id" string="Service Catalog" optional="show"/>
+                    <field name="type_id" string="Ticket Type" optional="show"/>
                     <field name="engineer_id" string="Default PIC IT"/>
                 </tree>
             </field>
@@ -111,13 +170,37 @@
                 <form>
                     <sheet>
                         <group>
-                            <field name="name"/>
-                            <field name="category_id"/>
-                            <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                            <field name="active"/>
+                            <group>
+                                <field name="code"/>
+                                <field name="name"/>
+                                <field name="category_id"/>
+                                <field name="service_id"/>
+                                <field name="type_id" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="engineer_id" string="Default PIC IT / Engineer"/>
+                                <field name="active"/>
+                            </group>
                         </group>
                     </sheet>
                 </form>
+            </field>
+        </record>
+
+        <record id="view_helpdesk_subcategory_search" model="ir.ui.view">
+            <field name="name">helpdesk.subcategory.search</field>
+            <field name="model">helpdesk.subcategory</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Sub Category"/>
+                    <field name="code" string="Sub Category Code"/>
+                    <field name="category_id" string="Category"/>
+                    <field name="service_id" string="Service Catalog"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Category" name="group_category_id" domain="[]" context="{'group_by': 'category_id'}"/>
+                        <filter string="Service Catalog" name="group_service_id" domain="[]" context="{'group_by': 'service_id'}"/>
+                    </group>
+                </search>
             </field>
         </record>
 
@@ -125,6 +208,7 @@
             <field name="name">Sub Category</field>
             <field name="res_model">helpdesk.subcategory</field>
             <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_helpdesk_subcategory_search"/>
         </record>
 
         <!-- helpdesk.location -->

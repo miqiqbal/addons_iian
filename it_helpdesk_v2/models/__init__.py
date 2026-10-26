@@ -1,3 +1,4 @@
+from . import helpdesk_ticket_type
 from . import helpdesk_service
 from . import helpdesk_category
 from . import helpdesk_cr_type

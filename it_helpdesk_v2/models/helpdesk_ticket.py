@@ -34,6 +34,7 @@ PROGRESS_BY_STATE = {
 SEQUENCE_CODE_BY_TYPE = {
     'incident': 'it.helpdesk.incident',
     'service_request': 'it.helpdesk.service.request',
+    'security_incident': 'it.helpdesk.security',
 }
 OPEN_STATES = ['draft', 'open', 'assigned', 'in_progress']
 
@@ -48,8 +49,18 @@ class HelpdeskTicket(models.Model):
         string='Ticket No', readonly=True, copy=False, default='New')
     title = fields.Char(string='Judul Kendala')
     ticket_type = fields.Selection(
-        [('incident', 'Incident'), ('service_request', 'Service Request')],
+        [
+            ('service_request', 'Service Request'),
+            ('incident', 'Incident – Operasional TI'),
+            ('security_incident', 'Incident – Keamanan Informasi'),
+        ],
+        string='Ticket Type (Code)',
         default='incident')
+    ticket_type_id = fields.Many2one(
+        'helpdesk.ticket.type',
+        string='Ticket Type',
+        domain="[('active', '=', True)]",
+        tracking=True)
     requester_id = fields.Many2one(
         'res.users', default=lambda self: self.env.user)
     requester_name = fields.Char(string='Nama_PIC')
@@ -67,7 +78,7 @@ class HelpdeskTicket(models.Model):
     registration_no = fields.Char(string='Keterangan')
     followup_date_it = fields.Char(string='Tanggal_TL_Laporan_(IT)')
     notes_it = fields.Text(string='Catatan')
-    service_id = fields.Many2one('helpdesk.service', string='Service')
+    service_id = fields.Many2one('helpdesk.service', string='Service', domain="['|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]")
     category_id = fields.Many2one('helpdesk.category', string='Category', domain="[('service_id', '=?', service_id)]")
     subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category', domain="[('category_id', '=?', category_id)]")
     description = fields.Html()
@@ -256,9 +267,76 @@ class HelpdeskTicket(models.Model):
         for ticket in self:
             ticket.progress_percent = PROGRESS_BY_STATE.get(ticket.state, 0.0)
 
+    @api.onchange('ticket_type_id')
+    def _onchange_ticket_type_id(self):
+        if self.ticket_type_id:
+            seq_code = self.ticket_type_id.sequence_code
+            if not seq_code and self.ticket_type_id.code:
+                code_map = {
+                    'TYP-01': 'service_request',
+                    'TYP-02': 'incident',
+                    'TYP-03': 'security_incident',
+                }
+                seq_code = code_map.get(str(self.ticket_type_id.code).strip().upper())
+            if seq_code and self.ticket_type != seq_code:
+                self.ticket_type = seq_code
+
+            if self.service_id:
+                mismatch = False
+                if self.service_id.type_id and self.service_id.type_id != self.ticket_type_id:
+                    mismatch = True
+                elif self.service_id.ticket_type and seq_code and self.service_id.ticket_type != seq_code:
+                    mismatch = True
+                if mismatch:
+                    self.service_id = False
+                    self.category_id = False
+                    self.subcategory_id = False
+
+            srv_domain = ['|', ('type_id', '=', self.ticket_type_id.id), ('ticket_type', '=', seq_code or self.ticket_type)]
+            cat_domain = ['|', ('type_id', '=', self.ticket_type_id.id), ('service_id.ticket_type', '=', seq_code or self.ticket_type)]
+            subcat_domain = ['|', ('type_id', '=', self.ticket_type_id.id), ('category_id.service_id.ticket_type', '=', seq_code or self.ticket_type)]
+            return {'domain': {
+                'service_id': srv_domain,
+                'category_id': cat_domain,
+                'subcategory_id': subcat_domain,
+            }}
+        return {'domain': {'service_id': [('id', '!=', False)]}}
+
+    @api.onchange('ticket_type')
+    def _onchange_ticket_type(self):
+        if self.ticket_type:
+            ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', self.ticket_type)], limit=1)
+            if not ttype:
+                code_map = {
+                    'service_request': 'TYP-01',
+                    'incident': 'TYP-02',
+                    'security_incident': 'TYP-03',
+                }
+                ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(self.ticket_type))], limit=1)
+            if ttype and self.ticket_type_id != ttype:
+                self.ticket_type_id = ttype.id
+
+            if self.service_id and self.service_id.ticket_type and self.service_id.ticket_type != self.ticket_type:
+                self.service_id = False
+                self.category_id = False
+                self.subcategory_id = False
+            return {'domain': {
+                'service_id': ['|', ('ticket_type', '=', self.ticket_type), ('type_id.sequence_code', '=', self.ticket_type)],
+                'category_id': [('service_id.ticket_type', '=', self.ticket_type)],
+                'subcategory_id': [('category_id.service_id.ticket_type', '=', self.ticket_type)],
+            }}
+        return {'domain': {'service_id': [('id', '!=', False)]}}
+
     @api.onchange('service_id')
     def _onchange_service_id(self):
         if self.service_id:
+            if self.service_id.type_id and self.ticket_type_id != self.service_id.type_id:
+                self.ticket_type_id = self.service_id.type_id
+            if self.service_id.ticket_type and self.ticket_type != self.service_id.ticket_type:
+                self.ticket_type = self.service_id.ticket_type
+            elif self.ticket_type_id and self.ticket_type_id.sequence_code and self.ticket_type != self.ticket_type_id.sequence_code:
+                self.ticket_type = self.ticket_type_id.sequence_code
+
             if self.category_id and self.category_id.service_id != self.service_id:
                 self.category_id = False
                 self.subcategory_id = False
@@ -267,20 +345,33 @@ class HelpdeskTicket(models.Model):
                 'subcategory_id': [('category_id.service_id', '=', self.service_id.id)],
             }}
         else:
-            return {'domain': {'category_id': [('id', '!=', False)], 'subcategory_id': [('id', '!=', False)]}}
+            cat_domain = [('service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
+            subcat_domain = [('category_id.service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
+            return {'domain': {'category_id': cat_domain, 'subcategory_id': subcat_domain}}
 
     @api.onchange('category_id')
     def _onchange_category_id(self):
         if self.category_id:
             if not self.service_id and self.category_id.service_id:
                 self.service_id = self.category_id.service_id
+            if self.category_id.type_id and self.ticket_type_id != self.category_id.type_id:
+                self.ticket_type_id = self.category_id.type_id
+            elif self.service_id and self.service_id.type_id and self.ticket_type_id != self.service_id.type_id:
+                self.ticket_type_id = self.service_id.type_id
+
+            if self.service_id and self.service_id.ticket_type and self.ticket_type != self.service_id.ticket_type:
+                self.ticket_type = self.service_id.ticket_type
+            elif self.ticket_type_id and self.ticket_type_id.sequence_code and self.ticket_type != self.ticket_type_id.sequence_code:
+                self.ticket_type = self.ticket_type_id.sequence_code
+
             if self.subcategory_id and self.subcategory_id.category_id != self.category_id:
                 self.subcategory_id = False
             return {'domain': {'subcategory_id': [('category_id', '=', self.category_id.id)]}}
         else:
             if self.service_id:
                 return {'domain': {'subcategory_id': [('category_id.service_id', '=', self.service_id.id)]}}
-            return {'domain': {'subcategory_id': [('id', '!=', False)]}}
+            subcat_domain = [('category_id.service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
+            return {'domain': {'subcategory_id': subcat_domain}}
 
     @api.onchange('subcategory_id')
     def _onchange_subcategory_id(self):
@@ -289,6 +380,15 @@ class HelpdeskTicket(models.Model):
                 self.category_id = self.subcategory_id.category_id
             if not self.service_id and self.category_id and self.category_id.service_id:
                 self.service_id = self.category_id.service_id
+            if self.subcategory_id.type_id and self.ticket_type_id != self.subcategory_id.type_id:
+                self.ticket_type_id = self.subcategory_id.type_id
+            elif self.service_id and self.service_id.type_id and self.ticket_type_id != self.service_id.type_id:
+                self.ticket_type_id = self.service_id.type_id
+
+            if self.service_id and self.service_id.ticket_type and self.ticket_type != self.service_id.ticket_type:
+                self.ticket_type = self.service_id.ticket_type
+            elif self.ticket_type_id and self.ticket_type_id.sequence_code and self.ticket_type != self.ticket_type_id.sequence_code:
+                self.ticket_type = self.ticket_type_id.sequence_code
 
     @api.depends(
         'q1_answer_id.score', 'q1_answer_id.weight', 'q2_answer_id.score', 'q2_answer_id.weight',
@@ -601,6 +701,22 @@ class HelpdeskTicket(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
+            if vals.get('ticket_type_id') and not vals.get('ticket_type'):
+                ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
+                if ttype.exists():
+                    vals['ticket_type'] = ttype.sequence_code or (
+                        'service_request' if ttype.code == 'TYP-01' else
+                        'incident' if ttype.code == 'TYP-02' else
+                        'security_incident' if ttype.code == 'TYP-03' else 'incident'
+                    )
+            elif vals.get('ticket_type') and not vals.get('ticket_type_id'):
+                ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', vals['ticket_type'])], limit=1)
+                if not ttype:
+                    code_map = {'service_request': 'TYP-01', 'incident': 'TYP-02', 'security_incident': 'TYP-03'}
+                    ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
+                if ttype:
+                    vals['ticket_type_id'] = ttype.id
+
             if vals.get('name', 'New') == 'New':
                 code = SEQUENCE_CODE_BY_TYPE.get(
                     vals.get('ticket_type'), SEQUENCE_CODE_BY_TYPE['incident'])
@@ -651,6 +767,24 @@ class HelpdeskTicket(models.Model):
             if ticket.engineer_id:
                 ticket._send_engineer_assignment_email()
         return tickets
+
+    def write(self, vals):
+        if vals.get('ticket_type_id') and 'ticket_type' not in vals:
+            ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
+            if ttype.exists():
+                vals['ticket_type'] = ttype.sequence_code or (
+                    'service_request' if ttype.code == 'TYP-01' else
+                    'incident' if ttype.code == 'TYP-02' else
+                    'security_incident' if ttype.code == 'TYP-03' else 'incident'
+                )
+        elif vals.get('ticket_type') and 'ticket_type_id' not in vals:
+            ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', vals['ticket_type'])], limit=1)
+            if not ttype:
+                code_map = {'service_request': 'TYP-01', 'incident': 'TYP-02', 'security_incident': 'TYP-03'}
+                ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
+            if ttype:
+                vals['ticket_type_id'] = ttype.id
+        return super().write(vals)
 
     @api.model
     def init(self):

@@ -35,6 +35,7 @@
                            decoration-warning="sla_status_color == 'warning'"
                            decoration-danger="sla_status_color == 'danger'"/>
                     <field name="sla_resolution_breached" invisible="1"/>
+                    <field name="ticket_type_id" string="Ticket Type" optional="hide"/>
                     <field name="service_id" string="Service" optional="hide"/>
                     <field name="requester_id" string="Requester" optional="hide"/>
                 </tree>
@@ -53,6 +54,7 @@
                     <field name="expected_result" string="Nilai Seharusnya"/>
                     <field name="requester_id"/>
                     <field name="engineer_id"/>
+                    <field name="ticket_type_id"/>
                     <field name="service_id"/>
                     <filter string="My Tickets" name="my_tickets" domain="[('requester_id', '=', uid)]"/>
                     <filter string="Unassigned" name="unassigned" domain="[('engineer_id', '=', False)]"/>
@@ -72,6 +74,7 @@
                     <group expand="0" string="Group By">
                         <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                         <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>
+                        <filter string="Ticket Type" name="group_ticket_type" context="{'group_by': 'ticket_type_id'}"/>
                         <filter string="Service" name="group_service" context="{'group_by': 'service_id'}"/>
                         <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
                         <filter string="Department / Location" name="group_location" context="{'group_by': 'location_id'}"/>
@@ -212,6 +215,9 @@
                                                  <field name="expected_result" string="Expected Result" placeholder="Tuliskan nilai / kondisi yang seharusnya diharapkan..." attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                                  <field name="excel_link" string="Link" widget="url" placeholder="https://... (tautan dokumen / modul kendala)" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                              </group>
+                                     <div class="alert alert-info py-2 px-3 my-2" role="alert" style="font-size: 13px;">
+                                         <i class="fa fa-info-circle mr-1"/> <strong>Catatan:</strong> Apabila tidak ada <strong>Expected Result</strong> atau <strong>Link</strong>, silakan isikan tanda strip (<strong>-</strong>).
+                                     </div>
                                              <group string="Attachment" class="mt-3">
                                                  <field name="attachment_ids" widget="many2many_binary" nolabel="1" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                              </group>
@@ -318,8 +324,13 @@
                                          <field name="priority_label" readonly="1" font-weight="bold"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
+                                         <span class="text-muted">Ticket Type</span>
+                                         <field name="ticket_type_id" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                         <field name="ticket_type" invisible="1"/>
+                                     </div>
+                                     <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Service</span>
-                                         <field name="service_id" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                         <field name="service_id" domain="['|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Category</span>
