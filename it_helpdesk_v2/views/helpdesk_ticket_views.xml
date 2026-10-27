@@ -325,20 +325,20 @@
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Ticket Type</span>
-                                         <field name="ticket_type_id" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                         <field name="ticket_type_id" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                          <field name="ticket_type" invisible="1"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Service</span>
-                                         <field name="service_id" domain="[('is_ticket', '=', True), '|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                         <field name="service_id" options="{'no_create': True, 'no_open': True}" domain="[('is_ticket', '=', True), '|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Category</span>
-                                         <field name="category_id" domain="[('is_ticket', '=', True), ('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                         <field name="category_id" options="{'no_create': True, 'no_open': True}" domain="[('is_ticket', '=', True), ('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2">
                                          <span class="text-muted">Sub Category</span>
-                                         <field name="subcategory_id" domain="[('is_ticket', '=', True), ('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                         <field name="subcategory_id" options="{'no_create': True, 'no_open': True}" domain="[('is_ticket', '=', True), ('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                      </div>
                                      <div class="d-flex justify-content-between mb-2" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
                                          <span class="text-muted">Impact</span>

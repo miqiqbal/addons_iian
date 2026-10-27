@@ -53,17 +53,17 @@
                                 <!-- FORM KIRI -->
                                 <div class="col-md-6 border-right">
                                     <group>
-                                        <field name="ticket_type_id" string="Ticket Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="ticket_type_id" string="Ticket Type" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                         <field name="ticket_type" invisible="1"/>
-                                        <field name="service_id" string="Service" domain="[('is_ticket', '=', True), '|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="category_id" string="Category" domain="[('is_ticket', '=', True), ('service_id', '=?', service_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="subcategory_id" string="Sub Category" domain="[('is_ticket', '=', True), ('category_id', '=?', category_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="service_id" string="Service" domain="[('is_ticket', '=', True), '|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="category_id" string="Category" domain="[('is_ticket', '=', True), ('service_id', '=?', service_id)]" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="subcategory_id" string="Sub Category" domain="[('is_ticket', '=', True), ('category_id', '=?', category_id)]" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     </group>
                                 </div>
                                 <!-- FORM KANAN -->
                                 <div class="col-md-6">
                                     <group>
-                                        <field name="location_id" string="Department &amp; Location" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="location_id" string="Department &amp; Location" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                         <field name="phone" string="Phone" placeholder="0812-1234-5678" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                         <field name="email" string="Email" placeholder="ahmad.fauzi@hki.co.id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                         <field name="cc_partner_ids" string="CC" widget="many2many_tags" placeholder="Pilih user untuk CC" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
@@ -76,11 +76,11 @@
                         <notebook class="mt-4">
                             <page string="Question" name="question">
                                 <group string="Penentu Prioritas (5 Pertanyaan)" class="mt-2">
-                                    <field name="q1_answer_id" string="1. Siapa yang terdampak?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="q2_answer_id" string="2. Apakah mengganggu operasional?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="q3_answer_id" string="3. Layanan yang terdampak?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="q4_answer_id" string="4. Apakah ada workaround?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="q5_answer_id" string="5. Apakah terkait deadline proyek/pekerjaan?" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="q1_answer_id" string="1. Siapa yang terdampak?" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="q2_answer_id" string="2. Apakah mengganggu operasional?" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="q3_answer_id" string="3. Layanan yang terdampak?" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="q4_answer_id" string="4. Apakah ada workaround?" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="q5_answer_id" string="5. Apakah terkait deadline proyek/pekerjaan?" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                 </group>
                             </page>
                             <page string="Expected Result &amp; Link" name="expected_result_link">

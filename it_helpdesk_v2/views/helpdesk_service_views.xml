@@ -46,8 +46,8 @@
                             </group>
                             <group>
                                 <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                                <field name="is_ticket" widget="boolean_toggle"/>
-                                <field name="is_change_request" widget="boolean_toggle"/>
+                                <field name="is_ticket" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                <field name="is_change_request" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
                                 <field name="active"/>
                             </group>
                         </group>
@@ -126,8 +126,8 @@
                             </group>
                             <group>
                                 <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                                <field name="is_ticket" widget="boolean_toggle"/>
-                                <field name="is_change_request" widget="boolean_toggle"/>
+                                <field name="is_ticket" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                <field name="is_change_request" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
                                 <field name="active"/>
                             </group>
                         </group>
@@ -195,8 +195,8 @@
                             </group>
                             <group>
                                 <field name="engineer_id" string="Default PIC IT / Engineer"/>
-                                <field name="is_ticket" widget="boolean_toggle"/>
-                                <field name="is_change_request" widget="boolean_toggle"/>
+                                <field name="is_ticket" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
+                                <field name="is_change_request" widget="boolean_toggle" groups="it_helpdesk_v2.group_helpdesk_manager"/>
                                 <field name="active"/>
                             </group>
                         </group>

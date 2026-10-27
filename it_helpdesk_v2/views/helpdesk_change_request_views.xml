@@ -124,21 +124,21 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <group string="Detail Pengajuan">
-                                    <field name="cr_type_id" string="CR Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="service_id" string="Service" options="{'no_create': True}" domain="[('is_change_request', '=', True)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="category_id" string="Category" options="{'no_create': True}" domain="[('is_change_request', '=', True), ('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('is_change_request', '=', True), ('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="target_department_id" string="CR to Departement" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="cr_type_id" string="CR Type" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="service_id" string="Service" options="{'no_create': True, 'no_open': True}" domain="[('is_change_request', '=', True)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="category_id" string="Category" options="{'no_create': True, 'no_open': True}" domain="[('is_change_request', '=', True), ('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True, 'no_open': True}" domain="[('is_change_request', '=', True), ('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="target_department_id" string="CR to Departement" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                     <field name="impact_on" string="Impact On" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                 </group>
                                 <group string="Hierarki Approval &amp; Eksekutor">
-                                    <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True}" readonly="1"/>
-                                    <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)], 'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
+                                    <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True, 'no_open': True}" readonly="1"/>
+                                    <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True, 'no_open': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)], 'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
                                     <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
                                 </group>
                             </div>
