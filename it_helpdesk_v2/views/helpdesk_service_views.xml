@@ -310,7 +310,7 @@
                                 <field name="ticket_ids" readonly="1">
                                     <tree>
                                         <field name="name" string="Ticket No"/>
-                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="title" string="Jelaskan Kendala"/>
                                         <field name="requester_id" string="Pemohon"/>
                                         <field name="created_date" string="Tanggal Create"/>
                                         <field name="priority" string="Priority"/>
@@ -367,7 +367,7 @@
                                 <field name="ticket_ids" readonly="1">
                                     <tree>
                                         <field name="name" string="Ticket No"/>
-                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="title" string="Jelaskan Kendala"/>
                                         <field name="requester_id" string="Pemohon"/>
                                         <field name="created_date" string="Tanggal Create"/>
                                         <field name="priority" string="Priority"/>
@@ -422,7 +422,7 @@
                                 <field name="ticket_ids" readonly="1">
                                     <tree>
                                         <field name="name" string="Ticket No"/>
-                                        <field name="title" string="Judul Kendala"/>
+                                        <field name="title" string="Jelaskan Kendala"/>
                                         <field name="requester_id" string="Pemohon"/>
                                         <field name="created_date" string="Tanggal Create"/>
                                         <field name="priority" string="Priority"/>

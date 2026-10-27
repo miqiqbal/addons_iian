@@ -47,7 +47,7 @@ class HelpdeskTicket(models.Model):
 
     name = fields.Char(
         string='Ticket No', readonly=True, copy=False, default='New')
-    title = fields.Char(string='Judul Kendala')
+    title = fields.Char(string='Jelaskan Kendala')
     ticket_type = fields.Selection(
         [
             ('service_request', 'Service Request'),
@@ -797,7 +797,7 @@ class HelpdeskTicket(models.Model):
     def action_publish(self):
         for ticket in self:
             missing = []
-            if not ticket.title or ticket.title.strip() == '': missing.append('Judul Kendala')
+            if not ticket.title or ticket.title.strip() == '': missing.append('Jelaskan Kendala')
             if not ticket.ticket_type: missing.append('Ticket Type')
             if not ticket.service_id: missing.append('Service')
             if not ticket.category_id: missing.append('Category')

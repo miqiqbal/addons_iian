@@ -132,7 +132,7 @@
                                 <field name="name" readonly="1" class="oe_inline"/>
                             </h2>
                             <h1 class="font-weight-bold text-dark mb-2">
-                                <field name="title" placeholder="Judul Tiket..." attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                <field name="title" placeholder="Tuliskan Kendala yang dialami..." attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                             </h1>
                             <div>
                                 <field name="priority" widget="badge" readonly="1"

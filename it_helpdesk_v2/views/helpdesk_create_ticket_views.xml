@@ -39,9 +39,9 @@
                                 <field name="name" readonly="1" class="oe_inline"/>
                             </h2>
                             <div class="form-group mb-0">
-                                <label for="title" string="Judul Kendala" class="oe_edit_only font-weight-bold text-muted d-block mb-1"/>
+                                <label for="title" string="Jelaskan Kendala" class="oe_edit_only font-weight-bold text-muted d-block mb-1"/>
                                 <h2>
-                                    <field name="title" placeholder="Tuliskan Judul Kendala..." class="w-100" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="title" placeholder="Tuliskan Kendala yang dialami..." class="w-100" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                 </h2>
                             </div>
                         </div>

@@ -24,7 +24,7 @@
             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
         </tr>
         <tr>
-            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Jelaskan Kendala</td>
             <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
         </tr>
         <tr style="background-color: #f2f4f7;">
@@ -83,7 +83,7 @@
             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
         </tr>
         <tr>
-            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Jelaskan Kendala</td>
             <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
         </tr>
         <tr style="background-color: #f2f4f7;">
@@ -142,7 +142,7 @@
             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
         </tr>
         <tr>
-            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Jelaskan Kendala</td>
             <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
         </tr>
         <tr style="background-color: #f2f4f7;">
@@ -196,7 +196,7 @@
             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #c0392b;"><t t-out="object.name or ''"/></td>
         </tr>
         <tr>
-            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Jelaskan Kendala</td>
             <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
         </tr>
         <tr style="background-color: #f2f4f7;">
@@ -244,7 +244,7 @@
             <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold; color: #003366;"><t t-out="object.name or ''"/></td>
         </tr>
         <tr>
-            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Judul Kendala</td>
+            <td style="padding: 9px 12px; border: 1px solid #dddddd; font-weight: bold;">Jelaskan Kendala</td>
             <td style="padding: 9px 12px; border: 1px solid #dddddd;"><t t-out="object.title or ''"/></td>
         </tr>
         <tr style="background-color: #f2f4f7;">

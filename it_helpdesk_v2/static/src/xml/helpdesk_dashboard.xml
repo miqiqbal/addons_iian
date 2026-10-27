@@ -515,7 +515,7 @@
                                     <thead class="thead-light">
                                         <tr>
                                             <th>No. Tiket</th>
-                                            <th>Judul Kendala</th>
+                                            <th>Jelaskan Kendala</th>
                                             <th>Service</th>
                                             <th>Requester</th>
                                             <th>Status</th>
