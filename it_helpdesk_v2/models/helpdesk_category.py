@@ -19,6 +19,8 @@ class HelpdeskCategory(models.Model):
     type_code = fields.Char(string='Type Code', related='service_id.type_code', store=True, readonly=True)
     engineer_id = fields.Many2one('res.users', string='Default PIC IT / Engineer')
     active = fields.Boolean(default=True)
+    is_ticket = fields.Boolean(string='Tersedia untuk Ticket', default=True, index=True)
+    is_change_request = fields.Boolean(string='Tersedia untuk Change Request', default=False, index=True)
     ticket_count = fields.Integer(compute='_compute_ticket_count', string='Jumlah Tiket / Case')
     ticket_ids = fields.One2many('helpdesk.ticket', 'category_id', string='Case Tiket')
 
@@ -102,6 +104,15 @@ class HelpdeskCategory(models.Model):
             'context': {'default_category_id': self.id},
         }
 
+    @api.model
+    def init(self):
+        super().init()
+        self.env.cr.execute("""
+            UPDATE helpdesk_category SET is_ticket = TRUE WHERE is_ticket IS NULL;
+            UPDATE helpdesk_category SET is_change_request = FALSE WHERE is_change_request IS NULL;
+        """)
+
+
 
 class HelpdeskSubcategory(models.Model):
     _name = 'helpdesk.subcategory'
@@ -123,6 +134,8 @@ class HelpdeskSubcategory(models.Model):
     type_code = fields.Char(string='Type Code', related='category_id.type_code', store=True, readonly=True)
     engineer_id = fields.Many2one('res.users', string='Default PIC IT / Engineer')
     active = fields.Boolean(default=True)
+    is_ticket = fields.Boolean(string='Tersedia untuk Ticket', default=True, index=True)
+    is_change_request = fields.Boolean(string='Tersedia untuk Change Request', default=False, index=True)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -186,3 +199,12 @@ class HelpdeskSubcategory(models.Model):
         if name:
             domain = ['|', ('code', operator, name), ('name', operator, name)]
         return self._search(expression.AND([domain, args]), limit=limit, access_rights_uid=name_get_uid)
+
+    @api.model
+    def init(self):
+        super().init()
+        self.env.cr.execute("""
+            UPDATE helpdesk_subcategory SET is_ticket = TRUE WHERE is_ticket IS NULL;
+            UPDATE helpdesk_subcategory SET is_change_request = FALSE WHERE is_change_request IS NULL;
+        """)
+

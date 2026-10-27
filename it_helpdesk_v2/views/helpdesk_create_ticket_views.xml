@@ -55,9 +55,9 @@
                                     <group>
                                         <field name="ticket_type_id" string="Ticket Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                         <field name="ticket_type" invisible="1"/>
-                                        <field name="service_id" string="Service" domain="['|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="category_id" string="Category" domain="[('service_id', '=?', service_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="subcategory_id" string="Sub Category" domain="[('category_id', '=?', category_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="service_id" string="Service" domain="[('is_ticket', '=', True), '|', ('type_id', '=?', ticket_type_id), ('ticket_type', '=?', ticket_type)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="category_id" string="Category" domain="[('is_ticket', '=', True), ('service_id', '=?', service_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="subcategory_id" string="Sub Category" domain="[('is_ticket', '=', True), ('category_id', '=?', category_id)]" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     </group>
                                 </div>
                                 <!-- FORM KANAN -->

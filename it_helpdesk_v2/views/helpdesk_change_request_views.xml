@@ -11,6 +11,7 @@
                     <field name="queue_number" string="No. Antrian"/>
                     <field name="request_identification"/>
                     <field name="cr_type_id" string="CR Type"/>
+                    <field name="service_id" string="Service"/>
                     <field name="category_id" string="Category"/>
                     <field name="subcategory_id" string="Sub Category"/>
                     <field name="target_department_id" string="CR to Departement"/>
@@ -124,8 +125,9 @@
                             <div class="col-md-6">
                                 <group string="Detail Pengajuan">
                                     <field name="cr_type_id" string="CR Type" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="category_id" string="Category" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="service_id" string="Service" options="{'no_create': True}" domain="[('is_change_request', '=', True)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="category_id" string="Category" options="{'no_create': True}" domain="[('is_change_request', '=', True), ('service_id', '=?', service_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                    <field name="subcategory_id" string="Sub Category" options="{'no_create': True}" domain="[('is_change_request', '=', True), ('category_id', '=?', category_id)]" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="target_department_id" string="CR to Departement" options="{'no_create': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                     <field name="impact_on" string="Impact On" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                 </group>
@@ -196,6 +198,7 @@
                     <field name="target_department_id" string="CR to Departement"/>
                     <field name="department_id" string="Unit Kerja"/>
                     <field name="category_id" string="Category"/>
+                    <field name="service_id" string="Service"/>
                     <field name="cr_type_id" string="CR Type"/>
 
                     <filter string="My Change Request" name="my_cr" domain="[('create_uid', '=', uid)]"/>
@@ -210,6 +213,8 @@
 
                     <group expand="0" string="Group By">
                         <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                        <filter string="Service" name="group_by_service" context="{'group_by': 'service_id'}"/>
+                        <filter string="Category" name="group_by_category" context="{'group_by': 'category_id'}"/>
                         <filter string="CR to Departement" name="group_by_target_dept" context="{'group_by': 'target_department_id'}"/>
                         <filter string="Engineer" name="group_by_engineer" context="{'group_by': 'engineer_id'}"/>
                         <filter string="Category" name="group_by_category" context="{'group_by': 'category_id'}"/>

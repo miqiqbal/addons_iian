@@ -22,6 +22,8 @@ class HelpdeskService(models.Model):
     ], string='Type Name', default='incident', index=True)
     engineer_id = fields.Many2one('res.users', string='Default PIC IT / Engineer')
     active = fields.Boolean(default=True)
+    is_ticket = fields.Boolean(string='Tersedia untuk Ticket', default=True, index=True)
+    is_change_request = fields.Boolean(string='Tersedia untuk Change Request', default=False, index=True)
     description = fields.Text()
     ticket_count = fields.Integer(compute='_compute_ticket_count', string='Jumlah Tiket / Case')
     ticket_ids = fields.One2many('helpdesk.ticket', 'service_id', string='Case Tiket')
@@ -180,3 +182,11 @@ class HelpdeskService(models.Model):
             'domain': [('service_id', '=', self.id)],
             'context': {'default_service_id': self.id},
         }
+
+    @api.model
+    def init(self):
+        super().init()
+        self.env.cr.execute("""
+            UPDATE helpdesk_service SET is_ticket = TRUE WHERE is_ticket IS NULL;
+            UPDATE helpdesk_service SET is_change_request = FALSE WHERE is_change_request IS NULL;
+        """)

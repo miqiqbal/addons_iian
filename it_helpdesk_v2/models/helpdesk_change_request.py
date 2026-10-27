@@ -15,8 +15,23 @@ class HelpdeskChangeRequest(models.Model):
 
     # Detail Pengajuan
     cr_type_id = fields.Many2one('helpdesk.cr.type', string='CR Type', tracking=True)
-    category_id = fields.Many2one('helpdesk.category', string='Category', tracking=True)
-    subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category', domain="[('category_id', '=?', category_id)]", tracking=True)
+    service_id = fields.Many2one('helpdesk.service', string='Service', domain="[('is_change_request', '=', True)]", tracking=True)
+    category_id = fields.Many2one('helpdesk.category', string='Category', domain="[('is_change_request', '=', True), ('service_id', '=?', service_id)]", tracking=True)
+    subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category', domain="[('is_change_request', '=', True), ('category_id', '=?', category_id)]", tracking=True)
+
+    @api.onchange('service_id')
+    def _onchange_service_id(self):
+        if self.service_id and self.category_id and self.category_id.service_id != self.service_id:
+            self.category_id = False
+            self.subcategory_id = False
+
+    @api.onchange('category_id')
+    def _onchange_category_id(self):
+        if self.category_id:
+            if not self.service_id and self.category_id.service_id:
+                self.service_id = self.category_id.service_id
+            if self.subcategory_id and self.subcategory_id.category_id != self.category_id:
+                self.subcategory_id = False
     target_department_id = fields.Many2one('hr.department', string='CR to Departement', domain="[('name', '=ilike', 'Departemen %')]", tracking=True)
     impact_on = fields.Selection(
         [
