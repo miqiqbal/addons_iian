@@ -153,8 +153,7 @@ class HelpdeskService(models.Model):
     def name_get(self):
         result = []
         for record in self:
-            label = f"[{record.code}] {record.name}" if record.code else record.name
-            result.append((record.id, label))
+            result.append((record.id, record.name or ''))
         return result
 
     @api.model

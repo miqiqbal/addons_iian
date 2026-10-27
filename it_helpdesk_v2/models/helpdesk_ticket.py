@@ -768,24 +768,6 @@ class HelpdeskTicket(models.Model):
                 ticket._send_engineer_assignment_email()
         return tickets
 
-    def write(self, vals):
-        if vals.get('ticket_type_id') and 'ticket_type' not in vals:
-            ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
-            if ttype.exists():
-                vals['ticket_type'] = ttype.sequence_code or (
-                    'service_request' if ttype.code == 'TYP-01' else
-                    'incident' if ttype.code == 'TYP-02' else
-                    'security_incident' if ttype.code == 'TYP-03' else 'incident'
-                )
-        elif vals.get('ticket_type') and 'ticket_type_id' not in vals:
-            ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', vals['ticket_type'])], limit=1)
-            if not ttype:
-                code_map = {'service_request': 'TYP-01', 'incident': 'TYP-02', 'security_incident': 'TYP-03'}
-                ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
-            if ttype:
-                vals['ticket_type_id'] = ttype.id
-        return super().write(vals)
-
     @api.model
     def init(self):
         super().init()
@@ -908,6 +890,22 @@ class HelpdeskTicket(models.Model):
         }
 
     def write(self, vals):
+        if vals.get('ticket_type_id') and 'ticket_type' not in vals:
+            ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
+            if ttype.exists():
+                vals['ticket_type'] = ttype.sequence_code or (
+                    'service_request' if ttype.code == 'TYP-01' else
+                    'incident' if ttype.code == 'TYP-02' else
+                    'security_incident' if ttype.code == 'TYP-03' else 'incident'
+                )
+        elif vals.get('ticket_type') and 'ticket_type_id' not in vals:
+            ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', vals['ticket_type'])], limit=1)
+            if not ttype:
+                code_map = {'service_request': 'TYP-01', 'incident': 'TYP-02', 'security_incident': 'TYP-03'}
+                ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
+            if ttype:
+                vals['ticket_type_id'] = ttype.id
+
         if vals.get('state') == 'open':
             for ticket in self:
                 if not ticket.publish_date:
