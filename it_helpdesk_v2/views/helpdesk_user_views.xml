@@ -10,7 +10,7 @@
             <field name="arch" type="xml">
                 <!-- Add an isolated tab in notebook without touching standard title or login fields -->
                 <xpath expr="//notebook" position="inside">
-                    <page string="IT Helpdesk" name="page_it_helpdesk">
+                    <page string="IT Helpdesk" name="page_it_helpdesk" groups="it_helpdesk_v2.group_helpdesk_manager">
                         <group string="Helpdesk Engineer Configuration">
                             <group>
                                 <field name="initials" string="Initial" placeholder="e.g. AFD"/>

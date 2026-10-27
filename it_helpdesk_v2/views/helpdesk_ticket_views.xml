@@ -166,7 +166,7 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Department / Location</span>
-                                            <field name="location_id" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                            <field name="location_id" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Tanggal Create Ticket</span>
@@ -280,18 +280,20 @@
                                      <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
                                          <group>
                                              <group>
-                                                 <field name="registration_no"/>
+                                                 <field name="registration_no" readonly="1"/>
                                              </group>
                                              <group>
-                                                 <field name="followup_date_it"/>
-                                                 <field name="notes_it"/>
+                                                 <field name="followup_date_it" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
+                                                 <field name="followup_date_it" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_agent"/>
+                                                 <field name="notes_it" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager"/>
+                                                 <field name="notes_it" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_agent"/>
                                              </group>
                                          </group>
                                      </page>
-                                     <page string="Work Log" name="work_log">
+                                     <page string="Work Log" name="work_log" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
                                          <group>
                                              <field name="progress_percent" widget="progressbar"/>
-                                             <field name="team_id"/>
+                                             <field name="team_id" options="{'no_create': True, 'no_open': True}"/>
                                          </group>
                                      </page>
                                      <page string="Communication" name="communication">
@@ -441,6 +443,7 @@
             <field name="model_id" ref="model_helpdesk_ticket"/>
             <field name="binding_model_id" ref="model_helpdesk_ticket"/>
             <field name="binding_view_types">list</field>
+            <field name="groups_id" eval="[(4, ref('it_helpdesk_v2.group_helpdesk_manager'))]"/>
             <field name="state">code</field>
             <field name="code"><![CDATA[
 now_dt = datetime.datetime.now()

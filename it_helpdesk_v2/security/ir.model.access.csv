@@ -27,7 +27,7 @@ access_helpdesk_team_manager,helpdesk.team.manager,model_helpdesk_team,group_hel
 access_helpdesk_ticket_employee,helpdesk.ticket.employee,model_helpdesk_ticket,group_helpdesk_user,1,1,1,0
 access_helpdesk_ticket_agent,helpdesk.ticket.agent,model_helpdesk_ticket,group_helpdesk_agent,1,1,1,0
 access_helpdesk_ticket_manager,helpdesk.ticket.manager,model_helpdesk_ticket,group_helpdesk_manager,1,1,1,1
-access_helpdesk_work_order_employee,helpdesk.work.order.employee,model_helpdesk_work_order,group_helpdesk_user,1,1,1,0
+access_helpdesk_work_order_employee,helpdesk.work.order.employee,model_helpdesk_work_order,group_helpdesk_user,1,0,0,0
 access_helpdesk_work_order_agent,helpdesk.work.order.agent,model_helpdesk_work_order,group_helpdesk_agent,1,1,1,0
 access_helpdesk_work_order_manager,helpdesk.work.order.manager,model_helpdesk_work_order,group_helpdesk_manager,1,1,1,1
 access_helpdesk_change_request_employee,helpdesk.change.request.employee,model_helpdesk_change_request,group_helpdesk_user,1,1,1,0
@@ -54,7 +54,7 @@ access_helpdesk_location_base_user,helpdesk.location.base.user,model_helpdesk_lo
 access_helpdesk_sla_base_user,helpdesk.sla.base.user,model_helpdesk_sla,base.group_user,1,0,0,0
 access_helpdesk_sla_status_base_user,helpdesk.sla.status.base.user,model_helpdesk_sla_status,base.group_user,1,0,0,0
 access_helpdesk_team_base_user,helpdesk.team.base.user,model_helpdesk_team,base.group_user,1,0,0,0
-access_helpdesk_work_order_base_user,helpdesk.work.order.base.user,model_helpdesk_work_order,base.group_user,1,1,1,0
+access_helpdesk_work_order_base_user,helpdesk.work.order.base.user,model_helpdesk_work_order,base.group_user,1,0,0,0
 access_helpdesk_change_request_base_user,helpdesk.change.request.base.user,model_helpdesk_change_request,base.group_user,1,1,1,0
 access_helpdesk_knowledge_base_user,helpdesk.knowledge.base.user,model_helpdesk_knowledge,base.group_user,1,0,0,0
 access_helpdesk_ticket_reassign_wizard_agent,helpdesk.ticket.reassign.wizard.agent,model_helpdesk_ticket_reassign_wizard,group_helpdesk_agent,1,1,1,1

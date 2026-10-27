@@ -135,11 +135,13 @@
                                     <field name="department_id" string="Placement / Unit Kerja" options="{'no_create': True, 'no_open': True}" readonly="1"/>
                                     <field name="dept_manager_id" string="Approval Manager Dept" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     <field name="kadept_manager_id" string="Approval Kadept Terkait" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True, 'no_open': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)], 'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
-                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
-                                    <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval', 'in_progress'])], 'required': [('state', '=', 'it_mgr_review')]}"/>
+                                    <field name="bpo_kadept_manager_id" string="Approval Kadept BPO" options="{'no_create': True, 'no_open': True}" attrs="{'invisible': [('is_target_dept_it', '=', True)]}" readonly="1"/>
+                                    <field name="manager_it_id" string="Review Manager IT" options="{'no_create': True, 'no_open': True}" readonly="1"/>
+                                    <field name="kadept_it_manager_id" string="Approval Kadept IT" options="{'no_create': True, 'no_open': True}" readonly="1"/>
+                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval'])], 'required': [('state', '=', 'it_mgr_review')]}" groups="it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager"/>
+                                    <field name="engineer_id" string="Engineer / PIC IT" options="{'no_create': True, 'no_open': True}" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_it_manager"/>
+                                    <field name="estimated_completion_date" string="Estimasi Selesai" attrs="{'readonly': [('state', 'not in', ['it_mgr_review', 'it_kadept_approval'])], 'required': [('state', '=', 'it_mgr_review')]}" groups="it_helpdesk_v2.group_helpdesk_it_manager,it_helpdesk_v2.group_helpdesk_manager"/>
+                                    <field name="estimated_completion_date" string="Estimasi Selesai" readonly="1" groups="!it_helpdesk_v2.group_helpdesk_it_manager"/>
                                 </group>
                             </div>
                             <div class="col-md-6">

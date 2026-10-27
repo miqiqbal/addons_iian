@@ -329,22 +329,21 @@ class HelpdeskChangeRequest(models.Model):
             cr.can_review_it_mgr = is_superuser or is_admin or bool(cr.manager_it_id and cr.manager_it_id.id == uid) or user.has_group('it_helpdesk_v2.group_helpdesk_it_manager')
             cr.can_approve_it_kadept = is_superuser or is_admin or bool(cr.kadept_it_manager_id and cr.kadept_it_manager_id.id == uid) or user.has_group('it_helpdesk_v2.group_helpdesk_it_manager')
 
-            # Can reject per state: Approver at current state, Admin, or Requester (Employee)
-            is_requester = bool((cr.created_by and cr.created_by.id == uid) or (cr.create_uid and cr.create_uid.id == uid))
+            # Can reject per state: Approver at current state or IT Admin/Superuser
             if cr.state in ('draft', 'done', 'closed'):
                 cr.can_reject = False
             elif cr.state == 'dept_mgr_approval':
-                cr.can_reject = cr.can_approve_dept_mgr or is_requester
+                cr.can_reject = cr.can_approve_dept_mgr
             elif cr.state == 'kadept_approval':
-                cr.can_reject = cr.can_approve_kadept or is_requester
+                cr.can_reject = cr.can_approve_kadept
             elif cr.state == 'bpo_approval':
-                cr.can_reject = cr.can_approve_bpo or is_requester
+                cr.can_reject = cr.can_approve_bpo
             elif cr.state == 'it_mgr_review':
-                cr.can_reject = cr.can_review_it_mgr or is_requester
+                cr.can_reject = cr.can_review_it_mgr
             elif cr.state == 'it_kadept_approval':
-                cr.can_reject = cr.can_approve_it_kadept or is_requester
+                cr.can_reject = cr.can_approve_it_kadept
             elif cr.state == 'in_progress':
-                cr.can_reject = is_superuser or is_admin or is_requester
+                cr.can_reject = is_superuser or is_admin
             else:
                 cr.can_reject = False
 
@@ -727,9 +726,22 @@ class HelpdeskChangeRequest(models.Model):
             user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
             self.env.is_superuser()
         )
+        is_it_mgr_or_admin = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            self.env.is_superuser()
+        )
+        if not is_it_mgr_or_admin and not self.env.context.get('bypass_draft_write_check'):
+            if 'engineer_id' in vals or 'estimated_completion_date' in vals:
+                for cr in self:
+                    if 'engineer_id' in vals and vals['engineer_id'] != (cr.engineer_id.id if cr.engineer_id else False):
+                        raise UserError(_("Penugasan Engineer / PIC IT hanya dapat dilakukan oleh IT Manager atau IT Admin."))
+                    if 'estimated_completion_date' in vals and vals['estimated_completion_date'] != cr.estimated_completion_date:
+                        raise UserError(_("Penetapan Estimasi Tanggal Penyelesaian hanya dapat dilakukan oleh IT Manager atau IT Admin."))
+
         if not is_agent_or_mgr and not self.env.context.get('bypass_draft_write_check'):
             content_fields = {
-                'request_identification', 'cr_type_id', 'category_id', 'subcategory_id',
+                'request_identification', 'cr_type_id', 'service_id', 'category_id', 'subcategory_id',
                 'target_department_id', 'impact_on', 'module', 'dept_manager_id',
                 'kadept_manager_id', 'bpo_kadept_manager_id', 'manager_it_id',
                 'kadept_it_manager_id', 'email', 'phone', 'enable_auto_close', 'note',

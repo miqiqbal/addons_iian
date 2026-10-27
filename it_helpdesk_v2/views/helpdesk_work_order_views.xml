@@ -77,7 +77,8 @@
                 <xpath expr="//sheet/div[hasclass('alert-info')]" position="before">
                     <div class="oe_button_box" name="button_box">
                         <button type="object" name="action_view_work_orders"
-                                class="oe_stat_button" icon="fa-wrench">
+                                class="oe_stat_button" icon="fa-wrench"
+                                groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager">
                             <field name="work_order_count" widget="statinfo" string="Work Order"/>
                         </button>
                     </div>

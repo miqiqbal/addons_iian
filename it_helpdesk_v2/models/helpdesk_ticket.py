@@ -135,17 +135,18 @@ class HelpdeskTicket(models.Model):
     @api.depends_context('uid')
     @api.depends('state')
     def _compute_can_reject(self):
-        is_mgr = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')
-        is_agent = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent')
+        is_mgr = (
+            self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            self.env.user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            self.env.is_superuser()
+        )
         for ticket in self:
             if ticket.state in ('draft', 'done', 'closed', 'reject'):
                 ticket.can_reject = False
             elif is_mgr:
                 ticket.can_reject = True
-            elif is_agent:
-                ticket.can_reject = False
             else:
-                ticket.can_reject = True
+                ticket.can_reject = False
 
     engineer_id = fields.Many2one('res.users', string='Engineer', tracking=True)
     engineer_name = fields.Char(string='PIC_IT')
@@ -890,6 +891,25 @@ class HelpdeskTicket(models.Model):
         }
 
     def write(self, vals):
+        user = self.env.user
+        is_it_mgr_or_admin = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            self.env.is_superuser()
+        )
+        if not is_it_mgr_or_admin and not self.env.context.get('bypass_draft_write_check'):
+            content_fields = {
+                'title', 'description', 'ticket_type', 'ticket_type_id', 'service_id', 'category_id',
+                'subcategory_id', 'location_id', 'phone', 'email', 'requester_id',
+                'cc_partner_ids', 'attachment_ids', 'q1_answer_id', 'q2_answer_id',
+                'q3_answer_id', 'q4_answer_id', 'q5_answer_id', 'expected_result',
+                'excel_link', 'registration_no'
+            }
+            if any(k in content_fields for k in vals.keys()):
+                for ticket in self:
+                    if ticket.state != 'draft':
+                        raise UserError(_("Pengeditan formulir tiket pada status selain Draft hanya dapat dilakukan oleh tim IT."))
+
         if vals.get('ticket_type_id') and 'ticket_type' not in vals:
             ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
             if ttype.exists():
@@ -1315,26 +1335,6 @@ class HelpdeskTicket(models.Model):
             'context': {'default_ticket_id': self.id},
         }
 
-    def write(self, vals):
-        user = self.env.user
-        is_it_mgr_or_admin = (
-            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
-            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
-            self.env.is_superuser()
-        )
-        if not is_it_mgr_or_admin and not self.env.context.get('bypass_draft_write_check'):
-            content_fields = {
-                'title', 'description', 'ticket_type', 'service_id', 'category_id',
-                'subcategory_id', 'location_id', 'phone', 'email', 'requester_id',
-                'cc_partner_ids', 'attachment_ids', 'q1_answer_id', 'q2_answer_id',
-                'q3_answer_id', 'q4_answer_id', 'q5_answer_id', 'expected_result',
-                'excel_link', 'registration_no'
-            }
-            if any(k in content_fields for k in vals.keys()):
-                for ticket in self:
-                    if ticket.state != 'draft':
-                        raise UserError(_("Pengeditan formulir tiket pada status selain Draft hanya dapat dilakukan oleh tim IT."))
-        return super().write(vals)
 
     def action_submit_create(self):
         """Dipanggil dari tombol Submit di form Create Ticket (Stage 8);
