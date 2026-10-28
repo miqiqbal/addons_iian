@@ -248,35 +248,52 @@
                                              </group>
                                          </div>
                                      </page>
-                                     <page string="Penyelesaian &amp; Bukti Solusi (Engineer)" name="resolution_proof" groups="it_helpdesk_v2.group_helpdesk_agent,it_helpdesk_v2.group_helpdesk_manager" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
-                                         <div class="card p-3 mb-3 border rounded bg-light">
-                                             <span class="font-weight-bold d-block text-primary mb-2">Apakah Penyelesaian Tersedia pada Knowledge Base?</span>
-                                             <field name="is_kb_solution_available" widget="radio" options="{'horizontal': true}"/>
-                                         </div>
-                                         <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('is_kb_solution_available', '!=', 'yes')]}">
-                                             <label for="selected_knowledge_id" string="Pilih Artikel Knowledge Base Penyelesaian" class="font-weight-bold mb-2 text-success"/>
-                                             <field name="selected_knowledge_id" options="{'no_create': True}" placeholder="Pilih dari daftar Kamus Knowledge Base..."/>
-                                         </div>
-                                         <div attrs="{'invisible': [('is_kb_solution_available', '=', 'yes')]}">
-                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm d-flex justify-content-between align-items-center flex-row">
-                                                 <div>
-                                                     <span class="font-weight-bold d-block text-dark">Publikasikan ke Knowledge Base?</span>
-                                                     <span class="text-muted small">Aktifkan untuk menyimpan teks tutorial &amp; foto bukti penyelesaian ini ke Kamus Solusi Mandiri saat tiket selesai</span>
-                                                 </div>
-                                                 <div>
-                                                     <field name="is_published_to_kb" widget="boolean_toggle"/>
-                                                 </div>
-                                             </div>
-                                             <div class="card p-3 mb-3 border rounded bg-white shadow-sm">
-                                                 <label for="resolution" string="Langkah-Langkah / Screenshot Penyelesaian Kendala" class="font-weight-bold mb-2 text-primary"/>
-                                                 <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..."/>
-                                             </div>
-                                             <div class="card p-3 border rounded bg-white shadow-sm mt-3">
-                                                 <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary"/>
-                                                 <field name="solution_attachment_ids" widget="many2many_binary"/>
-                                             </div>
-                                         </div>
-                                     </page>
+                                     <page string="Penyelesaian &amp; Solusi" name="resolution_proof" attrs="{'invisible': [('state', '=', 'draft')]}">
+                                          <!-- Banner Informasi untuk Pelapor jika tiket masih dalam proses -->
+                                          <div class="alert alert-info py-2 px-3 mb-3" role="alert" attrs="{'invisible': ['|', ('is_engineer_or_officer', '=', True), ('state', 'in', ['done', 'closed'])]}">
+                                              <i class="fa fa-info-circle mr-1"/> <strong>Informasi:</strong> Tiket Anda sedang dalam penanganan oleh Tim IT. Solusi dan bukti penyelesaian akan dicatat di sini setelah penanganan selesai.
+                                          </div>
+
+                                          <!-- Pilihan Sumber Solusi (Khusus Tim IT / Engineer) -->
+                                          <div class="card p-3 mb-3 border rounded bg-light" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}">
+                                              <span class="font-weight-bold d-block text-primary mb-2">Apakah Penyelesaian Tersedia pada Knowledge Base?</span>
+                                              <field name="is_kb_solution_available" widget="radio" options="{'horizontal': true}" attrs="{'readonly': [('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                                          </div>
+
+                                          <!-- Pilihan Artikel Knowledge Base -->
+                                          <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('is_kb_solution_available', '!=', 'yes')]}">
+                                              <label for="selected_knowledge_id" string="Pilih Artikel Knowledge Base Penyelesaian" class="font-weight-bold mb-2 text-success" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}"/>
+                                              <label for="selected_knowledge_id" string="Rujukan Solusi (Knowledge Base)" class="font-weight-bold mb-2 text-success" attrs="{'invisible': [('is_engineer_or_officer', '=', True)]}"/>
+                                              <div>
+                                                  <field name="selected_knowledge_id" options="{'no_create': True, 'no_open': True}" placeholder="Pilih dari daftar Kamus Knowledge Base..." attrs="{'readonly': ['|', ('is_engineer_or_officer', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                                              </div>
+                                          </div>
+
+                                          <!-- Toggle Publikasikan ke Knowledge Base (Khusus Tim IT saat input manual) -->
+                                          <div class="card p-3 mb-3 border rounded bg-white shadow-sm d-flex justify-content-between align-items-center flex-row" attrs="{'invisible': ['|', ('is_kb_solution_available', '=', 'yes'), ('is_engineer_or_officer', '=', False)]}">
+                                              <div>
+                                                  <span class="font-weight-bold d-block text-dark">Publikasikan ke Knowledge Base?</span>
+                                                  <span class="text-muted small">Aktifkan untuk menyimpan teks tutorial &amp; foto bukti penyelesaian ini ke Kamus Solusi Mandiri saat tiket selesai</span>
+                                              </div>
+                                              <div>
+                                                  <field name="is_published_to_kb" widget="boolean_toggle" attrs="{'readonly': [('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                                              </div>
+                                          </div>
+
+                                          <!-- Langkah-Langkah / Penjelasan Solusi -->
+                                          <div class="card p-3 mb-3 border rounded bg-white shadow-sm" attrs="{'invisible': [('is_kb_solution_available', '=', 'yes'), ('is_engineer_or_officer', '=', True)]}">
+                                              <label for="resolution" string="Langkah-Langkah / Screenshot Penyelesaian Kendala" class="font-weight-bold mb-2 text-primary" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}"/>
+                                              <label for="resolution" string="Langkah-Langkah / Penjelasan Solusi dari Tim IT" class="font-weight-bold mb-2 text-primary" attrs="{'invisible': [('is_engineer_or_officer', '=', True)]}"/>
+                                              <field name="resolution" placeholder="Tuliskan petunjuk, tutorial, atau penjelasan lengkap (dapat me-paste gambar screenshot di sela-sela teks)..." attrs="{'readonly': ['|', ('is_engineer_or_officer', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                                          </div>
+
+                                          <!-- Bukti Foto / Berkas Penyelesaian -->
+                                          <div class="card p-3 border rounded bg-white shadow-sm mt-3" attrs="{'invisible': ['|', ('is_kb_solution_available', '=', 'yes'), '&amp;', ('is_engineer_or_officer', '=', False), ('solution_attachment_ids', '=', False)]}">
+                                              <label for="solution_attachment_ids" string="Bukti Foto Screenshot / File Penyelesaian" class="font-weight-bold mb-2 text-primary" attrs="{'invisible': [('is_engineer_or_officer', '=', False)]}"/>
+                                              <label for="solution_attachment_ids" string="Bukti Foto / Berkas Penyelesaian" class="font-weight-bold mb-2 text-primary" attrs="{'invisible': [('is_engineer_or_officer', '=', True)]}"/>
+                                              <field name="solution_attachment_ids" widget="many2many_binary" attrs="{'readonly': ['|', ('is_engineer_or_officer', '=', False), ('state', 'in', ['done', 'closed', 'reject'])]}"/>
+                                          </div>
+                                      </page>
                                      <page string="Detail Kendala Proyek (Import)" name="excel_import_details">
                                          <group>
                                              <group>

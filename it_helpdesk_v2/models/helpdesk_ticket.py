@@ -128,7 +128,13 @@ class HelpdeskTicket(models.Model):
 
     @api.depends_context('uid')
     def _compute_is_engineer_or_officer(self):
-        is_agent_or_mgr = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_agent') or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')
+        user = self.env.user
+        is_agent_or_mgr = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            self.env.is_superuser()
+        )
         for ticket in self:
             ticket.is_engineer_or_officer = is_agent_or_mgr
 
@@ -897,6 +903,17 @@ class HelpdeskTicket(models.Model):
             user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
             self.env.is_superuser()
         )
+        is_it_user = (
+            user.has_group('it_helpdesk_v2.group_helpdesk_agent') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_it_manager') or
+            user.has_group('it_helpdesk_v2.group_helpdesk_manager') or
+            self.env.is_superuser()
+        )
+        if not is_it_user and not self.env.context.get('bypass_draft_write_check'):
+            sol_fields = {'resolution', 'selected_knowledge_id', 'is_kb_solution_available', 'solution_attachment_ids', 'is_published_to_kb'}
+            if any(k in sol_fields for k in vals.keys()):
+                raise UserError(_("Penyelesaian dan bukti solusi tiket hanya dapat diisi atau diubah oleh Tim IT."))
+
         if not is_it_mgr_or_admin and not self.env.context.get('bypass_draft_write_check'):
             content_fields = {
                 'title', 'description', 'ticket_type', 'ticket_type_id', 'service_id', 'category_id',
@@ -1027,7 +1044,7 @@ class HelpdeskTicket(models.Model):
                 if not ticket.selected_knowledge_id:
                     raise UserError('Mohon pilih artikel Knowledge Base penyelesaian terlebih dahulu sebelum mengklik Mark as Done!')
                 ticket.knowledge_id = ticket.selected_knowledge_id.id
-                if not ticket.resolution and ticket.selected_knowledge_id.content:
+                if ticket.selected_knowledge_id.content:
                     ticket.resolution = ticket.selected_knowledge_id.content
 
                 kb_title = ticket.selected_knowledge_id.name or ticket.selected_knowledge_id.problem or 'Artikel Knowledge Base'

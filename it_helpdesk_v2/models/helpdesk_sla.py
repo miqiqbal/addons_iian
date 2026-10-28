@@ -51,21 +51,39 @@ class HelpdeskSLA(models.Model):
 
     def _compute_deadline(self, start_datetime, value, unit):
         self.ensure_one()
-        if not start_datetime:
+        if not start_datetime or not value:
             return False
+
         calendar = self.env.company.resource_calendar_id
-        if not calendar:
-            if unit == 'minute':
-                return start_datetime + timedelta(minutes=value)
-            if unit in ('hour', 'working_hour'):
-                return start_datetime + timedelta(hours=value)
+
+        # 1. Menit ('minute'): Menit Kalender Riil (24/7 respon darurat)
+        if unit == 'minute':
+            return start_datetime + timedelta(minutes=value)
+
+        # 2. Jam ('hour'): Jam Kalender Riil (24/7 jam non-stop tanpa jeda kantor)
+        if unit == 'hour':
+            return start_datetime + timedelta(hours=value)
+
+        # 3. Jam Kerja ('working_hour'): Jam Operasional Kantor (memperhitungkan jam kantor, istirahat, weekend, & hari libur)
+        if unit == 'working_hour':
+            if calendar:
+                return calendar.plan_hours(value, start_datetime, compute_leaves=True)
+            return start_datetime + timedelta(hours=value)
+
+        # 4. Hari Kerja ('working_day'): Hari Kerja Kantor (melompati Sabtu, Minggu, dan hari libur)
+        if unit == 'working_day':
+            if calendar:
+                if float(value).is_integer():
+                    res = calendar.plan_days(int(value), start_datetime, compute_leaves=True)
+                    if res:
+                        return res
+                # Tangani pecahan desimal hari kerja (misal 0.5 hari kerja = 4 jam kerja)
+                hours = value * (calendar.hours_per_day or 8.0)
+                return calendar.plan_hours(hours, start_datetime, compute_leaves=True)
             return start_datetime + timedelta(days=value)
 
-        if unit == 'minute':
-            return calendar.plan_hours(value / 60.0, start_datetime, compute_leaves=True)
-        if unit in ('hour', 'working_hour'):
-            return calendar.plan_hours(value, start_datetime, compute_leaves=True)
-        return calendar.plan_days(value, start_datetime, compute_leaves=True)
+        # Default fallback (Hari biasa / unit lainnya)
+        return start_datetime + timedelta(days=value)
 
 
     def get_deadline(self, start_datetime):
