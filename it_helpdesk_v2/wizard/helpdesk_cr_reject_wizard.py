@@ -19,6 +19,8 @@ class HelpdeskCrRejectWizard(models.TransientModel):
             'state': 'draft',
             'rejection_reason': self.reason,
             'queue_number': 0,
+            'has_been_rejected': True,
+            'rejection_count': (self.cr_id.rejection_count or 0) + 1,
         })
         self.cr_id._reindex_active_queue()
 

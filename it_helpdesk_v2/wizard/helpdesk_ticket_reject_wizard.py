@@ -17,7 +17,9 @@ class HelpdeskTicketRejectWizard(models.TransientModel):
         # Update state langsung kembali ke draft dan simpan alasan penolakan pada tiket
         self.ticket_id.sudo().with_context(bypass_draft_write_check=True).write({
             'state': 'draft',
-            'rejection_reason': self.reason
+            'rejection_reason': self.reason,
+            'has_been_rejected': True,
+            'rejection_count': (self.ticket_id.rejection_count or 0) + 1,
         })
 
         # Catat log otomatis di Chatter

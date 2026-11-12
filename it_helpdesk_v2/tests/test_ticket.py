@@ -198,5 +198,27 @@ class TestTicket(common.TransactionCase):
         ticket.with_user(it_manager).action_done()
         self.assertEqual(ticket.state, 'done')
 
+    def test_reject_wizard_sets_has_been_rejected_and_kpi(self):
+        ticket = self._create_ticket()
+        self.assertFalse(ticket.has_been_rejected)
+        self.assertEqual(ticket.rejection_count, 0)
+        wizard = self.env['helpdesk.ticket.reject.wizard'].create({
+            'ticket_id': ticket.id,
+            'reason': 'Data kurang lengkap mohon diperbaiki',
+        })
+        wizard.action_confirm_reject()
+        self.assertEqual(ticket.state, 'draft')
+        self.assertTrue(ticket.has_been_rejected)
+        self.assertEqual(ticket.rejection_count, 1)
+        self.assertEqual(ticket.rejection_reason, 'Data kurang lengkap mohon diperbaiki')
+
+        # Check KPI values count
+        kpis = self.env['helpdesk.dashboard.kpi']._compute_kpi_values()
+        self.assertGreaterEqual(kpis.get('ticket_reject', 0), 1)
+
+        # Check analytics data
+        analytics = self.env['helpdesk.dashboard.kpi'].get_dashboard_analytics_data()
+        self.assertGreaterEqual(analytics.get('top_kpis', {}).get('reject_ticket', 0), 1)
+
 
 

@@ -441,6 +441,10 @@ class HelpdeskChangeRequest(models.Model):
 
     note = fields.Text(string='Note')
     rejection_reason = fields.Text(string='Alasan Penolakan')
+    has_been_rejected = fields.Boolean(
+        string='Pernah Ditolak / Revisi', default=False, copy=False, index=True)
+    rejection_count = fields.Integer(
+        string='Frekuensi Ditolak / Revisi', default=0, copy=False)
     attachment_ids = fields.Many2many('ir.attachment', string='Attachment File')
     analysis_and_solution = fields.Html(string='Analysis & Solution')
     propose_solution = fields.Html(string='Propose Solution')

@@ -90,7 +90,11 @@ class HelpdeskDashboardKPI(models.TransientModel):
             start_of_year = today.replace(month=1, day=1)
             domain.append(('created_date', '>=', start_of_year.strftime('%Y-%m-%d 00:00:00')))
 
-        if state_filter and state_filter not in ('total', 'all', False):
+        if state_filter == 'reject':
+            domain.append('|')
+            domain.append(('state', '=', 'reject'))
+            domain.append(('has_been_rejected', '=', True))
+        elif state_filter and state_filter not in ('total', 'all', False):
             domain.append(('state', '=', str(state_filter)))
 
         state_names = {
@@ -154,7 +158,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
             'ticket_open': Ticket.search_count([('state', '=', 'open')]),
             'ticket_in_progress': Ticket.search_count([('state', '=', 'in_progress')]),
             'ticket_done': Ticket.search_count([('state', '=', 'done')]),
-            'ticket_reject': Ticket.search_count([('state', '=', 'reject')]),
+            'ticket_reject': Ticket.search_count(['|', ('state', '=', 'reject'), ('has_been_rejected', '=', True)]),
             'ticket_closed': Ticket.search_count([('state', '=', 'closed')]),
         }
 
@@ -230,7 +234,11 @@ class HelpdeskDashboardKPI(models.TransientModel):
         return self._open_tickets_by_state('done', 'Done')
 
     def action_open_tickets_reject(self):
-        return self._open_tickets_by_state('reject', 'Reject')
+        action = self.env.ref('it_helpdesk_v2.action_helpdesk_ticket').sudo().read()[0]
+        action['domain'] = ['|', ('state', '=', 'reject'), ('has_been_rejected', '=', True)]
+        action['name'] = 'Tiket Reject / Pernah Ditolak'
+        action.pop('id', None)
+        return action
 
     def action_open_tickets_closed(self):
         return self._open_tickets_by_state('closed', 'Closed')
@@ -330,7 +338,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
         open_count = sum(1 for t in all_tickets if t.state == 'open')
         assigned_count = sum(1 for t in all_tickets if t.state == 'assigned')
         progress_count = sum(1 for t in all_tickets if t.state == 'in_progress')
-        reject_count = sum(1 for t in all_tickets if t.state == 'reject')
+        reject_count = sum(1 for t in all_tickets if (t.state == 'reject' or getattr(t, 'has_been_rejected', False)))
         done_count = sum(1 for t in all_tickets if t.state == 'done')
         closed_count = sum(1 for t in all_tickets if t.state == 'closed')
 
@@ -448,7 +456,7 @@ class HelpdeskDashboardKPI(models.TransientModel):
                 pe_c = len([x for x in t_list if x.state in ('draft', 'pending')])
                 re_c = len([x for x in t_list if x.state == 'done'])
                 cl_c = len([x for x in t_list if x.state == 'closed'])
-                ca_c = len([x for x in t_list if x.state == 'reject'])
+                ca_c = len([x for x in t_list if (x.state == 'reject' or getattr(x, 'has_been_rejected', False))])
 
                 breached_count = len([x for x in t_list if getattr(x, 'sla_resolution_breached', False)])
                 sla_achievement = round(((tot - breached_count) / (tot or 1)) * 100, 1)

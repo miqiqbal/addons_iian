@@ -105,6 +105,10 @@ class HelpdeskTicket(models.Model):
         compute='_compute_can_reject')
     rejection_reason = fields.Text(
         string='Alasan Penolakan', copy=False, readonly=True)
+    has_been_rejected = fields.Boolean(
+        string='Pernah Ditolak / Revisi', default=False, copy=False, index=True)
+    rejection_count = fields.Integer(
+        string='Frekuensi Ditolak / Revisi', default=0, copy=False)
     is_admin = fields.Boolean(
         compute='_compute_is_admin')
 

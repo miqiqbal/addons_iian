@@ -35,6 +35,7 @@
                            decoration-warning="sla_status_color == 'warning'"
                            decoration-danger="sla_status_color == 'danger'"/>
                     <field name="sla_resolution_breached" invisible="1"/>
+                    <field name="has_been_rejected" string="Pernah Ditolak / Revisi" optional="hide"/>
                     <field name="ticket_type_id" string="Ticket Type" optional="hide"/>
                     <field name="service_id" string="Service" optional="hide"/>
                     <field name="requester_id" string="Requester" optional="hide"/>
@@ -65,7 +66,7 @@
                     <filter string="Assigned" name="state_assigned" domain="[('state', '=', 'assigned')]"/>
                     <filter string="Progress" name="state_in_progress" domain="[('state', '=', 'in_progress')]"/>
                     <filter string="Done" name="state_done" domain="[('state', '=', 'done')]"/>
-                    <filter string="Reject" name="state_reject" domain="[('state', '=', 'reject')]"/>
+                    <filter string="Reject / Pernah Ditolak" name="state_reject" domain="['|', ('state', '=', 'reject'), ('has_been_rejected', '=', True)]"/>
                     <filter string="Closed" name="state_closed" domain="[('state', '=', 'closed')]"/>
                     <separator/>
                     <filter string="Hari Ini" name="filter_today" domain="[('created_date', '&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>

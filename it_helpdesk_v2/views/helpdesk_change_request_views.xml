@@ -221,6 +221,7 @@
                     <filter string="In Progress" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
                     <filter string="Done" name="filter_done" domain="[('state', '=', 'done')]"/>
                     <filter string="Closed" name="filter_closed" domain="[('state', '=', 'closed')]"/>
+                    <filter string="Pernah Ditolak / Revisi" name="filter_rejected" domain="['|', ('state', '=', 'rejected'), ('has_been_rejected', '=', True)]"/>
                     <separator/>
                     <filter string="Departemen Tujuan IT" name="filter_target_it" domain="[('is_target_dept_it', '=', True)]"/>
 
