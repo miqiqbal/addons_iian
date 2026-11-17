@@ -43,7 +43,7 @@ access_helpdesk_keyword_manager,helpdesk.keyword.manager,model_helpdesk_keyword,
 access_helpdesk_keyword_engineer_user,helpdesk.keyword.engineer.user,model_helpdesk_keyword_engineer,group_helpdesk_user,1,0,0,0
 access_helpdesk_keyword_engineer_manager,helpdesk.keyword.engineer.manager,model_helpdesk_keyword_engineer,group_helpdesk_manager,1,1,1,1
 access_helpdesk_knowledge_user,helpdesk.knowledge.user,model_helpdesk_knowledge,group_helpdesk_user,1,0,0,0
-access_helpdesk_knowledge_agent,helpdesk.knowledge.agent,model_helpdesk_knowledge,group_helpdesk_agent,1,1,1,0
+access_helpdesk_knowledge_agent,helpdesk.knowledge.agent,model_helpdesk_knowledge,group_helpdesk_agent,1,0,0,0
 access_helpdesk_knowledge_manager,helpdesk.knowledge.manager,model_helpdesk_knowledge,group_helpdesk_manager,1,1,1,1
 access_helpdesk_ticket_base_user,helpdesk.ticket.base.user,model_helpdesk_ticket,base.group_user,1,1,1,0
 

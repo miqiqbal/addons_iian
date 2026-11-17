@@ -14,10 +14,13 @@
                     <field name="subcategory_id"/>
                     <field name="author_id"/>
                     <filter string="Quick Solution" name="filter_quick_solution" domain="[('is_quick_solution', '=', True)]"/>
+                    <filter string="Dokumen Panduan (File)" name="filter_type_file" domain="[('solution_type', '=', 'file')]"/>
+                    <filter string="Teks Tutorial" name="filter_type_text" domain="[('solution_type', '=', 'text')]"/>
                     <filter string="Artikel Saya" name="filter_my_articles" domain="[('author_id', '=', uid)]"/>
                     <separator/>
                     <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
                     <group expand="0" string="Group By">
+                        <filter string="Format Solusi" name="group_solution_type" context="{'group_by': 'solution_type'}"/>
                         <filter string="Service / Layanan" name="group_service" context="{'group_by': 'service_id'}"/>
                         <filter string="Kategori" name="group_category" context="{'group_by': 'category_id'}"/>
                         <filter string="Sub Kategori" name="group_subcategory" context="{'group_by': 'subcategory_id'}"/>
@@ -27,14 +30,18 @@
             </field>
         </record>
 
-        <!-- Knowledge Base Tree View (Default: create="false" for Employee) -->
+        <!-- Knowledge Base Tree View (Default: create="false" edit="false" for non-admin) -->
         <record id="view_helpdesk_knowledge_tree" model="ir.ui.view">
             <field name="name">helpdesk.knowledge.tree</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="arch" type="xml">
-                <tree string="Knowledge Base" create="false">
+                <tree string="Knowledge Base" create="false" edit="false">
                     <field name="sequence" widget="handle"/>
                     <field name="name" string="Judul Solusi / Artikel" class="font-weight-bold text-primary"/>
+                    <field name="solution_type" string="Format Solusi" widget="badge"
+                           decoration-info="solution_type == 'file'"
+                           decoration-primary="solution_type == 'hybrid'"
+                           decoration-muted="solution_type == 'text'"/>
                     <field name="service_id" string="Service"/>
                     <field name="category_id" string="Category"/>
                     <field name="subcategory_id" string="Sub Category"/>
@@ -44,18 +51,19 @@
             </field>
         </record>
 
-        <!-- Knowledge Base Kanban View (Default: create="false" for Employee) -->
+        <!-- Knowledge Base Kanban View (Default: create="false" edit="false" for non-admin) -->
         <record id="view_helpdesk_knowledge_kanban" model="ir.ui.view">
             <field name="name">helpdesk.knowledge.kanban</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="arch" type="xml">
-                <kanban class="o_kanban_dashboard" create="false">
+                <kanban class="o_kanban_dashboard" create="false" edit="false">
                     <field name="name"/>
                     <field name="service_id"/>
                     <field name="category_id"/>
                     <field name="subcategory_id"/>
                     <field name="summary"/>
                     <field name="is_quick_solution"/>
+                    <field name="solution_type"/>
                     <templates>
                         <t t-name="kanban-box">
                             <div class="oe_kanban_global_click p-3 border rounded shadow-sm bg-white" style="border-radius:10px;">
@@ -63,7 +71,12 @@
                                     <div class="font-weight-bold text-primary" style="font-size:16px;">
                                         <i class="fa fa-book mr-1"/> <t t-esc="record.name.value"/>
                                     </div>
-                                    <span t-if="record.is_quick_solution.raw_value" class="badge badge-success">Quick Solution</span>
+                                    <div>
+                                        <span t-if="record.is_quick_solution.raw_value" class="badge badge-success mr-1">Quick Solution</span>
+                                        <span t-if="record.solution_type.raw_value == 'file'" class="badge badge-info"><i class="fa fa-file-text-o mr-1"/>Dokumen</span>
+                                        <span t-elif="record.solution_type.raw_value == 'hybrid'" class="badge badge-primary"><i class="fa fa-paperclip mr-1"/>Hybrid</span>
+                                        <span t-elif="record.solution_type.raw_value == 'text'" class="badge badge-secondary"><i class="fa fa-pencil mr-1"/>Teks</span>
+                                    </div>
                                 </div>
                                 <div class="text-muted small mb-1" t-if="record.service_id.value or record.category_id.value">
                                     <span t-if="record.service_id.value"><t t-esc="record.service_id.value"/></span>
@@ -83,12 +96,12 @@
             </field>
         </record>
 
-        <!-- Knowledge Base Form View (Default: create="false" for Employee) -->
+        <!-- Knowledge Base Form View (Default: create="false" edit="false" for non-admin) -->
         <record id="view_helpdesk_knowledge_form" model="ir.ui.view">
             <field name="name">helpdesk.knowledge.form</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="arch" type="xml">
-                <form string="Knowledge Base (Pusat Solusi Mandiri)" create="false">
+                <form string="Knowledge Base (Pusat Solusi Mandiri)" create="false" edit="false">
                     <sheet>
                         <div class="oe_title mb-3">
                             <label for="name" string="Judul Solusi / Artikel Panduan" class="font-weight-bold text-dark"/>
@@ -99,6 +112,11 @@
 
                         <!-- Top Metadata Group with High-Contrast Visible Labels -->
                         <div class="card p-3 mb-4 bg-white border rounded shadow-sm" style="border-radius:12px;">
+                            <div class="mb-3 p-3 bg-light rounded border">
+                                <label for="solution_type" string="Format Pilihan Pembuatan Solusi:" class="font-weight-bold text-primary d-block mb-1" style="font-size: 14px;"/>
+                                <field name="solution_type" widget="radio" options="{'horizontal': true}"/>
+                            </div>
+
                             <group>
                                 <group string="Klasifikasi Layanan &amp; Kategori">
                                     <field name="service_id" options="{'no_create': True}" placeholder="Pilih Layanan..."/>
@@ -117,68 +135,86 @@
                             </div>
                         </div>
 
-                        <!-- Main Content Container with Rich Text & Embedded Images -->
-                        <div class="card p-3 mb-4 border rounded shadow-sm bg-white" style="border-radius:12px;">
+                        <!-- Attachment Section (Prominently displayed when solution_type in 'file', 'hybrid') -->
+                        <div class="card p-3 mb-4 border rounded shadow-sm bg-white" style="border-radius:12px;"
+                             attrs="{'invisible': [('solution_type', '=', 'text')]}">
                             <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
-                                <i class="fa fa-book text-primary mr-2" style="font-size:18px;"/>
-                                <span class="font-weight-bold text-dark" style="font-size:15px;">Langkah-Langkah &amp; Panduan Solusi (Tutorial)</span>
+                                <i class="fa fa-cloud-upload text-primary mr-2" style="font-size:20px;"/>
+                                <span class="font-weight-bold text-dark" style="font-size:15px;">Berkas Dokumen Panduan (PDF, Word, Excel, SOP, Foto Panduan)</span>
+                                <span class="badge badge-info ml-2" attrs="{'invisible': [('solution_type', '!=', 'file')]}">Mode Upload File (Tanpa Perlu Ketik Manual)</span>
+                                <span class="badge badge-light text-muted ml-2" attrs="{'invisible': [('solution_type', '=', 'file')]}">Lampiran Tambahan</span>
+                            </div>
+                            <p class="text-muted small mb-2">
+                                Unggah dokumen panduan (PDF/DOCX/XLSX/PPTX) atau foto petunjuk di bawah ini. Anda dapat mengunggah satu atau beberapa berkas sekaligus:
+                            </p>
+                            <field name="attachment_ids" widget="many2many_binary" string="Dokumen Lampiran"
+                                   attrs="{'required': [('solution_type', '=', 'file')]}"/>
+                        </div>
+
+                        <!-- Information Banner for File-Only Knowledge Base Articles -->
+                        <div class="alert alert-info d-flex align-items-center mb-3" role="alert"
+                             attrs="{'invisible': [('solution_type', '!=', 'file')]}">
+                            <i class="fa fa-info-circle fa-2x mr-3 text-info"/>
+                            <div>
+                                <strong>Panduan Berbasis Dokumen / SOP:</strong>
+                                <div class="small">Artikel ini merupakan panduan berbentuk dokumen. Silakan unduh berkas lampiran di atas untuk membaca petunjuk lengkap.</div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content Container with Rich Text & Embedded Images (Only for text or hybrid) -->
+                        <div class="card p-3 mb-4 border rounded shadow-sm bg-white" style="border-radius:12px;"
+                             attrs="{'invisible': [('solution_type', '=', 'file')]}">
+                            <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
+                                <i class="fa fa-pencil-square-o text-primary mr-2" style="font-size:18px;"/>
+                                <span class="font-weight-bold text-dark" style="font-size:15px;">Langkah-Langkah &amp; Panduan Solusi (Tutorial Teks)</span>
                             </div>
                             <p class="text-muted small mb-2">
                                 Tuliskan panduan langkah demi langkah penyelesaian masalah di bawah ini. Anda juga dapat menempelkan (paste) gambar screenshot langsung di dalam kotak teks editor:
                             </p>
-                            <field name="content" placeholder="Tuliskan petunjuk dan panduan langkah demi langkah beserta gambar/screenshot penyelesaian masalah di sini..."/>
-                        </div>
-
-                        <!-- Attachment Section -->
-                        <div class="card p-3 border rounded shadow-sm bg-white" style="border-radius:12px;">
-                            <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
-                                <i class="fa fa-paperclip text-primary mr-2" style="font-size:18px;"/>
-                                <span class="font-weight-bold text-dark" style="font-size:15px;">Attachment / Berkas Panduan Tambahan</span>
-                                <span class="badge badge-light text-muted ml-2">Opsional</span>
-                            </div>
-                            <p class="text-muted small mb-2">
-                                Unggah berkas dokumen panduan (PDF/DOCX) atau file pendukung lainnya jika diperlukan:
-                            </p>
-                            <field name="attachment_ids" widget="many2many_binary"/>
+                            <field name="content" placeholder="Tuliskan petunjuk dan panduan langkah demi langkah beserta gambar/screenshot penyelesaian masalah di sini..."
+                                   attrs="{'required': [('solution_type', 'in', ['text', 'hybrid'])]}"/>
                         </div>
                     </sheet>
                 </form>
             </field>
         </record>
 
-        <!-- Enable Create Button for Engineer & Helpdesk Officer Roles -->
-        <record id="view_helpdesk_knowledge_kanban_agent" model="ir.ui.view">
-            <field name="name">helpdesk.knowledge.kanban.agent</field>
+        <!-- Enable Create and Edit Buttons EXCLUSIVELY for IT Admin (group_helpdesk_manager) -->
+        <record id="view_helpdesk_knowledge_kanban_manager" model="ir.ui.view">
+            <field name="name">helpdesk.knowledge.kanban.manager</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="inherit_id" ref="view_helpdesk_knowledge_kanban"/>
-            <field name="groups_id" eval="[(4, ref('group_helpdesk_agent')), (4, ref('group_helpdesk_manager'))]"/>
+            <field name="groups_id" eval="[(4, ref('it_helpdesk_v2.group_helpdesk_manager'))]"/>
             <field name="arch" type="xml">
                 <xpath expr="//kanban" position="attributes">
                     <attribute name="create">true</attribute>
+                    <attribute name="edit">true</attribute>
                 </xpath>
             </field>
         </record>
 
-        <record id="view_helpdesk_knowledge_tree_agent" model="ir.ui.view">
-            <field name="name">helpdesk.knowledge.tree.agent</field>
+        <record id="view_helpdesk_knowledge_tree_manager" model="ir.ui.view">
+            <field name="name">helpdesk.knowledge.tree.manager</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="inherit_id" ref="view_helpdesk_knowledge_tree"/>
-            <field name="groups_id" eval="[(4, ref('group_helpdesk_agent')), (4, ref('group_helpdesk_manager'))]"/>
+            <field name="groups_id" eval="[(4, ref('it_helpdesk_v2.group_helpdesk_manager'))]"/>
             <field name="arch" type="xml">
                 <xpath expr="//tree" position="attributes">
                     <attribute name="create">true</attribute>
+                    <attribute name="edit">true</attribute>
                 </xpath>
             </field>
         </record>
 
-        <record id="view_helpdesk_knowledge_form_agent" model="ir.ui.view">
-            <field name="name">helpdesk.knowledge.form.agent</field>
+        <record id="view_helpdesk_knowledge_form_manager" model="ir.ui.view">
+            <field name="name">helpdesk.knowledge.form.manager</field>
             <field name="model">helpdesk.knowledge</field>
             <field name="inherit_id" ref="view_helpdesk_knowledge_form"/>
-            <field name="groups_id" eval="[(4, ref('group_helpdesk_agent')), (4, ref('group_helpdesk_manager'))]"/>
+            <field name="groups_id" eval="[(4, ref('it_helpdesk_v2.group_helpdesk_manager'))]"/>
             <field name="arch" type="xml">
                 <xpath expr="//form" position="attributes">
                     <attribute name="create">true</attribute>
+                    <attribute name="edit">true</attribute>
                 </xpath>
             </field>
         </record>

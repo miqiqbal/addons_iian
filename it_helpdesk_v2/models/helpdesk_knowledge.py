@@ -14,13 +14,14 @@ class HelpdeskKnowledge(models.Model):
     subcategory_id = fields.Many2one('helpdesk.subcategory', string='Sub Category')
     problem = fields.Char(string='Problem Title / Masalah')
     solution_type = fields.Selection([
-        ('text', 'Teks Tutorial Saja'),
-        ('hybrid', 'Tutorial & File Lampiran')
-    ], string='Format Jenis Solusi', default='text')
+        ('file', 'Dokumen / File Panduan (Upload Dokumen)'),
+        ('text', 'Teks Tutorial Saja (Ketik Manual)'),
+        ('hybrid', 'Kombinasi (Tutorial & File Lampiran)')
+    ], string='Format Jenis Solusi', default='file', required=True)
     is_quick_solution = fields.Boolean(string='Quick Solution?', default=True)
     summary = fields.Text(string='Description / Ringkasan Masalah')
     content = fields.Html(string='Langkah-Langkah & Foto Solusi (Tutorial)')
-    attachment_ids = fields.Many2many('ir.attachment', string='Attachment / Screenshot Solusi')
+    attachment_ids = fields.Many2many('ir.attachment', string='Attachment / Dokumen Panduan')
     author_id = fields.Many2one('res.users', string='Penulis Artikel', default=lambda self: self.env.user)
     active = fields.Boolean(default=True)
 
@@ -53,8 +54,13 @@ class HelpdeskKnowledge(models.Model):
 
     @api.model
     def create(self, vals):
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError('Hanya pengguna dengan Role Akses "IT Admin" yang memiliki wewenang untuk membuat artikel Knowledge Base!')
+
         if vals.get('name') and not vals.get('problem'):
             vals['problem'] = vals['name']
+        if vals.get('solution_type', 'file') == 'file' and not vals.get('content'):
+            vals['content'] = '<p>Panduan teknis dan petunjuk penyelesaian lengkap tersedia pada berkas lampiran.</p>'
         if vals.get('subcategory_id') and not vals.get('category_id'):
             subcat = self.env['helpdesk.subcategory'].browse(vals['subcategory_id'])
             if subcat.category_id:
@@ -65,11 +71,22 @@ class HelpdeskKnowledge(models.Model):
             cat = self.env['helpdesk.category'].browse(vals['category_id'])
             if cat.service_id:
                 vals['service_id'] = cat.service_id.id
-        return super().create(vals)
+        rec = super().create(vals)
+        if rec.attachment_ids:
+            rec.attachment_ids.sudo().write({
+                'res_model': 'helpdesk.knowledge',
+                'res_id': rec.id,
+            })
+        return rec
 
     def write(self, vals):
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError('Hanya pengguna dengan Role Akses "IT Admin" yang memiliki wewenang untuk mengubah artikel Knowledge Base!')
+
         if vals.get('name') and not vals.get('problem'):
             vals['problem'] = vals['name']
+        if vals.get('solution_type') == 'file' and not vals.get('content') and not self.content:
+            vals['content'] = '<p>Panduan teknis dan petunjuk penyelesaian lengkap tersedia pada berkas lampiran.</p>'
         if vals.get('subcategory_id') and not vals.get('category_id'):
             subcat = self.env['helpdesk.subcategory'].browse(vals['subcategory_id'])
             if subcat.category_id:
@@ -80,11 +97,19 @@ class HelpdeskKnowledge(models.Model):
             cat = self.env['helpdesk.category'].browse(vals['category_id'])
             if cat.service_id:
                 vals['service_id'] = cat.service_id.id
-        return super().write(vals)
+        res = super().write(vals)
+        if 'attachment_ids' in vals:
+            for rec in self:
+                if rec.attachment_ids:
+                    rec.attachment_ids.sudo().write({
+                        'res_model': 'helpdesk.knowledge',
+                        'res_id': rec.id,
+                    })
+        return res
 
     def unlink(self):
-        if not self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager'):
-            raise UserError('Hanya pengguna dengan Role Akses "Helpdesk Manager" yang diizinkan untuk menghapus artikel Knowledge Base!')
+        if not (self.env.is_superuser() or self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager')):
+            raise UserError('Hanya pengguna dengan Role Akses "IT Admin" yang diizinkan untuk menghapus artikel Knowledge Base!')
         return super().unlink()
 
     @api.model

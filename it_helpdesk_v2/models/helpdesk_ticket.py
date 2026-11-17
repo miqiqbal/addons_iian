@@ -882,9 +882,9 @@ class HelpdeskTicket(models.Model):
             }
             kb_id = getattr(ticket, 'knowledge_id', False)
             if kb_id:
-                kb_id.write(kb_vals)
+                kb_id.sudo().write(kb_vals)
             else:
-                kb = self.env['helpdesk.knowledge'].create(kb_vals)
+                kb = self.env['helpdesk.knowledge'].sudo().create(kb_vals)
                 ticket.knowledge_id = kb.id
             
             ticket.is_published_to_kb = True
