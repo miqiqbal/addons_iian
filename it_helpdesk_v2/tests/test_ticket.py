@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from odoo import fields
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import common
 
 
@@ -219,6 +219,90 @@ class TestTicket(common.TransactionCase):
         # Check analytics data
         analytics = self.env['helpdesk.dashboard.kpi'].get_dashboard_analytics_data()
         self.assertGreaterEqual(analytics.get('top_kpis', {}).get('reject_ticket', 0), 1)
+
+    def test_keyword_rule_min_two_engineers_validation(self):
+        eng1 = self.env['res.users'].create({
+            'name': 'Engineer Primary Test',
+            'login': 'eng_primary_test',
+            'email': 'eng_primary@test.com',
+        })
+        eng2 = self.env['res.users'].create({
+            'name': 'Engineer Backup Test',
+            'login': 'eng_backup_test',
+            'email': 'eng_backup@test.com',
+        })
+
+        # 1. Creating rule with only 1 engineer must raise ValidationError
+        with self.assertRaises(ValidationError):
+            self.env['helpdesk.keyword'].create({
+                'name': 'Rule Satu Engineer',
+                'keyword_list': 'keyword1, keyword2',
+                'engineer_line_ids': [
+                    (0, 0, {'user_id': eng1.id, 'sequence': 10}),
+                ],
+            })
+
+        # 2. Creating rule with 2 engineers must succeed
+        rule = self.env['helpdesk.keyword'].create({
+            'name': 'Rule Dua Engineer',
+            'keyword_list': 'keyword1, keyword2',
+            'engineer_line_ids': [
+                (0, 0, {'user_id': eng1.id, 'sequence': 10}),
+                (0, 0, {'user_id': eng2.id, 'sequence': 20}),
+            ],
+        })
+        self.assertEqual(len(rule.engineer_line_ids), 2)
+        self.assertIn('Utama', rule.engineer_summary)
+        self.assertIn('Backup', rule.engineer_summary)
+
+    def test_keyword_routing_quota_and_backup_failover(self):
+        eng1 = self.env['res.users'].create({
+            'name': 'PIC Utama Router',
+            'login': 'pic_utama_router',
+            'email': 'pic_utama@test.com',
+            'max_daily_quota': 2,
+        })
+        eng2 = self.env['res.users'].create({
+            'name': 'PIC Backup Router',
+            'login': 'pic_backup_router',
+            'email': 'pic_backup@test.com',
+            'max_daily_quota': 5,
+        })
+
+        rule = self.env['helpdesk.keyword'].create({
+            'name': 'Routing Failover Test',
+            'keyword_list': 'failovertesting',
+            'engineer_line_ids': [
+                (0, 0, {'user_id': eng1.id, 'sequence': 10}),
+                (0, 0, {'user_id': eng2.id, 'sequence': 20}),
+            ],
+        })
+
+        # Quota on line reflects and edits user_id.max_daily_quota
+        line1 = rule.engineer_line_ids.filtered(lambda l: l.user_id == eng1)
+        self.assertEqual(line1.max_daily_quota, 2)
+        line1.max_daily_quota = 3
+        self.assertEqual(eng1.max_daily_quota, 3)
+
+        # Create ticket with title matching keyword
+        # Under quota: routes to eng1 (Primary)
+        t1 = self._create_ticket(title='Kendala failovertesting nomor 1')
+        t1.action_assign()
+        self.assertEqual(t1.engineer_id, eng1)
+
+        t2 = self._create_ticket(title='Kendala failovertesting nomor 2')
+        t2.action_assign()
+        self.assertEqual(t2.engineer_id, eng1)
+
+        t3 = self._create_ticket(title='Kendala failovertesting nomor 3')
+        t3.action_assign()
+        self.assertEqual(t3.engineer_id, eng1)
+
+        # Now eng1 has 3 active tickets today (quota is 3).
+        # Ticket 4 must auto-failover to eng2 (Backup)!
+        t4 = self._create_ticket(title='Kendala failovertesting nomor 4')
+        t4.action_assign()
+        self.assertEqual(t4.engineer_id, eng2, "Ticket 4 should route to eng2 because eng1 reached quota")
 
 
 

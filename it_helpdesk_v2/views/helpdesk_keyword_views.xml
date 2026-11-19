@@ -43,11 +43,15 @@
                         <group string="Kata Kunci Pemicu (Keywords)">
                             <field name="keyword_list" placeholder="lupa password, reset password, ganti password..."/>
                         </group>
-                        <group string="PIC IT Auto Assign (Urutan Prioritas Penugasan)">
+                        <group string="PIC IT Auto Assign (Urutan Prioritas Penugasan &amp; Kuota Harian)">
+                            <div class="alert alert-info py-2 px-3 mb-2" role="alert" style="font-size: 13px;">
+                                <i class="fa fa-info-circle mr-1"/> <strong>Ketentuan:</strong> Wajib mendaftarkan <strong>minimal 2 Engineer</strong> (Urutan 1 sebagai <strong>PIC Utama</strong>, dan Urutan 2+ sebagai <strong>PIC Backup</strong>). Anda dapat langsung mengatur batas kuota tiket harian per engineer pada kolom tabel di bawah ini.
+                            </div>
                             <field name="engineer_line_ids" nolabel="1">
                                 <tree editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="user_id" string="Nama Engineer" options="{'no_create': True}"/>
+                                    <field name="max_daily_quota" string="Batas Kuota Harian (Tiket)"/>
                                 </tree>
                             </field>
                         </group>

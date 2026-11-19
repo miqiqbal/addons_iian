@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class HelpdeskKeywordEngineer(models.Model):
@@ -11,6 +12,12 @@ class HelpdeskKeywordEngineer(models.Model):
     user_id = fields.Many2one(
         'res.users', string='Engineer', required=True,
         domain=[('share', '=', False)]
+    )
+    max_daily_quota = fields.Integer(
+        related='user_id.max_daily_quota',
+        readonly=False,
+        string='Batas Kuota Harian (Tiket)',
+        help='Batas kuota tiket aktif per hari untuk engineer ini'
     )
 
 
@@ -62,16 +69,27 @@ class HelpdeskKeyword(models.Model):
         return {'domain': {'subcategory_ids': [('id', '!=', False)]}}
 
 
-    @api.depends('engineer_line_ids', 'engineer_line_ids.sequence', 'engineer_line_ids.user_id', 'engineer_ids')
+    @api.constrains('engineer_line_ids', 'active')
+    def _check_min_engineers(self):
+        for rec in self:
+            if rec.active and len(rec.engineer_line_ids) < 2:
+                raise ValidationError(_(
+                    "Aturan '%s' wajib memiliki minimal 2 Engineer (1 PIC Utama dan minimal 1 PIC Backup) "
+                    "agar sistem auto-routing dan failover dapat berjalan optimal saat kuota penuh."
+                ) % (rec.name or ''))
+
+    @api.depends('engineer_line_ids', 'engineer_line_ids.sequence', 'engineer_line_ids.user_id', 'engineer_line_ids.max_daily_quota', 'engineer_ids')
     def _compute_engineer_summary(self):
         for rec in self:
             if rec.engineer_line_ids:
                 lines = rec.engineer_line_ids.sorted('sequence')
-                names = [line.user_id.name for line in lines if line.user_id]
-                if names:
-                    rec.engineer_summary = " ➔ ".join(["%d. %s" % (idx + 1, name) for idx, name in enumerate(names)])
-                else:
-                    rec.engineer_summary = "-"
+                parts = []
+                for idx, line in enumerate(lines):
+                    if line.user_id:
+                        role_label = 'Utama' if idx == 0 else f'Backup {idx}' if len(lines) > 2 else 'Backup'
+                        quota_val = line.max_daily_quota or 5
+                        parts.append(f"{idx + 1}. {line.user_id.name} (Kuota: {quota_val}) [{role_label}]")
+                rec.engineer_summary = " ➔ ".join(parts) if parts else "-"
             else:
                 rec.engineer_summary = "-"
 
