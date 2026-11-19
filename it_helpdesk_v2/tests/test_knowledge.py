@@ -120,3 +120,48 @@ class TestHelpdeskKnowledge(common.TransactionCase):
         kb_id = kb.id
         kb.with_user(admin_user).unlink()
         self.assertFalse(self.env['helpdesk.knowledge'].browse(kb_id).exists())
+
+    def test_ticket_kb_recommendations(self):
+        # 1. Ticket without matching category -> has_kb_recommendation is False
+        other_service = self.env['helpdesk.service'].create({'name': 'Other Service Unrelated'})
+        ticket = self.env['helpdesk.ticket'].create({
+            'title': 'Kendala Umum',
+            'service_id': other_service.id,
+        })
+        ticket._compute_kb_recommendations()
+        self.assertFalse(ticket.has_kb_recommendation)
+        self.assertEqual(ticket.kb_recommendation_count, 0)
+        self.assertFalse(ticket.kb_recommendation_html)
+
+        # 2. Create KB article with attachment in self.category
+        attachment = self.env['ir.attachment'].create({
+            'name': 'Form_Template_Surat.docx',
+            'type': 'binary',
+            'datas': base64.b64encode(b'TEMPLATE DATA'),
+        })
+        kb = self.env['helpdesk.knowledge'].create({
+            'name': 'Template Surat Permohonan Resmi',
+            'category_id': self.category.id,
+            'service_id': self.service.id,
+            'solution_type': 'file',
+            'attachment_ids': [(6, 0, [attachment.id])],
+        })
+
+        # 3. Ticket selects self.category -> has_kb_recommendation becomes True
+        ticket.write({'category_id': self.category.id, 'service_id': self.service.id})
+        ticket._compute_kb_recommendations()
+        self.assertTrue(ticket.has_kb_recommendation)
+        self.assertEqual(ticket.kb_recommendation_count, 1)
+        self.assertIn(kb, ticket.kb_recommendation_ids)
+        self.assertIn('Template Surat Permohonan Resmi', ticket.kb_recommendation_html)
+        self.assertIn('Form_Template_Surat.docx', ticket.kb_recommendation_html)
+        self.assertIn(f'/web/content/{attachment.id}?download=true', ticket.kb_recommendation_html)
+
+        # 4. Onchange test
+        ticket_new = self.env['helpdesk.ticket'].new({'title': 'Draft New'})
+        ticket_new.service_id = self.service
+        ticket_new._onchange_service_id()
+        ticket_new.category_id = self.category
+        ticket_new._onchange_category_id()
+        self.assertTrue(ticket_new.has_kb_recommendation)
+        self.assertIn('Template Surat Permohonan Resmi', ticket_new.kb_recommendation_html)

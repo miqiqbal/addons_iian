@@ -112,11 +112,95 @@ class HelpdeskTicket(models.Model):
     is_admin = fields.Boolean(
         compute='_compute_is_admin')
 
+    # Smart Knowledge Base Recommendation (for requesters during ticket draft)
+    has_kb_recommendation = fields.Boolean(
+        compute='_compute_kb_recommendations', string='Ada Rekomendasi KB')
+    kb_recommendation_ids = fields.Many2many(
+        'helpdesk.knowledge', compute='_compute_kb_recommendations', string='Daftar Rekomendasi KB')
+    kb_recommendation_count = fields.Integer(
+        compute='_compute_kb_recommendations', string='Jumlah Rekomendasi KB')
+    kb_recommendation_html = fields.Html(
+        compute='_compute_kb_recommendations', string='Tampilan Rekomendasi KB', sanitize=False)
+    kb_category_name = fields.Char(
+        compute='_compute_kb_recommendations', string='Nama Kategori KB')
+
     @api.depends_context('uid')
     def _compute_is_admin(self):
         has_admin = self.env.user.has_group('it_helpdesk_v2.group_helpdesk_manager') or self.env.is_superuser()
         for ticket in self:
             ticket.is_admin = has_admin
+
+    @api.depends('service_id', 'category_id', 'subcategory_id')
+    def _compute_kb_recommendations(self):
+        for ticket in self:
+            records = self.env['helpdesk.knowledge'].browse()
+            cat_name = ''
+            if ticket.subcategory_id:
+                records = self.env['helpdesk.knowledge'].search([
+                    ('active', '=', True),
+                    ('subcategory_id', '=', ticket.subcategory_id.id)
+                ], limit=5)
+                cat_name = ticket.subcategory_id.name or ''
+            if not records and ticket.category_id:
+                records = self.env['helpdesk.knowledge'].search([
+                    ('active', '=', True),
+                    ('category_id', '=', ticket.category_id.id)
+                ], limit=5)
+                cat_name = ticket.category_id.name or ''
+            if not records and ticket.service_id:
+                records = self.env['helpdesk.knowledge'].search([
+                    ('active', '=', True),
+                    ('service_id', '=', ticket.service_id.id)
+                ], limit=5)
+                cat_name = ticket.service_id.name or ''
+
+            ticket.kb_recommendation_ids = records
+            ticket.kb_recommendation_count = len(records)
+            ticket.has_kb_recommendation = bool(records)
+            ticket.kb_category_name = cat_name
+
+            if records:
+                html_items = []
+                for rec in records:
+                    buttons_html = []
+                    for att in rec.attachment_ids:
+                        file_ext = (att.name or '').split('.')[-1].upper() if '.' in (att.name or '') else 'FILE'
+                        btn = f'<a href="/web/content/{att.id}?download=true" target="_blank" class="btn btn-sm btn-outline-success mr-2 mb-1 py-1 px-2 font-weight-bold" style="font-size: 11.5px; text-decoration: none;"><i class="fa fa-download mr-1"></i>Unduh {file_ext}: {att.name}</a>'
+                        buttons_html.append(btn)
+
+                    article_btn = f'<a href="/web#id={rec.id}&amp;model=helpdesk.knowledge&amp;view_type=form" target="_blank" class="btn btn-sm btn-outline-primary mb-1 py-1 px-2 font-weight-bold" style="font-size: 11.5px; text-decoration: none;"><i class="fa fa-book mr-1"></i>Buka Panduan</a>'
+                    buttons_html.append(article_btn)
+
+                    summary_snippet = f'<div class="text-muted" style="font-size: 11.5px; margin-top: 2px;">{rec.summary}</div>' if rec.summary else ''
+
+                    type_badge = ''
+                    if rec.solution_type == 'file':
+                        type_badge = '<span class="badge badge-success mr-2">File Dokumen / Template</span>'
+                    elif rec.solution_type == 'text':
+                        type_badge = '<span class="badge badge-info mr-2">Tutorial / Panduan</span>'
+                    else:
+                        type_badge = '<span class="badge badge-primary mr-2">Kombinasi</span>'
+
+                    item = f"""
+                    <div class="card p-2 mb-2 border bg-white shadow-sm" style="border-radius: 6px;">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div style="flex: 1; min-width: 220px;" class="mr-2">
+                                <div style="font-size: 13px; font-weight: 600; color: #2C3E50;">
+                                    {type_badge}{rec.name}
+                                </div>
+                                {summary_snippet}
+                            </div>
+                            <div class="mt-1 mt-md-0 d-flex flex-wrap align-items-center">
+                                {' '.join(buttons_html)}
+                            </div>
+                        </div>
+                    </div>
+                    """
+                    html_items.append(item)
+
+                ticket.kb_recommendation_html = ''.join(html_items)
+            else:
+                ticket.kb_recommendation_html = False
 
     @api.onchange('selected_knowledge_id')
     def _onchange_selected_knowledge_id(self):
@@ -351,11 +435,13 @@ class HelpdeskTicket(models.Model):
             if self.category_id and self.category_id.service_id != self.service_id:
                 self.category_id = False
                 self.subcategory_id = False
+            self._compute_kb_recommendations()
             return {'domain': {
                 'category_id': [('service_id', '=', self.service_id.id)],
                 'subcategory_id': [('category_id.service_id', '=', self.service_id.id)],
             }}
         else:
+            self._compute_kb_recommendations()
             cat_domain = [('service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
             subcat_domain = [('category_id.service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
             return {'domain': {'category_id': cat_domain, 'subcategory_id': subcat_domain}}
@@ -377,8 +463,10 @@ class HelpdeskTicket(models.Model):
 
             if self.subcategory_id and self.subcategory_id.category_id != self.category_id:
                 self.subcategory_id = False
+            self._compute_kb_recommendations()
             return {'domain': {'subcategory_id': [('category_id', '=', self.category_id.id)]}}
         else:
+            self._compute_kb_recommendations()
             if self.service_id:
                 return {'domain': {'subcategory_id': [('category_id.service_id', '=', self.service_id.id)]}}
             subcat_domain = [('category_id.service_id.ticket_type', '=', self.ticket_type)] if self.ticket_type else [('id', '!=', False)]
@@ -400,6 +488,7 @@ class HelpdeskTicket(models.Model):
                 self.ticket_type = self.service_id.ticket_type
             elif self.ticket_type_id and self.ticket_type_id.sequence_code and self.ticket_type != self.ticket_type_id.sequence_code:
                 self.ticket_type = self.ticket_type_id.sequence_code
+        self._compute_kb_recommendations()
 
     @api.depends(
         'q1_answer_id.score', 'q1_answer_id.weight', 'q2_answer_id.score', 'q2_answer_id.weight',
