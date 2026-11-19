@@ -304,5 +304,77 @@ class TestTicket(common.TransactionCase):
         t4.action_assign()
         self.assertEqual(t4.engineer_id, eng2, "Ticket 4 should route to eng2 because eng1 reached quota")
 
+    def test_requester_info_autofill_from_hr_employee(self):
+        dept = self.env['hr.department'].create({'name': 'Departemen TI & Digital'})
+        user = self.env['res.users'].create({
+            'name': 'Budi Requester',
+            'login': 'budi.requester',
+            'email': 'budi.work@example.com',
+            'groups_id': [(6, 0, [
+                self.env.ref('base.group_user').id,
+                self.env.ref('it_helpdesk_v2.group_helpdesk_user').id,
+            ])],
+        })
+        self.env['hr.employee'].create({
+            'name': 'Budi Requester',
+            'user_id': user.id,
+            'department_id': dept.id,
+            'work_email': 'budi.work@example.com',
+            'work_phone': '081299998888',
+        })
+
+        # 1. Ticket created by/for user with hr.employee autofills department_id, email, phone
+        ticket = self.env['helpdesk.ticket'].with_user(user).create({
+            'title': 'Kendala Komputer',
+            'ticket_type': 'incident',
+            'service_id': self.service.id,
+            'requester_id': user.id,
+        })
+        self.assertEqual(ticket.department_id, dept)
+        self.assertEqual(ticket.email, 'budi.work@example.com')
+        self.assertEqual(ticket.phone, '081299998888')
+        # location_id must be synced in background
+        self.assertTrue(ticket.location_id)
+        self.assertEqual(ticket.location_id.name, dept.name)
+
+        # 2. Phone remains editable (overridden if requester enters a different number)
+        ticket_custom_phone = self.env['helpdesk.ticket'].with_user(user).create({
+            'title': 'Kendala Printer',
+            'ticket_type': 'incident',
+            'service_id': self.service.id,
+            'requester_id': user.id,
+            'phone': '089911223344',
+        })
+        self.assertEqual(ticket_custom_phone.phone, '089911223344')
+        self.assertEqual(ticket_custom_phone.department_id, dept)
+        self.assertEqual(ticket_custom_phone.email, 'budi.work@example.com')
+
+    def test_requester_info_onchange(self):
+        dept1 = self.env['hr.department'].create({'name': 'Departemen Logistik'})
+        user1 = self.env['res.users'].create({
+            'name': 'User Logistik',
+            'login': 'user.logistik',
+            'email': 'user.logistik@work.com',
+            'groups_id': [(6, 0, [
+                self.env.ref('base.group_user').id,
+                self.env.ref('it_helpdesk_v2.group_helpdesk_user').id,
+            ])],
+        })
+        self.env['hr.employee'].create({
+            'name': 'User Logistik',
+            'user_id': user1.id,
+            'department_id': dept1.id,
+            'work_email': 'user.logistik@work.com',
+            'work_phone': '081122334455',
+        })
+
+        ticket = self.env['helpdesk.ticket'].new({'title': 'Draft Ticket'})
+        ticket.requester_id = user1
+        ticket._onchange_requester_id()
+        self.assertEqual(ticket.department_id, dept1)
+        self.assertEqual(ticket.email, 'user.logistik@work.com')
+        self.assertEqual(ticket.phone, '081122334455')
+        self.assertEqual(ticket.location_name, dept1.name)
+
 
 

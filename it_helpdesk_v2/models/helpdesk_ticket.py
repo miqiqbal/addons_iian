@@ -45,6 +45,67 @@ class HelpdeskTicket(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'create_date desc'
 
+    def _get_employee_for_user(self, user):
+        """Mendapatkan hr.employee dari res.users secara cerdas:
+        1. Cari berdasarkan user_id == user.id
+        2. Cari berdasarkan work_email / private_email == user.email atau login
+        3. Cari berdasarkan name == user.name
+        """
+        if not user:
+            return self.env['hr.employee']
+        user = user.sudo()
+        Emp = self.env['hr.employee'].sudo()
+        emp = Emp.search([('user_id', '=', user.id)], limit=1)
+        if emp:
+            return emp
+
+        email = user.email or user.login
+        if email:
+            emp = Emp.search(['|', ('work_email', '=ilike', email), ('private_email', '=ilike', email)], limit=1)
+            if emp:
+                if not emp.user_id:
+                    emp.write({'user_id': user.id})
+                return emp
+
+        if user.name:
+            emp = Emp.search([('name', '=ilike', user.name)], limit=1)
+            if emp:
+                if not emp.user_id:
+                    emp.write({'user_id': user.id})
+                return emp
+
+        return Emp
+
+    @api.model
+    def _default_department_id(self):
+        emp = self._get_employee_for_user(self.env.user)
+        return emp.department_id.id if emp and emp.department_id else False
+
+    @api.model
+    def _default_location_id(self):
+        emp = self._get_employee_for_user(self.env.user)
+        if emp and emp.department_id:
+            dept_name = emp.department_id.name
+            loc = self.env['helpdesk.location'].sudo().search([('name', '=ilike', dept_name)], limit=1)
+            if not loc:
+                loc = self.env['helpdesk.location'].sudo().create({'name': dept_name})
+            return loc.id
+        return False
+
+    @api.model
+    def _default_email(self):
+        emp = self._get_employee_for_user(self.env.user)
+        if emp and emp.work_email:
+            return emp.work_email
+        return self.env.user.email or self.env.user.partner_id.email or ''
+
+    @api.model
+    def _default_phone(self):
+        emp = self._get_employee_for_user(self.env.user)
+        if emp and emp.work_phone:
+            return emp.work_phone
+        return self.env.user.phone or self.env.user.mobile or self.env.user.partner_id.phone or self.env.user.partner_id.mobile or ''
+
     name = fields.Char(
         string='Ticket No', readonly=True, copy=False, default='New')
     title = fields.Char(string='Jelaskan Kendala')
@@ -64,14 +125,20 @@ class HelpdeskTicket(models.Model):
     requester_id = fields.Many2one(
         'res.users', default=lambda self: self.env.user)
     requester_name = fields.Char(string='Nama_PIC')
-    department_id = fields.Many2one('hr.department')
-    location_id = fields.Many2one('helpdesk.location')
+    department_id = fields.Many2one(
+        'hr.department',
+        string='Department & Location',
+        default=_default_department_id)
+    location_id = fields.Many2one(
+        'helpdesk.location',
+        string='Location',
+        default=_default_location_id)
     location_name = fields.Char(string='Proyek')
     phone = fields.Char(
         string='Whatsapp_PIC',
-        default=lambda self: self.env.user.phone or self.env.user.mobile or self.env.user.partner_id.phone or self.env.user.partner_id.mobile)
+        default=_default_phone)
     email = fields.Char(
-        default=lambda self: self.env.user.email or self.env.user.partner_id.email)
+        default=_default_email)
     cc_partner_ids = fields.Many2many('res.partner', string='CC')
     excel_link = fields.Char(string='Link')
     expected_result = fields.Text(string='Expected Result')
@@ -213,6 +280,16 @@ class HelpdeskTicket(models.Model):
     def _onchange_location_id(self):
         if self.location_id:
             self.location_name = self.location_id.name
+
+    @api.onchange('department_id')
+    def _onchange_department_id(self):
+        if self.department_id:
+            dept_name = self.department_id.name
+            loc = self.env['helpdesk.location'].sudo().search([('name', '=ilike', dept_name)], limit=1)
+            if not loc:
+                loc = self.env['helpdesk.location'].sudo().create({'name': dept_name})
+            self.location_id = loc.id
+            self.location_name = dept_name
 
     @api.depends_context('uid')
     def _compute_is_engineer_or_officer(self):
@@ -672,8 +749,21 @@ class HelpdeskTicket(models.Model):
     @api.onchange('requester_id')
     def _onchange_requester_id(self):
         if self.requester_id:
-            self.email = self.requester_id.email or self.requester_id.partner_id.email or ''
-            self.phone = self.requester_id.phone or self.requester_id.mobile or self.requester_id.partner_id.phone or self.requester_id.partner_id.mobile or ''
+            emp = self._get_employee_for_user(self.requester_id)
+            if emp:
+                if emp.department_id:
+                    self.department_id = emp.department_id.id
+                    dept_name = emp.department_id.name
+                    loc = self.env['helpdesk.location'].sudo().search([('name', '=ilike', dept_name)], limit=1)
+                    if not loc:
+                        loc = self.env['helpdesk.location'].sudo().create({'name': dept_name})
+                    self.location_id = loc.id
+                    self.location_name = dept_name
+                self.email = emp.work_email or self.requester_id.email or self.requester_id.partner_id.email or ''
+                self.phone = emp.work_phone or self.requester_id.phone or self.requester_id.mobile or self.requester_id.partner_id.phone or self.requester_id.partner_id.mobile or ''
+            else:
+                self.email = self.requester_id.email or self.requester_id.partner_id.email or ''
+                self.phone = self.requester_id.phone or self.requester_id.mobile or self.requester_id.partner_id.phone or self.requester_id.partner_id.mobile or ''
 
     def _get_engineer_daily_ticket_count(self, user_id):
         """Hitung jumlah tiket aktif yang ditugaskan ke engineer pada hari ini"""
@@ -802,7 +892,7 @@ class HelpdeskTicket(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('ticket_type_id') and not vals.get('ticket_type'):
-                ttype = self.env['helpdesk.ticket.type'].browse(vals['ticket_type_id'])
+                ttype = self.env['helpdesk.ticket.type'].sudo().browse(vals['ticket_type_id'])
                 if ttype.exists():
                     vals['ticket_type'] = ttype.sequence_code or (
                         'service_request' if ttype.code == 'TYP-01' else
@@ -810,17 +900,17 @@ class HelpdeskTicket(models.Model):
                         'security_incident' if ttype.code == 'TYP-03' else 'incident'
                     )
             elif vals.get('ticket_type') and not vals.get('ticket_type_id'):
-                ttype = self.env['helpdesk.ticket.type'].search([('sequence_code', '=', vals['ticket_type'])], limit=1)
+                ttype = self.env['helpdesk.ticket.type'].sudo().search([('sequence_code', '=', vals['ticket_type'])], limit=1)
                 if not ttype:
                     code_map = {'service_request': 'TYP-01', 'incident': 'TYP-02', 'security_incident': 'TYP-03'}
-                    ttype = self.env['helpdesk.ticket.type'].search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
+                    ttype = self.env['helpdesk.ticket.type'].sudo().search([('code', '=', code_map.get(vals['ticket_type']))], limit=1)
                 if ttype:
                     vals['ticket_type_id'] = ttype.id
 
             if vals.get('name', 'New') == 'New':
                 code = SEQUENCE_CODE_BY_TYPE.get(
                     vals.get('ticket_type'), SEQUENCE_CODE_BY_TYPE['incident'])
-                vals['name'] = self.env['ir.sequence'].next_by_code(code) or 'New'
+                vals['name'] = self.env['ir.sequence'].sudo().next_by_code(code) or 'New'
 
             if not vals.get('title'):
                 desc = vals.get('description') or ''
@@ -828,6 +918,38 @@ class HelpdeskTicket(models.Model):
                 vals['title'] = clean_desc[:60] if clean_desc else 'Kendala Helpdesk'
 
             # Sync names for import and report consistency
+            if vals.get('department_id') and not vals.get('location_id'):
+                dept = self.env['hr.department'].sudo().browse(vals['department_id'])
+                if dept.exists():
+                    loc = self.env['helpdesk.location'].sudo().search([('name', '=ilike', dept.name)], limit=1)
+                    if not loc:
+                        loc = self.env['helpdesk.location'].sudo().create({'name': dept.name})
+                    vals['location_id'] = loc.id
+                    vals['location_name'] = dept.name
+            elif vals.get('location_id') and not vals.get('department_id'):
+                loc = self.env['helpdesk.location'].sudo().browse(vals['location_id'])
+                if loc.exists():
+                    dept = self.env['hr.department'].sudo().search([('name', '=ilike', loc.name)], limit=1)
+                    if dept:
+                        vals['department_id'] = dept.id
+
+            req_user = self.env['res.users'].browse(vals.get('requester_id')) if vals.get('requester_id') else self.env.user
+            if not vals.get('department_id') or not vals.get('email') or not vals.get('phone'):
+                emp = self._get_employee_for_user(req_user)
+                if emp:
+                    if not vals.get('department_id') and emp.department_id:
+                        vals['department_id'] = emp.department_id.id
+                        if not vals.get('location_id'):
+                            loc = self.env['helpdesk.location'].search([('name', '=ilike', emp.department_id.name)], limit=1)
+                            if not loc:
+                                loc = self.env['helpdesk.location'].sudo().create({'name': emp.department_id.name})
+                            vals['location_id'] = loc.id
+                            vals['location_name'] = emp.department_id.name
+                    if not vals.get('email') and emp.work_email:
+                        vals['email'] = emp.work_email
+                    if not vals.get('phone') and emp.work_phone:
+                        vals['phone'] = emp.work_phone
+
             if vals.get('location_id') and not vals.get('location_name'):
                 loc = self.env['helpdesk.location'].browse(vals['location_id'])
                 if loc.exists():
@@ -900,7 +1022,7 @@ class HelpdeskTicket(models.Model):
             if not ticket.ticket_type: missing.append('Ticket Type')
             if not ticket.service_id: missing.append('Service')
             if not ticket.category_id: missing.append('Category')
-            if not ticket.location_id: missing.append('Department / Location')
+            if not ticket.department_id and not ticket.location_id: missing.append('Department / Location')
             if not ticket.phone: missing.append('Phone')
             if not ticket.q1_answer_id: missing.append('Pertanyaan Prioritas 1 (Siapa yang terdampak?)')
             if not ticket.q2_answer_id: missing.append('Pertanyaan Prioritas 2 (Apakah mengganggu operasional?)')
@@ -911,6 +1033,17 @@ class HelpdeskTicket(models.Model):
             if not ticket.excel_link or ticket.excel_link.strip() == '': missing.append('Link')
             if missing:
                 raise UserError('Mohon lengkapi kolom wajib berikut sebelum mempublikasikan tiket:\n• ' + '\n• '.join(missing))
+
+            if ticket.department_id and not ticket.location_id:
+                loc = self.env['helpdesk.location'].search([('name', '=ilike', ticket.department_id.name)], limit=1)
+                if not loc:
+                    loc = self.env['helpdesk.location'].sudo().create({'name': ticket.department_id.name})
+                ticket.location_id = loc.id
+                ticket.location_name = ticket.department_id.name
+            elif ticket.location_id and not ticket.department_id:
+                dept = self.env['hr.department'].search([('name', '=ilike', ticket.location_id.name)], limit=1)
+                if dept:
+                    ticket.department_id = dept.id
             vals = {
                 'state': 'open',
                 'publish_date': ticket.publish_date or fields.Datetime.now(),

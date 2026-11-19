@@ -204,8 +204,9 @@
                                             <field name="engineer_id"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
-                                            <span class="text-muted d-block">Department / Location</span>
-                                            <field name="location_id" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                            <span class="text-muted d-block">Department &amp; Location</span>
+                                            <field name="department_id" readonly="1" force_save="1" options="{'no_create': True, 'no_open': True}"/>
+                                            <field name="location_id" invisible="1" force_save="1"/>
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Tanggal Create Ticket</span>
@@ -241,7 +242,7 @@
                                         </div>
                                         <div class="col-md-6 mb-2">
                                             <span class="text-muted d-block">Email</span>
-                                            <field name="email" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                            <field name="email" readonly="1" force_save="1"/>
                                         </div>
                                     </div>
                                 </div>

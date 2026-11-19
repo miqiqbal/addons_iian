@@ -95,9 +95,10 @@
                                 <!-- FORM KANAN -->
                                 <div class="col-md-6">
                                     <group>
-                                        <field name="location_id" string="Department &amp; Location" options="{'no_create': True, 'no_open': True}" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="phone" string="Phone" placeholder="0812-1234-5678" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
-                                        <field name="email" string="Email" placeholder="ahmad.fauzi@hki.co.id" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                                        <field name="department_id" string="Department &amp; Location" readonly="1" force_save="1" options="{'no_create': True, 'no_open': True}"/>
+                                        <field name="location_id" invisible="1" force_save="1"/>
+                                        <field name="phone" string="Phone" placeholder="0812-XXXX-XXXX" attrs="{'readonly': [('state', 'not in', ['draft'])], 'required': [('state', '=', 'draft')]}"/>
+                                        <field name="email" string="Email" readonly="1" force_save="1"/>
                                         <field name="cc_partner_ids" string="CC" widget="many2many_tags" placeholder="Pilih user untuk CC" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
                                     </group>
                                 </div>
